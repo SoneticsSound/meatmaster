@@ -58,8 +58,9 @@
         <!-- result card (appears on a successful read) -->
         <div class="result-card" id="result-card" hidden>
           <div class="result-fmt" id="result-fmt">UPC-A</div>
+          <div class="result-name" id="result-name">Unknown product</div>
           <div class="result-code" id="result-code">000000000000</div>
-          <div class="result-note">Not in the product list yet — names arrive in Session 3.</div>
+          <div class="result-note" id="result-note">Not in the product list yet.</div>
           <div class="result-actions">
             <button class="btn" id="btn-rescan">Rescan</button>
             <button class="btn btn-primary" id="btn-confirm">&check; Confirm</button>
@@ -87,10 +88,14 @@
       </header>
       <div class="placeholder">
         <div class="ph-icon">🗂️</div>
-        <h2>Product database lands in Session 3</h2>
-        <p>Seeded from the 24-item beef count sheet. Each entry: PLU, UPC, friendly name, category, case position, photo. It grows itself in the field.</p>
-        <span class="chip">Session 3</span>
+        <h2>Seed beef database loaded</h2>
+        <p>24 barcodes from the beef count sheet are mapped to useful working names. Unknown scans still show raw numbers for quick follow-up.</p>
+        <span class="chip">v0.8.0</span>
       </div>
+      <section class="product-list-wrap">
+        <h2 class="recent-title">Seed products <span class="recent-count" id="product-count">0</span></h2>
+        <ul class="product-list" id="product-list"></ul>
+      </section>
     </section>
 
     <!-- SESSION / COUNT -->
@@ -146,9 +151,10 @@
     <p>Tap <span class="share-ico">⎋</span> Share, then <strong>Add to Home Screen</strong>.</p>
   </div>
 
-  <div class="build-stamp" id="build-stamp">v0.7.0</div>
+  <div class="build-stamp" id="build-stamp">v0.8.0</div>
 
   <script src="vendor/zbar/index.js"></script>
+  <script src="products.js"></script>
   <script src="app.js"></script>
   <script src="scanner.js"></script>
 </body>

@@ -43,6 +43,35 @@
   window.addEventListener('offline', refreshNet);
   refreshNet();
 
+  /* ---------- product list ---------- */
+  var productList = document.getElementById('product-list');
+  var productCount = document.getElementById('product-count');
+  if (productList && window.MMProducts) {
+    var products = window.MMProducts.all.slice().sort(function (a, b) {
+      return a.casePosition - b.casePosition;
+    });
+    if (productCount) productCount.textContent = products.length;
+    products.forEach(function (p) {
+      var li = document.createElement('li');
+      li.className = 'product-item';
+      var plu = document.createElement('div');
+      plu.className = 'product-plu';
+      plu.textContent = p.plu;
+      var body = document.createElement('div');
+      var name = document.createElement('div');
+      name.className = 'product-name';
+      name.textContent = p.name;
+      var meta = document.createElement('div');
+      meta.className = 'product-meta';
+      meta.textContent = p.upc + ' - ' + p.sheetName;
+      body.appendChild(name);
+      body.appendChild(meta);
+      li.appendChild(plu);
+      li.appendChild(body);
+      productList.appendChild(li);
+    });
+  }
+
   /* ---------- iOS "Add to Home Screen" hint ---------- */
   // Show only in mobile Safari, only when not already installed, only once dismissed.
   const iosBox = document.getElementById('ios-install');

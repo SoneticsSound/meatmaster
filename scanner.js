@@ -23,7 +23,9 @@
   var errMsg    = el('cam-error-msg');
   var card      = el('result-card');
   var resFmt    = el('result-fmt');
+  var resName   = el('result-name');
   var resCode   = el('result-code');
+  var resNote   = el('result-note');
   var controls  = el('scan-controls');
   var recentBox = el('recent');
   var recentList= el('recent-list');
@@ -292,6 +294,14 @@
 
     paused = true;
     feedback();
+    var product = window.MMProducts && window.MMProducts.findByCode(code);
+    if (product) {
+      resName.textContent = product.name;
+      resNote.textContent = 'PLU ' + product.plu + ' - ' + product.sheetName;
+    } else {
+      resName.textContent = 'Unknown product';
+      resNote.textContent = 'Not in the product list yet. Confirm to keep the raw scan.';
+    }
     resCode.textContent = code;
     resFmt.textContent = prettyType(result.type);
     show(card, true);
