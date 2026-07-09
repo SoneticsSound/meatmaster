@@ -1,0 +1,5 @@
+# OS / editor cruft — nothing here belongs in the app
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
