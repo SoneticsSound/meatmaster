@@ -6,7 +6,7 @@
    IMPORTANT: bump CACHE_VERSION whenever the app files change, so phones
    pick up the new version instead of the old cached one. */
 
-const CACHE_VERSION = 'mm-v0.3.0';
+const CACHE_VERSION = 'mm-v0.4.0';
 
 // The "app shell" — the files needed to open the app offline.
 const SHELL = [
@@ -15,7 +15,8 @@ const SHELL = [
   './styles.css',
   './app.js',
   './scanner.js',
-  './vendor/zxing.min.js',
+  './vendor/zbar/index.js',
+  './vendor/zbar/zbar.wasm',
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',

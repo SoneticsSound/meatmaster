@@ -1,10 +1,12 @@
 /* MeatMaster — camera barcode scanner (Session 2)
-   Reads UPC/EAN barcodes live from the camera.
+   Engine: zbar (WebAssembly, in vendor/zbar/). Chosen after testing real
+   store photos: zbar reads GS1 DataBar (the barcode type on variable-weight
+   meat/deli labels), reads any rotation, and is more robust than ZXing on
+   real, curved, glare-y packages.
 
-   Design note: we drive the camera ourselves (getUserMedia) and feed frames
-   into ZXing's *core* decoder (canvas -> luminance -> binarizer -> decode).
-   ZXing's own camera/image helpers proved unreliable in testing; the core
-   decoder is rock-solid. This keeps us on the part that works and is testable.
+   Per frame: scan the framed box raw first (fast; gets DataBar + clean codes),
+   and on a miss scan an Otsu-thresholded copy (rescues glare/low contrast).
+   Both proven against real photos. Plain vanilla JS, no build step.
 
    Flow: tap Start -> camera opens -> a barcode is read -> confirm card ->
    Confirm (records it) or Rescan. Camera stops when you leave the Scan tab. */
@@ -32,72 +34,83 @@
   var paused = false;    // a result is showing; ignore new reads
   var stream = null;     // MediaStream (so we can turn the camera off)
   var scanTimer = null;  // decode-loop timer
-  var canvas = null, ctx = null;
   var lastCode = null, lastTime = 0;
   var recent = [];       // this-session scans (in memory)
 
+  // reusable work canvases (avoid per-frame allocation)
+  var cropCanvas = null, cropCtx = null;   // the framed box, at full res
+  var otsuCanvas = null, otsuCtx = null;    // thresholded copy for hard reads
+
   function show(node, on) { if (node) node.hidden = !on; }
 
-  /* ---------- the decode engine (core ZXing, the part we verified) ----------
-     Two hard-won lessons baked in here:
-     1. This ZXing build FAILS when several barcode formats are enabled at once
-        (each works alone), so we try formats one at a time.
-     2. EAN-13 also reads UPC-A codes (UPC-A is EAN-13 with a leading zero),
-        and Sprouts' store barcodes are EAN-13 — so it's first and covers most.
-     For each format we try two binarizers: GlobalHistogram (crisp barcodes,
-     fast) then Hybrid (uneven lighting, e.g. a dim cooler). */
-  var _reader = null;
-  var _hints = null;
-  var _rotCanvas = null, _rotCtx = null;
-  function hints() {
-    if (_hints) return _hints;
-    var Z = window.ZXing;
-    _hints = new Map();
-    // EAN-13 also reads UPC-A (UPC-A = EAN-13 with a leading zero).
-    _hints.set(Z.DecodeHintType.POSSIBLE_FORMATS, [Z.BarcodeFormat.EAN_13]);
-    // TRY_HARDER = scan more rows + tolerate tilt. Essential for real,
-    // hand-held, curved-package barcodes (verified against real photos).
-    _hints.set(Z.DecodeHintType.TRY_HARDER, true);
-    return _hints;
-  }
-  // Return the canvas rotated 90°, so a sideways barcode becomes readable.
-  function rotate90(c) {
-    if (!_rotCanvas) {
-      _rotCanvas = document.createElement('canvas');
-      _rotCtx = _rotCanvas.getContext('2d', { willReadFrequently: true });
-    }
-    _rotCanvas.width = c.height; _rotCanvas.height = c.width;
-    _rotCtx.setTransform(1, 0, 0, 1, 0, 0);
-    _rotCtx.translate(_rotCanvas.width / 2, _rotCanvas.height / 2);
-    _rotCtx.rotate(Math.PI / 2);
-    _rotCtx.drawImage(c, -c.width / 2, -c.height / 2);
-    return _rotCanvas;
-  }
-  // Decode a canvas. Tries GlobalHistogram then Hybrid binarizer, each in
-  // upright and 90°-rotated orientation, with TRY_HARDER. Returns first hit
-  // (a ZXing Result) or null. GlobalHistogram-upright is cheapest and handles
-  // the common well-aligned case first.
-  function decodeCanvas(cnv) {
-    var Z = window.ZXing;
-    if (!_reader) _reader = new Z.MultiFormatReader();
-    var orients = [cnv, rotate90(cnv)];
-    var bins = [Z.GlobalHistogramBinarizer, Z.HybridBinarizer];
-    for (var b = 0; b < bins.length; b++) {
-      for (var o = 0; o < orients.length; o++) {
-        var src = new Z.HTMLCanvasElementLuminanceSource(orients[o]);
-        try { return _reader.decode(new Z.BinaryBitmap(new bins[b](src)), hints()); }
-        catch (e) {}
-      }
-    }
-    return null;
+  /* ---------- decode engine (zbar) ---------- */
+  // Turn zbar's symbol name (e.g. "ZBAR_EAN13") into a friendly label.
+  function prettyType(t) {
+    if (!t) return 'BARCODE';
+    var s = String(t).replace(/^ZBAR_/, '');
+    var map = {
+      EAN13: 'EAN-13', EAN8: 'EAN-8', UPCA: 'UPC-A', UPCE: 'UPC-E',
+      ISBN13: 'ISBN-13', ISBN10: 'ISBN-10', CODE128: 'Code 128',
+      CODE39: 'Code 39', CODE93: 'Code 93', CODABAR: 'Codabar',
+      I25: 'ITF', DATABAR: 'DataBar', DATABAR_EXP: 'DataBar', QRCODE: 'QR'
+    };
+    return map[s] || s.replace(/_/g, ' ');
   }
 
-  function formatName(fmt) {
-    try {
-      var F = window.ZXing.BarcodeFormat;
-      for (var k in F) { if (F[k] === fmt) return k.replace(/_/g, '-'); }
-    } catch (e) {}
-    return 'BARCODE';
+  // Run zbar on a canvas. Returns { text, type } or null.
+  function zbarScan(cnv) {
+    if (!window.zbarWasm) return Promise.resolve(null);
+    var id = cnv.getContext('2d', { willReadFrequently: true })
+               .getImageData(0, 0, cnv.width, cnv.height);
+    return window.zbarWasm.scanImageData(id).then(function (syms) {
+      if (syms && syms.length) {
+        var s = syms[0];
+        var text = (typeof s.decode === 'function') ? s.decode() : String(s.data || '');
+        return { text: text, type: s.typeName };
+      }
+      return null;
+    }).catch(function () { return null; });
+  }
+
+  // Write an Otsu (auto-threshold) black/white version of src into dst.
+  // This rescues barcodes lost to glare / low contrast (verified on real photos).
+  function otsuInto(src, dst) {
+    var w = src.width, h = src.height;
+    dst.width = w; dst.height = h;
+    var sd = src.getContext('2d', { willReadFrequently: true })
+               .getImageData(0, 0, w, h).data;
+    var n = w * h, gray = new Uint8Array(n), hist = new Uint32Array(256);
+    for (var i = 0, p = 0; p < n; i += 4, p++) {
+      var v = (sd[i] * 0.299 + sd[i + 1] * 0.587 + sd[i + 2] * 0.114) | 0;
+      gray[p] = v; hist[v]++;
+    }
+    var sum = 0, k;
+    for (k = 0; k < 256; k++) sum += k * hist[k];
+    var sumB = 0, wB = 0, max = 0, thr = 127;
+    for (k = 0; k < 256; k++) {
+      wB += hist[k]; if (!wB) continue;
+      var wF = n - wB; if (!wF) break;
+      sumB += k * hist[k];
+      var mB = sumB / wB, mF = (sum - sumB) / wF;
+      var between = wB * wF * (mB - mF) * (mB - mF);
+      if (between > max) { max = between; thr = k; }
+    }
+    var out = otsuCtx.createImageData(w, h), od = out.data;
+    for (var q = 0, j = 0; q < n; q++, j += 4) {
+      var b = gray[q] > thr ? 255 : 0;
+      od[j] = od[j + 1] = od[j + 2] = b; od[j + 3] = 255;
+    }
+    otsuCtx.putImageData(out, 0, 0);
+    return dst;
+  }
+
+  // Decode one framed-box canvas: raw first, Otsu on a miss.
+  function decodeFrame(cnv) {
+    return zbarScan(cnv).then(function (r) {
+      if (r) return r;
+      otsuInto(cnv, otsuCanvas);
+      return zbarScan(otsuCanvas);
+    });
   }
 
   /* ---------- feedback ---------- */
@@ -128,11 +141,6 @@
 
   /* ---------- camera + decode loop ---------- */
   function start() {
-    if (!window.ZXing) {
-      errMsg.textContent = 'Scanner engine failed to load. Reopen the app.';
-      show(idle, false); show(errBox, true);
-      return;
-    }
     show(idle, false); show(errBox, false); show(card, false);
     paused = false;
 
@@ -162,30 +170,37 @@
 
   function loop() {
     if (!running) return;
+    if (paused || video.readyState < 2 || !video.videoWidth) {
+      scanTimer = setTimeout(loop, 90);
+      return;
+    }
     try {
-      if (!paused && video.readyState >= 2 && video.videoWidth) {
-        canvas = canvas || document.createElement('canvas');
-        ctx = ctx || canvas.getContext('2d', { willReadFrequently: true });
-        var vw = video.videoWidth, vh = video.videoHeight;
-        // Crop to (roughly) the on-screen framing box, at full resolution, so
-        // the barcode the user lines up keeps all its pixels instead of being
-        // shrunk away. Verified: downscaling the whole frame lost real barcodes.
-        var sideF = 0.10, topF = 0.16;
-        var sx = vw * sideF, sy = vh * topF;
-        var sw = vw * (1 - 2 * sideF), sh = vh * (1 - 2 * topF);
-        var cap = 1000, scale = Math.min(1, cap / sw); // bound work for speed
-        canvas.width = Math.round(sw * scale);
-        canvas.height = Math.round(sh * scale);
-        ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
-        var res = decodeCanvas(canvas);
-        if (res) onDecode(res);
-      }
-    } catch (e) { /* keep the loop alive no matter what */ }
-    scanTimer = setTimeout(loop, 90);
+      cropCanvas = cropCanvas || document.createElement('canvas');
+      cropCtx = cropCtx || cropCanvas.getContext('2d', { willReadFrequently: true });
+      if (!otsuCanvas) { otsuCanvas = document.createElement('canvas'); otsuCtx = otsuCanvas.getContext('2d', { willReadFrequently: true }); }
+
+      // Crop to (roughly) the on-screen framing box, at full resolution, so the
+      // barcode keeps its pixels. Cap the longest side to bound decode time.
+      var vw = video.videoWidth, vh = video.videoHeight;
+      var sideF = 0.08, topF = 0.14;
+      var sx = vw * sideF, sy = vh * topF;
+      var sw = vw * (1 - 2 * sideF), sh = vh * (1 - 2 * topF);
+      var cap = 900, scale = Math.min(1, cap / Math.max(sw, sh));
+      cropCanvas.width = Math.round(sw * scale);
+      cropCanvas.height = Math.round(sh * scale);
+      cropCtx.drawImage(video, sx, sy, sw, sh, 0, 0, cropCanvas.width, cropCanvas.height);
+
+      decodeFrame(cropCanvas).then(function (res) {
+        if (res && res.text && running && !paused) onDecode(res);
+        if (running) scanTimer = setTimeout(loop, 60);
+      });
+    } catch (e) {
+      if (running) scanTimer = setTimeout(loop, 120);
+    }
   }
 
   function onDecode(result) {
-    var code = result.getText();
+    var code = result.text;
     var now = Date.now();
     if (code === lastCode && (now - lastTime) < 2500) return; // debounce repeats
     lastCode = code; lastTime = now;
@@ -193,7 +208,7 @@
     paused = true;
     feedback();
     resCode.textContent = code;
-    resFmt.textContent = formatName(result.getBarcodeFormat());
+    resFmt.textContent = prettyType(result.type);
     show(card, true);
   }
 
@@ -248,22 +263,23 @@
     });
   });
 
-  // exposed for testing the exact shipping decode path without a physical camera
+  // exposed so we can verify the decode path without a physical camera
   window.MMScanner = {
     start: start,
     stop: stop,
     getRecent: function () { return recent.slice(); },
-    decodeCanvas: decodeCanvas,
     decodeImage: function (url) {
       return new Promise(function (resolve, reject) {
         var img = new Image();
         img.onload = function () {
           var c = document.createElement('canvas');
           c.width = img.naturalWidth; c.height = img.naturalHeight;
-          c.getContext('2d').drawImage(img, 0, 0);
-          var r = decodeCanvas(c);
-          if (r) resolve({ text: r.getText(), format: formatName(r.getBarcodeFormat()) });
-          else reject(new Error('not detected'));
+          c.getContext('2d', { willReadFrequently: true }).drawImage(img, 0, 0);
+          if (!otsuCanvas) { otsuCanvas = document.createElement('canvas'); otsuCtx = otsuCanvas.getContext('2d', { willReadFrequently: true }); }
+          decodeFrame(c).then(function (r) {
+            if (r && r.text) resolve({ text: r.text, format: prettyType(r.type) });
+            else reject(new Error('not detected'));
+          });
         };
         img.onerror = function () { reject(new Error('image failed to load')); };
         img.src = url;
