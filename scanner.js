@@ -47,27 +47,47 @@
      For each format we try two binarizers: GlobalHistogram (crisp barcodes,
      fast) then Hybrid (uneven lighting, e.g. a dim cooler). */
   var _reader = null;
-  var _formats = null;
-  function formatList() {
-    if (_formats) return _formats;
-    var F = window.ZXing.BarcodeFormat;
-    _formats = [F.EAN_13, F.UPC_E, F.EAN_8];
-    return _formats;
+  var _hints = null;
+  var _rotCanvas = null, _rotCtx = null;
+  function hints() {
+    if (_hints) return _hints;
+    var Z = window.ZXing;
+    _hints = new Map();
+    // EAN-13 also reads UPC-A (UPC-A = EAN-13 with a leading zero).
+    _hints.set(Z.DecodeHintType.POSSIBLE_FORMATS, [Z.BarcodeFormat.EAN_13]);
+    // TRY_HARDER = scan more rows + tolerate tilt. Essential for real,
+    // hand-held, curved-package barcodes (verified against real photos).
+    _hints.set(Z.DecodeHintType.TRY_HARDER, true);
+    return _hints;
   }
-  // Decode one still image (a canvas). Returns a ZXing Result or null.
+  // Return the canvas rotated 90°, so a sideways barcode becomes readable.
+  function rotate90(c) {
+    if (!_rotCanvas) {
+      _rotCanvas = document.createElement('canvas');
+      _rotCtx = _rotCanvas.getContext('2d', { willReadFrequently: true });
+    }
+    _rotCanvas.width = c.height; _rotCanvas.height = c.width;
+    _rotCtx.setTransform(1, 0, 0, 1, 0, 0);
+    _rotCtx.translate(_rotCanvas.width / 2, _rotCanvas.height / 2);
+    _rotCtx.rotate(Math.PI / 2);
+    _rotCtx.drawImage(c, -c.width / 2, -c.height / 2);
+    return _rotCanvas;
+  }
+  // Decode a canvas. Tries GlobalHistogram then Hybrid binarizer, each in
+  // upright and 90°-rotated orientation, with TRY_HARDER. Returns first hit
+  // (a ZXing Result) or null. GlobalHistogram-upright is cheapest and handles
+  // the common well-aligned case first.
   function decodeCanvas(cnv) {
     var Z = window.ZXing;
     if (!_reader) _reader = new Z.MultiFormatReader();
-    // one luminance read per frame, shared across all attempts
-    var source = new Z.HTMLCanvasElementLuminanceSource(cnv);
-    var binGlobal = new Z.BinaryBitmap(new Z.GlobalHistogramBinarizer(source));
-    var binHybrid = new Z.BinaryBitmap(new Z.HybridBinarizer(source));
-    var fmts = formatList();
-    for (var i = 0; i < fmts.length; i++) {
-      var h = new Map();
-      h.set(Z.DecodeHintType.POSSIBLE_FORMATS, [fmts[i]]);
-      try { return _reader.decode(binGlobal, h); } catch (e1) {}
-      try { return _reader.decode(binHybrid, h); } catch (e2) {}
+    var orients = [cnv, rotate90(cnv)];
+    var bins = [Z.GlobalHistogramBinarizer, Z.HybridBinarizer];
+    for (var b = 0; b < bins.length; b++) {
+      for (var o = 0; o < orients.length; o++) {
+        var src = new Z.HTMLCanvasElementLuminanceSource(orients[o]);
+        try { return _reader.decode(new Z.BinaryBitmap(new bins[b](src)), hints()); }
+        catch (e) {}
+      }
     }
     return null;
   }
@@ -118,7 +138,11 @@
 
     navigator.mediaDevices.getUserMedia({
       audio: false,
-      video: { facingMode: { ideal: 'environment' } }
+      video: {
+        facingMode: { ideal: 'environment' },
+        width:  { ideal: 1920 },   // sharper feed = thinner bars resolved
+        height: { ideal: 1080 }
+      }
     }).then(function (s) {
       stream = s;
       video.srcObject = s;
@@ -127,7 +151,7 @@
       running = true;
       scanner.classList.add('is-live');
       show(controls, true);
-      scanSub.textContent = 'Camera on · line up a barcode';
+      scanSub.textContent = 'Fill the box · hold steady · good light helps';
       loop();
     }).catch(function (e) {
       errMsg.textContent = friendlyError(e);
@@ -142,17 +166,22 @@
       if (!paused && video.readyState >= 2 && video.videoWidth) {
         canvas = canvas || document.createElement('canvas');
         ctx = ctx || canvas.getContext('2d', { willReadFrequently: true });
-        // cap width for speed; keeps decode fast on a phone
         var vw = video.videoWidth, vh = video.videoHeight;
-        var scale = Math.min(1, 900 / vw);
-        canvas.width = Math.round(vw * scale);
-        canvas.height = Math.round(vh * scale);
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        // Crop to (roughly) the on-screen framing box, at full resolution, so
+        // the barcode the user lines up keeps all its pixels instead of being
+        // shrunk away. Verified: downscaling the whole frame lost real barcodes.
+        var sideF = 0.10, topF = 0.16;
+        var sx = vw * sideF, sy = vh * topF;
+        var sw = vw * (1 - 2 * sideF), sh = vh * (1 - 2 * topF);
+        var cap = 1000, scale = Math.min(1, cap / sw); // bound work for speed
+        canvas.width = Math.round(sw * scale);
+        canvas.height = Math.round(sh * scale);
+        ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
         var res = decodeCanvas(canvas);
         if (res) onDecode(res);
       }
     } catch (e) { /* keep the loop alive no matter what */ }
-    scanTimer = setTimeout(loop, 120); // ~8 checks per second
+    scanTimer = setTimeout(loop, 90);
   }
 
   function onDecode(result) {
