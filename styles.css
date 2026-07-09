@@ -293,6 +293,7 @@ body {
   font-size: 10px;
   color: var(--ink-dim);
   opacity: .5;
-  pointer-events: none;
-  z-index: 4;
+  padding: 6px 8px;      /* bigger tap target — tap to toggle diagnostics */
+  cursor: pointer;
+  z-index: 26;
 }

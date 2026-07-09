@@ -61,12 +61,31 @@
     });
   }
 
-  /* ---------- register the offline service worker ---------- */
+  /* ---------- register the offline service worker + auto-update ----------
+     Without this, an installed iOS app can stay stuck on an old version.
+     - updateViaCache:'none' → always re-fetch the worker script (don't trust
+       the browser's HTTP cache), so a new version is actually noticed.
+     - reg.update() on load → check for a newer version every time it opens.
+     - controllerchange → when the new version takes over, reload once so the
+       user is always on the latest (guarded so the first install doesn't loop). */
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('service-worker.js')
-        .then((reg) => console.log('[MeatMaster] offline ready', reg.scope))
-        .catch((err) => console.warn('[MeatMaster] service worker failed', err));
+    // Only auto-reload on a *later* takeover, not the very first install.
+    var hadController = !!navigator.serviceWorker.controller;
+    var refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (refreshing || !hadController) return;
+      refreshing = true;
+      window.location.reload();
+    });
+
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('service-worker.js', { updateViaCache: 'none' })
+        .then(function (reg) {
+          console.log('[MeatMaster] offline ready', reg.scope);
+          reg.update();                                  // check now
+          setInterval(function () { reg.update(); }, 60 * 60 * 1000); // and hourly
+        })
+        .catch(function (err) { console.warn('[MeatMaster] service worker failed', err); });
     });
   }
 })();

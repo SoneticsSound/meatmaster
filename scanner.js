@@ -140,8 +140,9 @@
     return { sharp: n ? sum / n : 0, mean: n ? bright / n : 0 };
   }
 
-  /* ---------- live on-device diagnostics (temporary) ---------- */
+  /* ---------- live on-device diagnostics (tap the version number to toggle) ---------- */
   var diagEl = null;
+  var diagEnabled = false;
   var diag = { zbar: 'init', vid: '-', frame: '-', tries: 0, hits: 0, last: '-', err: '', fps: 0 };
   var fpsMark = 0, fpsCount = 0;
   function ensureDiag() {
@@ -219,7 +220,7 @@
       show(controls, true);
       scanSub.textContent = 'Fill the box · hold steady · good light helps';
       applyFocus();   // nudge the camera toward sharp close-up frames
-      ensureDiag(); diagEl.hidden = false;
+      ensureDiag(); diagEl.hidden = !diagEnabled;
       diag.tries = 0; diag.hits = 0; diag.last = '-'; fpsMark = Date.now(); fpsCount = 0;
       renderDiag();
       loop();
@@ -346,6 +347,14 @@
     t.addEventListener('click', function () {
       if (t.dataset.goto !== 'scan' && running) stop();
     });
+  });
+
+  // tap the version number to show/hide the tech diagnostics
+  var stamp = el('build-stamp');
+  if (stamp) stamp.addEventListener('click', function () {
+    diagEnabled = !diagEnabled;
+    ensureDiag();
+    diagEl.hidden = !(diagEnabled && running);
   });
 
   // exposed so we can verify the decode path without a physical camera
