@@ -34,6 +34,7 @@
   var paused = false;    // a result is showing; ignore new reads
   var stream = null;     // MediaStream (so we can turn the camera off)
   var scanTimer = null;  // decode-loop timer
+  var blurSkips = 0;     // consecutive blurry frames skipped (anti-starvation)
   var lastCode = null, lastTime = 0;
   var recent = [];       // this-session scans (in memory)
 
@@ -113,6 +114,38 @@
     });
   }
 
+  // Cheap "is this frame sharp?" score (average edge gradient, subsampled).
+  // Readable barcodes score ~11+, a blurred/blank frame drops well below.
+  // Lets us skip decoding useless frames and spend effort on good ones.
+  function sharpness(cnv) {
+    var w = cnv.width, h = cnv.height;
+    var d = cnv.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, w, h).data;
+    var step = 4, sum = 0, n = 0;
+    for (var y = 0; y < h - step; y += step) {
+      for (var x = 0; x < w - step; x += step) {
+        var i = (y * w + x) * 4;
+        var g  = d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114;
+        var ix = (y * w + (x + step)) * 4;
+        var iy = ((y + step) * w + x) * 4;
+        var gx = d[ix] * 0.299 + d[ix + 1] * 0.587 + d[ix + 2] * 0.114;
+        var gy = d[iy] * 0.299 + d[iy + 1] * 0.587 + d[iy + 2] * 0.114;
+        sum += Math.abs(g - gx) + Math.abs(g - gy); n++;
+      }
+    }
+    return n ? sum / n : 0;
+  }
+
+  // Ask the camera for continuous autofocus (macro-ish), so close-up barcodes
+  // come in sharp. Support varies by device; failing is harmless.
+  function applyFocus() {
+    try {
+      var track = stream && stream.getVideoTracks && stream.getVideoTracks()[0];
+      if (!track || !track.applyConstraints) return;
+      track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] })
+        .catch(function () {});
+    } catch (e) {}
+  }
+
   /* ---------- feedback ---------- */
   function feedback() {
     try {
@@ -160,6 +193,7 @@
       scanner.classList.add('is-live');
       show(controls, true);
       scanSub.textContent = 'Fill the box · hold steady · good light helps';
+      applyFocus();   // nudge the camera toward sharp close-up frames
       loop();
     }).catch(function (e) {
       errMsg.textContent = friendlyError(e);
@@ -179,16 +213,25 @@
       cropCtx = cropCtx || cropCanvas.getContext('2d', { willReadFrequently: true });
       if (!otsuCanvas) { otsuCanvas = document.createElement('canvas'); otsuCtx = otsuCanvas.getContext('2d', { willReadFrequently: true }); }
 
-      // Crop to (roughly) the on-screen framing box, at full resolution, so the
+      // Crop to (roughly) the on-screen framing box, at high resolution, so the
       // barcode keeps its pixels. Cap the longest side to bound decode time.
       var vw = video.videoWidth, vh = video.videoHeight;
       var sideF = 0.08, topF = 0.14;
       var sx = vw * sideF, sy = vh * topF;
       var sw = vw * (1 - 2 * sideF), sh = vh * (1 - 2 * topF);
-      var cap = 900, scale = Math.min(1, cap / Math.max(sw, sh));
+      var cap = 1100, scale = Math.min(1, cap / Math.max(sw, sh));
       cropCanvas.width = Math.round(sw * scale);
       cropCanvas.height = Math.round(sh * scale);
       cropCtx.drawImage(video, sx, sy, sw, sh, 0, 0, cropCanvas.width, cropCanvas.height);
+
+      // Skip clearly-blurry / near-blank frames so we spend decode time on good
+      // ones — but never starve (force a decode after a few skips).
+      if (sharpness(cropCanvas) < 5 && blurSkips < 4) {
+        blurSkips++;
+        scanTimer = setTimeout(loop, 45);
+        return;
+      }
+      blurSkips = 0;
 
       decodeFrame(cropCanvas).then(function (res) {
         if (res && res.text && running && !paused) onDecode(res);
