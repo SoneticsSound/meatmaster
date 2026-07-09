@@ -266,6 +266,25 @@ body {
   cursor: pointer;
 }
 
+/* ---- live diagnostics panel (temporary, for on-device debugging) ---- */
+.diag {
+  position: fixed;
+  left: 8px; right: 8px;
+  bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 16px);
+  background: rgba(0, 0, 0, .82);
+  color: #43d675;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: pre;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(67, 214, 117, .3);
+  z-index: 25;
+  pointer-events: none;
+}
+.diag[hidden] { display: none; }
+
 /* ---- build stamp ---- */
 .build-stamp {
   position: fixed;

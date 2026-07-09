@@ -60,17 +60,22 @@
 
   // Run zbar on a canvas. Returns { text, type } or null.
   function zbarScan(cnv) {
-    if (!window.zbarWasm) return Promise.resolve(null);
+    if (!window.zbarWasm) { diag.zbar = 'not loaded'; return Promise.resolve(null); }
     var id = cnv.getContext('2d', { willReadFrequently: true })
                .getImageData(0, 0, cnv.width, cnv.height);
     return window.zbarWasm.scanImageData(id).then(function (syms) {
+      diag.zbar = 'ready'; diag.err = '';
       if (syms && syms.length) {
         var s = syms[0];
         var text = (typeof s.decode === 'function') ? s.decode() : String(s.data || '');
         return { text: text, type: s.typeName };
       }
       return null;
-    }).catch(function () { return null; });
+    }).catch(function (e) {
+      diag.zbar = 'error';
+      diag.err = (e && e.message ? e.message : String(e)).slice(0, 44);
+      return null;
+    });
   }
 
   // Write an Otsu (auto-threshold) black/white version of src into dst.
@@ -114,13 +119,13 @@
     });
   }
 
-  // Cheap "is this frame sharp?" score (average edge gradient, subsampled).
-  // Readable barcodes score ~11+, a blurred/blank frame drops well below.
-  // Lets us skip decoding useless frames and spend effort on good ones.
-  function sharpness(cnv) {
+  // Cheap frame probe: average edge gradient ("sharp") and mean brightness.
+  // Readable barcodes score sharp ~11+; a black/blank capture shows near-zero
+  // brightness (a key on-device clue). Subsampled for speed.
+  function frameStats(cnv) {
     var w = cnv.width, h = cnv.height;
     var d = cnv.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, w, h).data;
-    var step = 4, sum = 0, n = 0;
+    var step = 4, sum = 0, n = 0, bright = 0;
     for (var y = 0; y < h - step; y += step) {
       for (var x = 0; x < w - step; x += step) {
         var i = (y * w + x) * 4;
@@ -129,10 +134,30 @@
         var iy = ((y + step) * w + x) * 4;
         var gx = d[ix] * 0.299 + d[ix + 1] * 0.587 + d[ix + 2] * 0.114;
         var gy = d[iy] * 0.299 + d[iy + 1] * 0.587 + d[iy + 2] * 0.114;
-        sum += Math.abs(g - gx) + Math.abs(g - gy); n++;
+        sum += Math.abs(g - gx) + Math.abs(g - gy); bright += g; n++;
       }
     }
-    return n ? sum / n : 0;
+    return { sharp: n ? sum / n : 0, mean: n ? bright / n : 0 };
+  }
+
+  /* ---------- live on-device diagnostics (temporary) ---------- */
+  var diagEl = null;
+  var diag = { zbar: 'init', vid: '-', frame: '-', tries: 0, hits: 0, last: '-', err: '', fps: 0 };
+  var fpsMark = 0, fpsCount = 0;
+  function ensureDiag() {
+    if (diagEl) return;
+    diagEl = document.createElement('div');
+    diagEl.className = 'diag';
+    document.body.appendChild(diagEl);
+  }
+  function renderDiag() {
+    if (!diagEl) return;
+    diagEl.textContent =
+      'engine: ' + diag.zbar + (diag.err ? ('  [' + diag.err + ']') : '') + '\n' +
+      'camera: ' + diag.vid + '\n' +
+      'frame:  ' + diag.frame + '\n' +
+      'tries ' + diag.tries + '  hits ' + diag.hits + '  fps ' + diag.fps + '\n' +
+      'last:   ' + diag.last;
   }
 
   // Ask the camera for continuous autofocus (macro-ish), so close-up barcodes
@@ -194,6 +219,9 @@
       show(controls, true);
       scanSub.textContent = 'Fill the box · hold steady · good light helps';
       applyFocus();   // nudge the camera toward sharp close-up frames
+      ensureDiag(); diagEl.hidden = false;
+      diag.tries = 0; diag.hits = 0; diag.last = '-'; fpsMark = Date.now(); fpsCount = 0;
+      renderDiag();
       loop();
     }).catch(function (e) {
       errMsg.textContent = friendlyError(e);
@@ -205,6 +233,7 @@
   function loop() {
     if (!running) return;
     if (paused || video.readyState < 2 || !video.videoWidth) {
+      diag.vid = 'not ready (rs ' + video.readyState + ')'; renderDiag();
       scanTimer = setTimeout(loop, 90);
       return;
     }
@@ -213,31 +242,43 @@
       cropCtx = cropCtx || cropCanvas.getContext('2d', { willReadFrequently: true });
       if (!otsuCanvas) { otsuCanvas = document.createElement('canvas'); otsuCtx = otsuCanvas.getContext('2d', { willReadFrequently: true }); }
 
-      // Crop to (roughly) the on-screen framing box, at high resolution, so the
-      // barcode keeps its pixels. Cap the longest side to bound decode time.
+      // Grab nearly the whole frame (small edge trim only), at high resolution.
+      // zbar finds a barcode anywhere in the image, so this is robust to exactly
+      // how the barcode is framed and to the video's aspect/orientation.
       var vw = video.videoWidth, vh = video.videoHeight;
-      var sideF = 0.08, topF = 0.14;
-      var sx = vw * sideF, sy = vh * topF;
-      var sw = vw * (1 - 2 * sideF), sh = vh * (1 - 2 * topF);
-      var cap = 1100, scale = Math.min(1, cap / Math.max(sw, sh));
+      var trim = 0.04;
+      var sx = vw * trim, sy = vh * trim, sw = vw * (1 - 2 * trim), sh = vh * (1 - 2 * trim);
+      var cap = 1200, scale = Math.min(1, cap / Math.max(sw, sh));
       cropCanvas.width = Math.round(sw * scale);
       cropCanvas.height = Math.round(sh * scale);
       cropCtx.drawImage(video, sx, sy, sw, sh, 0, 0, cropCanvas.width, cropCanvas.height);
 
-      // Skip clearly-blurry / near-blank frames so we spend decode time on good
-      // ones — but never starve (force a decode after a few skips).
-      if (sharpness(cropCanvas) < 5 && blurSkips < 4) {
-        blurSkips++;
+      var st = frameStats(cropCanvas);
+      diag.vid = vw + 'x' + vh + ' rs' + video.readyState;
+      diag.frame = 'bright ' + st.mean.toFixed(0) + '  sharp ' + st.sharp.toFixed(1) +
+                   '  ' + cropCanvas.width + 'x' + cropCanvas.height;
+
+      // Only skip genuinely dead frames (near-black/blank); never starve.
+      if (st.sharp < 3 && blurSkips < 3) {
+        blurSkips++; renderDiag();
         scanTimer = setTimeout(loop, 45);
         return;
       }
       blurSkips = 0;
 
       decodeFrame(cropCanvas).then(function (res) {
+        diag.tries++;
+        fpsCount++;
+        var nowT = Date.now();
+        if (nowT - fpsMark >= 1000) { diag.fps = fpsCount; fpsCount = 0; fpsMark = nowT; }
+        if (res && res.text) { diag.hits++; diag.last = res.text + ' (' + prettyType(res.type) + ')'; }
+        renderDiag();
         if (res && res.text && running && !paused) onDecode(res);
         if (running) scanTimer = setTimeout(loop, 60);
       });
     } catch (e) {
+      diag.err = ('loop ' + (e && e.message ? e.message : e)).slice(0, 44);
+      renderDiag();
       if (running) scanTimer = setTimeout(loop, 120);
     }
   }
@@ -289,6 +330,7 @@
     scanner.classList.remove('is-live');
     show(controls, false); show(card, false); show(errBox, false);
     show(idle, true);
+    if (diagEl) diagEl.hidden = true;
     scanSub.textContent = 'Walk the case · scan each package';
   }
 
