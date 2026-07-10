@@ -1,6 +1,6 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.13.0**
+Current app version: **v0.13.1**
 
 Last synced: 2026-07-09
 
@@ -26,6 +26,7 @@ The app is a cached offline PWA, so version fidelity matters. When any app file 
 - Recognized scans auto-record into a persistent count session without requiring Confirm.
 - Session tab shows grouped counts plus removable scan evidence rows.
 - Export tab downloads a CSV with product name, PLU, count, store code, and category.
+- Exact same barcode repeats are suppressed for 10 seconds to prevent duplicate-toast loops.
 
 ## Fidelity Notes
 

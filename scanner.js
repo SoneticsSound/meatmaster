@@ -61,7 +61,7 @@
     toastTimer = setTimeout(function () {
       show(card, false);
       card.classList.remove('is-ok', 'is-dupe');
-    }, kind === 'dupe' ? 2200 : 1200);
+    }, kind === 'dupe' ? 1600 : 1000);
   }
 
   /* ---------- decode engine (zbar) ---------- */
@@ -378,7 +378,7 @@
   function onDecode(result) {
     var code = result.text;
     var now = Date.now();
-    if (code === lastCode && (now - lastTime) < 2500) return; // debounce repeats
+    if (code === lastCode && (now - lastTime) < 10000) return; // suppress same-package repeats
     lastCode = code; lastTime = now;
     var token = ++scanToken;
 
@@ -433,7 +433,7 @@
       });
       recent.unshift({ code: code, fmt: prettyType(result.type), at: new Date(), name: product.name });
       renderRecent();
-      toast(scan && scan.duplicate ? 'dupe' : 'ok', product.name, scan && scan.duplicate ? 'Possible duplicate - remove from Session if needed' : 'Counted +1');
+      toast(scan && scan.duplicate ? 'dupe' : 'ok', product.name, scan && scan.duplicate ? 'Possible duplicate - not counted again if repeated quickly' : 'Counted +1');
       return;
     }
 

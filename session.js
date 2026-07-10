@@ -43,7 +43,7 @@
     return state.scans.some(function (s) {
       if (s.removed || s.code !== c) return false;
       var t = Date.parse(s.at || '');
-      return t && (now - t) < 2 * 60 * 1000;
+      return t && (now - t) < 10 * 1000;
     });
   }
 
