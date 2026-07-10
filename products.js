@@ -1,53 +1,83 @@
 /* MeatMaster - local product seed database (Session 3)
    Source: Reference/IMG_7236.jpeg, Sprouts Production Count Sheet Report.
-   This file is deliberately plain JS so the app has no build step and works offline. */
+
+   The `upc` values here are the ACTUAL barcodes decoded from the count sheet
+   (via backoffice/harvest_barcodes.py), not hand-transcribed digits.
+
+   Sprouts weighed-item barcode format (EAN-13):
+     0 2 IIIII X PPPP C
+     │ │  │    │  │    └ check digit
+     │ │  │    │  └───── 4-digit price (varies per package; 0000 on the sheet)
+     │ │  │    └──────── item check digit
+     │ │  └───────────── 5-digit item = "0" + 4-digit PLU   ← identifies the product
+     │ └──────────────── "2" = in-store, variable weight
+     └────────────────── EAN-13 leading zero
+   So a real package of the same cut has a DIFFERENT full barcode (price baked in)
+   but the SAME PLU. We match on the PLU and ignore the price. */
 
 (function () {
   'use strict';
 
   var products = [
-    { plu: '7059', upc: '0020705900009', name: 'Grassfed Angus Short Ribs', sheetName: 'SPROUTS BEEF-SHORT RIBS-ANGUS-BI-GRASS 1 LB', category: 'Beef', casePosition: 1, source: 'IMG_7236.jpeg' },
-    { plu: '7271', upc: '0020727100005', name: 'Angus Boneless Chuck Roast', sheetName: 'SPROUTS BEEF-ROAST-BNLS-CHUCK-J 1 LB', category: 'Beef', casePosition: 2, source: 'IMG_7236.jpeg' },
-    { plu: '7275', upc: '0020727500003', name: 'Angus Boneless Rump Roast', sheetName: 'SPROUTS BEEF-ROAST-ANGUS-BNLS-RUMP-JBS 1 LB', category: 'Beef', casePosition: 3, source: 'IMG_7236.jpeg' },
-    { plu: '7277', upc: '0020727700007', name: 'Angus Stew Meat', sheetName: 'SPROUTS BEEF-ANGUS-BNLS-STEW MEAT-JBS 1 LB', category: 'Beef', casePosition: 4, source: 'IMG_7236.jpeg' },
-    { plu: '7315', upc: '0020731500006', name: 'Angus Ribeye Steak', sheetName: 'SPROUTS BEEF-STEAK-ANGUS-BLNS-RIBEYE-J 1 LB', category: 'Beef', casePosition: 5, source: 'IMG_7236.jpeg' },
-    { plu: '7323', upc: '0020732300001', name: 'Angus New York Steak', sheetName: 'SPROUTS BEEF-STEAK-ANGUS-BNLS-NEW YOR 1 LB', category: 'Beef', casePosition: 6, source: 'IMG_7236.jpeg' },
-    { plu: '7331', upc: '0020733100006', name: 'Angus Tenderloin Steak', sheetName: 'SPROUTS BEEF-STEAK-ANGUS-BL-TNDRLN-SPL 1 LB', category: 'Beef', casePosition: 7, source: 'IMG_7236.jpeg' },
-    { plu: '7348', upc: '0020734800004', name: 'Angus Top Sirloin Steak', sheetName: 'SPROUTS BEEF-STEAK-ANGUS-TP SRLN-CH-JE 1 LB', category: 'Beef', casePosition: 8, source: 'IMG_7236.jpeg' },
-    { plu: '7381', upc: '0020738100001', name: 'Angus Petite Sirloin Steak', sheetName: 'SPROUTS BEEF-STEAK-ANGUS-BNLS-PETITE S 1 LB', category: 'Beef', casePosition: 9, source: 'IMG_7236.jpeg' },
-    { plu: '7382', upc: '0020738200008', name: 'Angus Petite Sirloin Steak', sheetName: 'SPROUTS BEEF-STEAK ANGUS-BNLS-PETITE S 1 LB', category: 'Beef', casePosition: 10, source: 'IMG_7236.jpeg' },
-    { plu: '7805', upc: '0020780500002', name: 'Angus London Broil Steak', sheetName: 'SPROUTS BEEF-STEAK-LONDON BROIL-ANGUS 1 LB', category: 'Beef', casePosition: 11, source: 'IMG_7236.jpeg' },
-    { plu: '7813', upc: '0020781300007', name: 'Grassfed Angus Breakfast Steak', sheetName: 'SPROUTS BEEF-STEAK-BREAKFAST-ANGUS GF 1 LB', category: 'Beef', casePosition: 12, source: 'IMG_7236.jpeg' },
-    { plu: '7814', upc: '0020781400004', name: 'Grassfed Angus Boneless Short Ribs', sheetName: 'SPROUTS BEEF-SHORT RIBS-BNLS-ANGUS GRA 1 LB', category: 'Beef', casePosition: 13, source: 'IMG_7236.jpeg' },
-    { plu: '7899', upc: '0020789900001', name: 'Grassfed Angus Flap Meat', sheetName: 'SPROUTS BEEF-FLAP MEAT-ANGUS GRASSF 1 LB', category: 'Beef', casePosition: 14, source: 'IMG_7236.jpeg' },
-    { plu: '7922', upc: '0020792200006', name: 'Grassfed Angus Tri-Tip Steak', sheetName: 'SPROUTS BEEF-STEAK-TRI TIP-ANGUS GRASS 1 LB', category: 'Beef', casePosition: 15, source: 'IMG_7236.jpeg' },
-    { plu: '9918', upc: '0020991800007', name: 'Grassfed Angus Tri-Tip Roast', sheetName: 'SPROUTS BEEF-ROAST TRI-TIP-ANGUS GRASS 1 LB', category: 'Beef', casePosition: 16, source: 'IMG_7236.jpeg' },
-    { plu: '9981', upc: '0020998100001', name: 'Grassfed Angus Boneless Chuck Roast', sheetName: 'SPROUTS BEEF-ROAST-CHUCK-BNLS-ANGUS GR 1 LB', category: 'Beef', casePosition: 17, source: 'IMG_7236.jpeg' },
-    { plu: '9985', upc: '0020998500009', name: 'Grassfed Angus Rump Roast', sheetName: 'SPROUTS BEEF-ROAST RUMP-ANGUS GRASSFED 1 LB', category: 'Beef', casePosition: 18, source: 'IMG_7236.jpeg' },
-    { plu: '9988', upc: '0020998800000', name: 'Grassfed Angus New York Steak', sheetName: 'SPROUTS BEEF-STEAK-BNLS-ANGUS GRASS 1 LB', category: 'Beef', casePosition: 19, source: 'IMG_7236.jpeg' },
-    { plu: '9989', upc: '0020998900007', name: 'Grassfed Angus Ribeye Steak', sheetName: 'SPROUTS BEEF-STEAK RIBEYE-BL-ANGUS GR 1 LB', category: 'Beef', casePosition: 20, source: 'IMG_7236.jpeg' },
-    { plu: '9990', upc: '0020999000003', name: 'Grassfed Angus Tenderloin Steak', sheetName: 'SPROUTS BEEF-STEAK-TENDERLOIN-ANGUS GP 1 LB', category: 'Beef', casePosition: 21, source: 'IMG_7236.jpeg' },
-    { plu: '9992', upc: '0020999200007', name: 'Grassfed Angus Top Sirloin Filet', sheetName: 'SPROUTS BEEF-STEAK TOP SIRLOIN FILET-G 1 LB', category: 'Beef', casePosition: 22, source: 'IMG_7236.jpeg' },
-    { plu: '9994', upc: '0020999400001', name: 'Grassfed Angus Stew Meat', sheetName: 'SPROUTS BEEF-STEW MEAT-ANGUS GRASSFED 1 LB', category: 'Beef', casePosition: 23, source: 'IMG_7236.jpeg' },
-    { plu: '9996', upc: '0020999600005', name: 'Grassfed Angus Stir Fry', sheetName: 'SPROUTS BEEF-STIR FRY-ANGUS GRASSFED 1 LB', category: 'Beef', casePosition: 24, source: 'IMG_7236.jpeg' }
+    { plu: '7059', upc: '0207059000009', name: 'Grassfed Angus Short Ribs', sheetName: 'SPROUTS BEEF-SHORT RIBS-ANGUS-BI-GRASS 1 LB', category: 'Beef', casePosition: 1 },
+    { plu: '7271', upc: '0207271000009', name: 'Angus Boneless Chuck Roast', sheetName: 'SPROUTS BEEF-ROAST-BNLS-CHUCK-J 1 LB', category: 'Beef', casePosition: 2 },
+    { plu: '7275', upc: '0207275000005', name: 'Angus Boneless Rump Roast', sheetName: 'SPROUTS BEEF-ROAST-ANGUS-BNLS-RUMP-JBS 1 LB', category: 'Beef', casePosition: 3 },
+    { plu: '7277', upc: '0207277000003', name: 'Angus Stew Meat', sheetName: 'SPROUTS BEEF-ANGUS-BNLS-STEW MEAT-JBS 1 LB', category: 'Beef', casePosition: 4 },
+    { plu: '7315', upc: '0207315000002', name: 'Angus Ribeye Steak', sheetName: 'SPROUTS BEEF-STEAK-ANGUS-BLNS-RIBEYE-J 1 LB', category: 'Beef', casePosition: 5 },
+    { plu: '7323', upc: '0207323000001', name: 'Angus New York Steak', sheetName: 'SPROUTS BEEF-STEAK-ANGUS-BNLS-NEW YOR 1 LB', category: 'Beef', casePosition: 6 },
+    { plu: '7331', upc: '0207331000000', name: 'Angus Tenderloin Steak', sheetName: 'SPROUTS BEEF-STEAK-ANGUS-BL-TNDRLN-SPL 1 LB', category: 'Beef', casePosition: 7 },
+    { plu: '7348', upc: '0207348000000', name: 'Angus Top Sirloin Steak', sheetName: 'SPROUTS BEEF-STEAK-ANGUS-TP SRLN-CH-JE 1 LB', category: 'Beef', casePosition: 8 },
+    { plu: '7381', upc: '0207381000005', name: 'Angus Petite Sirloin Steak', sheetName: 'SPROUTS BEEF-STEAK-ANGUS-BNLS-PETITE S 1 LB', category: 'Beef', casePosition: 9 },
+    { plu: '7382', upc: '0207382000004', name: 'Angus Petite Sirloin Steak', sheetName: 'SPROUTS BEEF-STEAK ANGUS-BNLS-PETITE S 1 LB', category: 'Beef', casePosition: 10 },
+    { plu: '7805', upc: '0207805000000', name: 'Angus London Broil Steak', sheetName: 'SPROUTS BEEF-STEAK-LONDON BROIL-ANGUS 1 LB', category: 'Beef', casePosition: 11 },
+    { plu: '7813', upc: '0207813000009', name: 'Grassfed Angus Breakfast Steak', sheetName: 'SPROUTS BEEF-STEAK-BREAKFAST-ANGUS GF 1 LB', category: 'Beef', casePosition: 12 },
+    { plu: '7814', upc: '0207814000008', name: 'Grassfed Angus Boneless Short Ribs', sheetName: 'SPROUTS BEEF-SHORT RIBS-BNLS-ANGUS GRA 1 LB', category: 'Beef', casePosition: 13 },
+    { plu: '7899', upc: '0207899000009', name: 'Grassfed Angus Flap Meat', sheetName: 'SPROUTS BEEF-FLAP MEAT-ANGUS GRASSF 1 LB', category: 'Beef', casePosition: 14 },
+    { plu: '7992', upc: '0207992000005', name: 'Grassfed Angus Tri-Tip Steak', sheetName: 'SPROUTS BEEF-STEAK-TRI TIP-ANGUS GRASS 1 LB', category: 'Beef', casePosition: 15 },
+    { plu: '9918', upc: '0209918000007', name: 'Grassfed Angus Tri-Tip Roast', sheetName: 'SPROUTS BEEF-ROAST TRI-TIP-ANGUS GRASS 1 LB', category: 'Beef', casePosition: 16 },
+    { plu: '9981', upc: '0209981000003', name: 'Grassfed Angus Boneless Chuck Roast', sheetName: 'SPROUTS BEEF-ROAST-CHUCK-BNLS-ANGUS GR 1 LB', category: 'Beef', casePosition: 17 },
+    { plu: '9985', upc: '0209985000009', name: 'Grassfed Angus Rump Roast', sheetName: 'SPROUTS BEEF-ROAST RUMP-ANGUS GRASSFED 1 LB', category: 'Beef', casePosition: 18 },
+    { plu: '9988', upc: '0209988000006', name: 'Grassfed Angus New York Steak', sheetName: 'SPROUTS BEEF-STEAK-BNLS-ANGUS GRASS 1 LB', category: 'Beef', casePosition: 19 },
+    { plu: '9989', upc: '0209989000005', name: 'Grassfed Angus Ribeye Steak', sheetName: 'SPROUTS BEEF-STEAK RIBEYE-BL-ANGUS GR 1 LB', category: 'Beef', casePosition: 20 },
+    { plu: '9990', upc: '0209990000001', name: 'Grassfed Angus Tenderloin Steak', sheetName: 'SPROUTS BEEF-STEAK-TENDERLOIN-ANGUS GP 1 LB', category: 'Beef', casePosition: 21 },
+    { plu: '9992', upc: '0209992000009', name: 'Grassfed Angus Top Sirloin Filet', sheetName: 'SPROUTS BEEF-STEAK TOP SIRLOIN FILET-G 1 LB', category: 'Beef', casePosition: 22 },
+    { plu: '9994', upc: '0209994000007', name: 'Grassfed Angus Stew Meat', sheetName: 'SPROUTS BEEF-STEW MEAT-ANGUS GRASSFED 1 LB', category: 'Beef', casePosition: 23 },
+    { plu: '9996', upc: '0209996000005', name: 'Grassfed Angus Stir Fry', sheetName: 'SPROUTS BEEF-STIR FRY-ANGUS GRASSFED 1 LB', category: 'Beef', casePosition: 24 }
   ];
 
   function normalizeCode(code) {
     return String(code || '').replace(/\D/g, '');
   }
 
-  var byUpc = {};
+  // Pull the 4-digit PLU out of a Sprouts in-store weighed barcode, ignoring the
+  // embedded price so every package of a cut maps to the same product.
+  // Returns null for codes that aren't in-store weighed items (e.g. national brands).
+  function extractPlu(code) {
+    var d = normalizeCode(code), item = null;
+    if (d.length === 13 && d.slice(0, 2) === '02') item = d.slice(2, 7);      // EAN-13 in-store
+    else if (d.length === 12 && d.charAt(0) === '2') item = d.slice(1, 6);    // UPC-A in-store
+    if (item === null) return null;
+    return item.replace(/^0+/, '');   // "07059" -> "7059"
+  }
+
+  var byPlu = {}, byUpc = {};
   products.forEach(function (p) {
+    byPlu[p.plu] = p;
     byUpc[normalizeCode(p.upc)] = p;
-    if (p.upc.length === 13 && p.upc.charAt(0) === '0') {
-      byUpc[p.upc.slice(1)] = p;
-    }
   });
 
   window.MMProducts = {
     all: products,
+    extractPlu: extractPlu,
+    findByPlu: function (plu) {
+      return byPlu[String(plu).replace(/^0+/, '')] || null;
+    },
     findByCode: function (code) {
-      return byUpc[normalizeCode(code)] || null;
+      var n = normalizeCode(code);
+      if (byUpc[n]) return byUpc[n];               // exact match (fixed-price items)
+      var plu = extractPlu(n);                      // weighed item -> match by PLU
+      if (plu && byPlu[plu]) return byPlu[plu];
+      return null;
     }
   };
 })();
