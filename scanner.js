@@ -431,7 +431,7 @@
         product: product,
         price: price
       });
-      recent.unshift({ code: code, fmt: prettyType(result.type), at: new Date(), name: product.name });
+      recent.unshift({ code: code, fmt: prettyType(result.type), at: new Date(), name: product.name, duplicate: scan && scan.duplicate });
       renderRecent();
       toast(scan && scan.duplicate ? 'dupe' : 'ok', product.name, scan && scan.duplicate ? 'Possible duplicate - not counted again if repeated quickly' : 'Counted +1');
       return;
@@ -458,7 +458,7 @@
       name: 'Unknown product',
       price: price
     });
-    recent.unshift({ code: code, fmt: prettyType(result.type), at: new Date(), name: 'Unknown product' });
+    recent.unshift({ code: code, fmt: prettyType(result.type), at: new Date(), name: 'Unknown product', duplicate: unknownScan && unknownScan.duplicate });
     renderRecent();
     paused = true;
     resName.textContent = 'Unknown product';
@@ -528,11 +528,15 @@
     recent.slice(0, 40).forEach(function (r) {
       var li = document.createElement('li');
       li.className = 'recent-item';
+      if (r.duplicate) li.className += ' is-duplicate';
       var t = r.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      var product = (!r.name && window.MMProducts) ? window.MMProducts.findByCode(r.code) : null;
       var code = document.createElement('span');
-      code.className = 'ri-code'; code.textContent = r.name || r.code;
+      code.className = 'ri-code'; code.textContent = r.name || (product && product.name) || r.code;
       var meta = document.createElement('span');
+      if (r.duplicate) meta.dataset.duplicate = '1';
       meta.className = 'ri-meta'; meta.textContent = r.fmt + ' · ' + t;
+      if (r.duplicate) meta.textContent = 'Duplicate Scan - ' + r.fmt + ' - ' + t;
       li.appendChild(code); li.appendChild(meta);
       recentList.appendChild(li);
     });

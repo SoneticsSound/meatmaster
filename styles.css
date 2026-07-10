@@ -223,6 +223,14 @@ body {
   padding: 12px 14px; background: var(--surface);
   border: 1px solid var(--line); border-radius: 12px; margin-bottom: 8px;
 }
+.recent-item.is-duplicate {
+  background: rgba(193,39,45,.16);
+  border-color: rgba(193,39,45,.95);
+}
+.recent-item.is-duplicate .ri-code,
+.recent-item.is-duplicate .ri-meta {
+  color: #ff8a8f;
+}
 .ri-code { font-weight: 700; font-variant-numeric: tabular-nums; }
 .ri-meta { font-size: 12px; color: var(--ink-dim); }
 
@@ -343,9 +351,13 @@ body {
 }
 .scan-swipe.is-duplicate .scan-row {
   border-color: rgba(193,39,45,.9);
+  background: rgba(193,39,45,.16);
 }
 .scan-swipe.is-duplicate .scan-row-meta {
   color: #ff8a8f;
+}
+.scan-swipe.is-duplicate .scan-row-name {
+  color: #ffced0;
 }
 .dupe-badge {
   display: inline-block;
@@ -378,6 +390,27 @@ body {
 .export-panel {
   display: grid;
   gap: 12px;
+}
+.session-actions {
+  display: grid;
+  gap: 12px;
+  margin-top: 26px;
+}
+.field-label {
+  color: var(--ink-dim);
+  font-size: 13px;
+  font-weight: 800;
+}
+.select {
+  width: 100%;
+  min-height: 52px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  padding: 0 12px;
 }
 
 /* ---- bottom tab bar ---- */

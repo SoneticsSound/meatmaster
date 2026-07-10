@@ -6,7 +6,9 @@
   'use strict';
 
   var STORE_KEY = 'mm.countSession.v1';
+  var SAVED_KEY = 'mm.savedSessions.v1';
   var state = { startedAt: null, scans: [] };
+  var savedSessions = [];
 
   function load() {
     try {
@@ -21,6 +23,20 @@
 
   function save() {
     try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  function loadSaved() {
+    try {
+      var raw = localStorage.getItem(SAVED_KEY);
+      savedSessions = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(savedSessions)) savedSessions = [];
+    } catch (e) {
+      savedSessions = [];
+    }
+  }
+
+  function saveSaved() {
+    try { localStorage.setItem(SAVED_KEY, JSON.stringify(savedSessions)); } catch (e) {}
   }
 
   function id() {
@@ -109,6 +125,25 @@
     render();
   }
 
+  function snapshotSession(label) {
+    load();
+    loadSaved();
+    var active = activeScans();
+    if (!active.length) return null;
+    var stamp = new Date();
+    var snap = {
+      id: id(),
+      label: label || ('Session ' + stamp.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })),
+      savedAt: stamp.toISOString(),
+      startedAt: state.startedAt,
+      scans: active
+    };
+    savedSessions.unshift(snap);
+    saveSaved();
+    renderExportOptions();
+    return snap;
+  }
+
   function applyProductToCode(code, product) {
     load();
     var c = codeText(code);
@@ -132,9 +167,17 @@
     return state.scans.filter(function (s) { return !s.removed; });
   }
 
-  function grouped() {
+  function scansForExport(sessionId) {
+    load();
+    loadSaved();
+    if (!sessionId || sessionId === 'active') return activeScans();
+    var found = savedSessions.find(function (s) { return s.id === sessionId; });
+    return found ? found.scans.filter(function (s) { return !s.removed; }) : [];
+  }
+
+  function groupedFrom(scans) {
     var groups = {};
-    activeScans().forEach(function (s) {
+    scans.forEach(function (s) {
       var key = s.productKey || ('code:' + s.code);
       if (!groups[key]) {
         groups[key] = {
@@ -151,6 +194,10 @@
     return Object.keys(groups).map(function (k) { return groups[k]; }).sort(function (a, b) {
       return String(a.productName).localeCompare(String(b.productName));
     });
+  }
+
+  function grouped() {
+    return groupedFrom(activeScans());
   }
 
   function renderSummary() {
@@ -221,7 +268,8 @@
       var body = document.createElement('div');
       var name = document.createElement('div');
       name.className = 'scan-row-name';
-      name.textContent = s.productName;
+      var product = (!s.productName || s.productName === 'Unknown product') && window.MMProducts ? window.MMProducts.findByCode(s.code) : null;
+      name.textContent = (product && product.name) || s.productName || s.code;
       if (s.duplicate) {
         var badge = document.createElement('span');
         badge.className = 'dupe-badge';
@@ -275,6 +323,26 @@
   function render() {
     renderSummary();
     renderLog();
+    renderExportOptions();
+  }
+
+  function renderExportOptions() {
+    var select = document.getElementById('export-session-select');
+    if (!select) return;
+    loadSaved();
+    var current = select.value || 'active';
+    select.innerHTML = '';
+    var active = document.createElement('option');
+    active.value = 'active';
+    active.textContent = 'Active session';
+    select.appendChild(active);
+    savedSessions.forEach(function (s) {
+      var opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = s.label + ' (' + (s.scans || []).filter(function (row) { return !row.removed; }).length + ' scans)';
+      select.appendChild(opt);
+    });
+    select.value = Array.prototype.some.call(select.options, function (o) { return o.value === current; }) ? current : 'active';
   }
 
   function csvEscape(v) {
@@ -282,8 +350,8 @@
     return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
   }
 
-  function exportCsv() {
-    var rows = grouped();
+  function exportCsv(sessionId) {
+    var rows = groupedFrom(scansForExport(sessionId));
     var head = ['Product Name', 'PLU', 'Count', 'Store Code', 'Category'];
     var lines = [head.map(csvEscape).join(',')];
     rows.forEach(function (r) {
@@ -302,6 +370,7 @@
   }
 
   load();
+  loadSaved();
 
   window.MMSession = {
     addScan: addScan,
@@ -309,9 +378,11 @@
     confirmNotDuplicate: confirmNotDuplicate,
     applyProductToCode: applyProductToCode,
     clear: clearSession,
+    saveSession: snapshotSession,
     grouped: grouped,
     activeScans: activeScans,
     render: render,
+    renderExportOptions: renderExportOptions,
     exportCsv: exportCsv
   };
 

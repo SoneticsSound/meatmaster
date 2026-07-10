@@ -101,8 +101,17 @@
   /* ---------- count session actions ---------- */
   var exportBtn = document.getElementById('btn-export-csv');
   var clearBtn = document.getElementById('btn-clear-session');
+  var saveSessionBtn = document.getElementById('btn-save-session');
+  var exportSelect = document.getElementById('export-session-select');
   if (exportBtn) exportBtn.addEventListener('click', function () {
-    if (window.MMSession) window.MMSession.exportCsv();
+    if (window.MMSession) window.MMSession.exportCsv(exportSelect ? exportSelect.value : 'active');
+  });
+  if (saveSessionBtn) saveSessionBtn.addEventListener('click', function () {
+    if (!window.MMSession) return;
+    var label = window.prompt('Session name', 'Meat count ' + new Date().toLocaleDateString());
+    if (label === null) return;
+    var saved = window.MMSession.saveSession(label.trim());
+    if (!saved) window.alert('No scans to save yet.');
   });
   if (clearBtn) clearBtn.addEventListener('click', function () {
     if (!window.MMSession) return;
