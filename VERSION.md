@@ -1,6 +1,6 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.13.2**
+Current app version: **v0.13.3**
 
 Last synced: 2026-07-09
 
@@ -28,6 +28,7 @@ The app is a cached offline PWA, so version fidelity matters. When any app file 
 - Export tab downloads a CSV with product name, PLU, count, store code, and category.
 - Exact same barcode repeats are suppressed for 10 seconds to prevent duplicate-toast loops.
 - Duplicate scan rows are marked with a small badge and can be swiped to Confirm or Remove.
+- Rescan now clears toast state, resets same-code cooldown, and restarts the decode loop if needed.
 
 ## Fidelity Notes
 

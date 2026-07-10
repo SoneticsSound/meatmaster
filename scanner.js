@@ -505,7 +505,21 @@
     }
   }
 
-  function rescan() { show(card, false); paused = false; }
+  function rescan() {
+    if (toastTimer) { clearTimeout(toastTimer); toastTimer = null; }
+    show(card, false);
+    card.classList.remove('is-ok', 'is-dupe');
+    paused = false;
+    lastCode = null;
+    lastTime = 0;
+    if (running && !scanTimer) loop();
+    if (!running && stream) {
+      running = true;
+      scanner.classList.add('is-live');
+      show(controls, true);
+      loop();
+    }
+  }
 
   function renderRecent() {
     recentNum.textContent = recent.length;
