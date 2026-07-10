@@ -521,7 +521,7 @@
     }
   }
 
-  function renderRecent() {
+  function renderRecentLegacy() {
     recentNum.textContent = recent.length;
     show(recentBox, recent.length > 0);
     recentList.innerHTML = '';
@@ -548,7 +548,7 @@
     recentList.innerHTML = '';
     recent.slice(0, 40).forEach(function (r) {
       var li = document.createElement('li');
-      li.className = 'scan-swipe recent-swipe' + (r.duplicate ? ' is-duplicate' : '');
+      li.className = 'scan-swipe recent-swipe' + (r.duplicate ? ' is-duplicate' : '') + (r.confirmed ? ' is-confirmed' : '');
       var actions = document.createElement('div');
       actions.className = 'scan-actions';
       if (r.duplicate) {
@@ -575,7 +575,7 @@
       actions.appendChild(remove);
 
       var row = document.createElement('div');
-      row.className = 'recent-item' + (r.duplicate ? ' is-duplicate' : '');
+      row.className = 'recent-item' + (r.duplicate ? ' is-duplicate' : '') + (r.confirmed ? ' is-confirmed' : '');
       var t = r.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       var product = (!r.name && window.MMProducts) ? window.MMProducts.findByCode(r.code) : null;
       var code = document.createElement('span');
@@ -586,6 +586,11 @@
         badge.className = 'dupe-badge';
         badge.textContent = 'Duplicate Scan';
         code.appendChild(badge);
+      } else if (r.confirmed) {
+        var confirmed = document.createElement('span');
+        confirmed.className = 'confirmed-badge';
+        confirmed.textContent = 'Confirmed';
+        code.appendChild(confirmed);
       }
       var meta = document.createElement('span');
       meta.className = 'ri-meta';
@@ -600,11 +605,13 @@
   }
 
   function confirmRecent(scanId) {
+    if (!scanId) return;
     recent = recent.map(function (r) {
-      if (r.id === scanId) {
+      if (r.id === scanId && r.duplicate) {
         var copy = {};
         Object.keys(r).forEach(function (k) { copy[k] = r[k]; });
         copy.duplicate = false;
+        copy.confirmed = true;
         return copy;
       }
       return r;

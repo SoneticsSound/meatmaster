@@ -104,9 +104,10 @@
   }
 
   function confirmNotDuplicate(scanId) {
+    if (!scanId) return;
     load();
     state.scans = state.scans.map(function (s) {
-      if (s.id === scanId) {
+      if (s.id === scanId && s.duplicate) {
         var copy = {};
         Object.keys(s).forEach(function (k) { copy[k] = s[k]; });
         copy.duplicate = false;
@@ -245,7 +246,7 @@
     var scans = activeScans();
     scans.slice(0, 80).forEach(function (s) {
       var li = document.createElement('li');
-      li.className = 'scan-swipe' + (s.duplicate ? ' is-duplicate' : '');
+      li.className = 'scan-swipe' + (s.duplicate ? ' is-duplicate' : '') + (s.confirmedAt ? ' is-confirmed' : '');
       var actions = document.createElement('div');
       actions.className = 'scan-actions';
       if (s.duplicate) {
@@ -283,6 +284,11 @@
         badge.className = 'dupe-badge';
         badge.textContent = 'Duplicate Scan';
         name.appendChild(badge);
+      } else if (s.confirmedAt) {
+        var confirmed = document.createElement('span');
+        confirmed.className = 'confirmed-badge';
+        confirmed.textContent = 'Confirmed';
+        name.appendChild(confirmed);
       }
       var meta = document.createElement('div');
       meta.className = 'scan-row-meta';

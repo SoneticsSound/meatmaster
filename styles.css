@@ -231,6 +231,14 @@ body {
 .recent-item.is-duplicate .ri-meta {
   color: #ff8a8f;
 }
+.recent-item.is-confirmed {
+  background: rgba(55,178,77,.14);
+  border-color: rgba(55,178,77,.8);
+}
+.recent-item.is-confirmed .ri-code,
+.recent-item.is-confirmed .ri-meta {
+  color: #8ce99a;
+}
 .ri-code { font-weight: 700; font-variant-numeric: tabular-nums; }
 .ri-meta { font-size: 12px; color: var(--ink-dim); }
 
@@ -366,10 +374,27 @@ body {
 .scan-swipe.is-duplicate .scan-row-name {
   color: #ffced0;
 }
+.scan-swipe.is-confirmed .scan-row {
+  border-color: rgba(55,178,77,.8);
+  background: rgba(55,178,77,.14);
+}
+.scan-swipe.is-confirmed .scan-row-name,
+.scan-swipe.is-confirmed .scan-row-meta {
+  color: #8ce99a;
+}
 .dupe-badge {
   display: inline-block;
   margin-left: 8px;
   color: #ff8a8f;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+.confirmed-badge {
+  display: inline-block;
+  margin-left: 8px;
+  color: var(--ok);
   font-size: 11px;
   font-weight: 900;
   text-transform: uppercase;
