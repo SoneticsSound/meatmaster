@@ -98,6 +98,18 @@
   renderProducts();
   window.MMRenderProducts = renderProducts;
 
+  /* ---------- count session actions ---------- */
+  var exportBtn = document.getElementById('btn-export-csv');
+  var clearBtn = document.getElementById('btn-clear-session');
+  if (exportBtn) exportBtn.addEventListener('click', function () {
+    if (window.MMSession) window.MMSession.exportCsv();
+  });
+  if (clearBtn) clearBtn.addEventListener('click', function () {
+    if (!window.MMSession) return;
+    if (window.confirm('Clear the current count session?')) window.MMSession.clear();
+  });
+  if (window.MMSession) window.MMSession.render();
+
   /* ---------- iOS "Add to Home Screen" hint ---------- */
   // Show only in mobile Safari, only when not already installed, only once dismissed.
   const iosBox = document.getElementById('ios-install');

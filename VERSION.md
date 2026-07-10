@@ -1,6 +1,6 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.12.0**
+Current app version: **v0.13.0**
 
 Last synced: 2026-07-09
 
@@ -23,6 +23,9 @@ The app is a cached offline PWA, so version fidelity matters. When any app file 
 - Local seed product database seeded from `../Reference/IMG_7236.jpeg`.
 - Saved local product edits and unknown-scan quick-add via browser storage.
 - Scan results show friendly product names when the barcode exists in the seed or saved database.
+- Recognized scans auto-record into a persistent count session without requiring Confirm.
+- Session tab shows grouped counts plus removable scan evidence rows.
+- Export tab downloads a CSV with product name, PLU, count, store code, and category.
 
 ## Fidelity Notes
 

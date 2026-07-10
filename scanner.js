@@ -40,12 +40,29 @@
   var blurSkips = 0;     // consecutive blurry frames skipped (anti-starvation)
   var lastCode = null, lastTime = 0;
   var recent = [];       // this-session scans (in memory)
+  var toastTimer = null;
 
   // reusable work canvases (avoid per-frame allocation)
   var cropCanvas = null, cropCtx = null;   // the framed box, at full res
   var otsuCanvas = null, otsuCtx = null;    // thresholded copy for hard reads
 
   function show(node, on) { if (node) node.hidden = !on; }
+
+  function toast(kind, title, note) {
+    if (toastTimer) { clearTimeout(toastTimer); toastTimer = null; }
+    resFmt.textContent = kind === 'dupe' ? 'POSSIBLE DUPLICATE' : 'RECORDED';
+    resName.textContent = title;
+    resCode.textContent = '';
+    resNote.textContent = note || '';
+    card.classList.toggle('is-ok', kind !== 'dupe');
+    card.classList.toggle('is-dupe', kind === 'dupe');
+    show(saveBtn, false);
+    show(card, true);
+    toastTimer = setTimeout(function () {
+      show(card, false);
+      card.classList.remove('is-ok', 'is-dupe');
+    }, kind === 'dupe' ? 2200 : 1200);
+  }
 
   /* ---------- decode engine (zbar) ---------- */
   // Turn zbar's symbol name (e.g. "ZBAR_EAN13") into a friendly label.
@@ -205,7 +222,7 @@
       o.connect(g); g.connect(ac.destination);
       o.start(); o.stop(ac.currentTime + 0.08);
     } catch (e) {}
-    if (navigator.vibrate) { try { navigator.vibrate(40); } catch (e) {} }
+    if (navigator.vibrate) { try { navigator.vibrate([35, 35, 35]); } catch (e) {} }
   }
 
   function friendlyError(err) {
@@ -296,7 +313,7 @@
         if (nowT - fpsMark >= 1000) { diag.fps = fpsCount; fpsCount = 0; fpsMark = nowT; }
         if (res && res.text) { diag.hits++; diag.last = res.text + ' (' + prettyType(res.type) + ')'; }
         renderDiag();
-        if (res && res.text && running && !paused) onDecode(res);
+        if (res && res.text && running && !paused) onDecodeAuto(res);
         if (running) scanTimer = setTimeout(loop, 60);
       });
     } catch (e) {
@@ -392,6 +409,69 @@
     show(card, true);
   }
 
+  function onDecodeAuto(result) {
+    var code = result.text;
+    var now = Date.now();
+    if (code === lastCode && (now - lastTime) < 2500) return; // debounce repeats
+    lastCode = code; lastTime = now;
+    var token = ++scanToken;
+
+    paused = false;
+    feedback();
+    resFmt.textContent = prettyType(result.type);
+    setCode(code);
+
+    var price = inferPrice(code);
+    var product = window.MMProducts && window.MMProducts.findByCode(code);
+    if (product) {
+      currentScan = { code: code, product: product, price: price };
+      var scan = window.MMSession && window.MMSession.addScan({
+        code: code,
+        format: prettyType(result.type),
+        product: product,
+        price: price
+      });
+      recent.unshift({ code: code, fmt: prettyType(result.type), at: new Date(), name: product.name });
+      renderRecent();
+      toast(scan && scan.duplicate ? 'dupe' : 'ok', product.name, scan && scan.duplicate ? 'Possible duplicate - remove from Session if needed' : 'Counted +1');
+      return;
+    }
+
+    if (isUrl(code)) {
+      currentScan = { code: code, product: null, price: price };
+      paused = true;
+      resName.textContent = 'Scanned link';
+      var linkBits = [];
+      if (price) linkBits.push('reads ~$' + price);
+      linkBits.push('tap the link above');
+      resNote.textContent = linkBits.join(' - ');
+      show(saveBtn, false);
+      show(card, true);
+      return;
+    }
+
+    currentScan = { code: code, product: null, price: price };
+    var unknownScan = window.MMSession && window.MMSession.addScan({
+      code: code,
+      format: prettyType(result.type),
+      product: null,
+      name: 'Unknown product',
+      price: price
+    });
+    recent.unshift({ code: code, fmt: prettyType(result.type), at: new Date(), name: 'Unknown product' });
+    renderRecent();
+    paused = true;
+    resName.textContent = 'Unknown product';
+    var bits = [];
+    if (price) bits.push('reads ~$' + price);
+    if (unknownScan && unknownScan.duplicate) bits.push('possible duplicate');
+    bits.push('counted +1');
+    resNote.textContent = bits.join(' - ');
+    show(saveBtn, true);
+    enrichOnline(code, token, price);
+    show(card, true);
+  }
+
   function confirmScan() {
     recent.unshift({ code: resCode.textContent, fmt: resFmt.textContent, at: new Date() });
     renderRecent();
@@ -420,6 +500,8 @@
       resNote.textContent = (saved.plu ? ('PLU ' + saved.plu) : 'Saved on phone') + (currentScan.price ? (' · ~$' + currentScan.price) : '');
       show(saveBtn, false);
       if (window.MMRenderProducts) window.MMRenderProducts();
+      if (window.MMSession && window.MMSession.applyProductToCode) window.MMSession.applyProductToCode(code, saved);
+      if (window.MMSession) window.MMSession.render();
     }
   }
 
@@ -434,7 +516,7 @@
       li.className = 'recent-item';
       var t = r.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       var code = document.createElement('span');
-      code.className = 'ri-code'; code.textContent = r.code;
+      code.className = 'ri-code'; code.textContent = r.name || r.code;
       var meta = document.createElement('span');
       meta.className = 'ri-meta'; meta.textContent = r.fmt + ' · ' + t;
       li.appendChild(code); li.appendChild(meta);

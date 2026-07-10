@@ -103,14 +103,20 @@
     <section class="screen" id="screen-session" data-screen="session" hidden>
       <header class="screen-head">
         <h1>Session</h1>
-        <p class="sub">Today's count so far</p>
+        <p class="sub">Confirmed package scans</p>
       </header>
-      <div class="placeholder">
-        <div class="ph-icon">🧾</div>
-        <h2>Counting lands in Session 4</h2>
-        <p>Scan hits the database, shows the friendly name and a reference photo, one tap sets the quantity. Your running count for the shift lives here.</p>
-        <span class="chip">Session 4</span>
+      <div class="session-stats">
+        <div><strong id="session-total">0</strong><span>Total scans</span></div>
+        <div><strong id="session-unique">0</strong><span>Products</span></div>
       </div>
+      <section class="session-block">
+        <h2 class="recent-title">Counts</h2>
+        <ul class="count-list" id="session-count-list"></ul>
+      </section>
+      <section class="session-block">
+        <h2 class="recent-title">Scan log</h2>
+        <ul class="scan-log" id="session-scan-list"></ul>
+      </section>
     </section>
 
     <!-- EXPORT -->
@@ -119,11 +125,9 @@
         <h1>Export</h1>
         <p class="sub">Hand the numbers back to Periscope</p>
       </header>
-      <div class="placeholder">
-        <div class="ph-icon">📤</div>
-        <h2>CSV export lands in Session 6</h2>
-        <p>Formatted to match the paper count sheet, so the finished count drops straight in with no re-typing.</p>
-        <span class="chip">Session 6</span>
+      <div class="export-panel">
+        <button class="btn btn-primary" id="btn-export-csv">Download CSV</button>
+        <button class="btn" id="btn-clear-session">Clear session</button>
       </div>
     </section>
 
@@ -152,10 +156,11 @@
     <p>Tap <span class="share-ico">⎋</span> Share, then <strong>Add to Home Screen</strong>.</p>
   </div>
 
-  <div class="build-stamp" id="build-stamp">v0.12.0</div>
+  <div class="build-stamp" id="build-stamp">v0.13.0</div>
 
   <script src="vendor/zbar/index.js"></script>
   <script src="products.js"></script>
+  <script src="session.js"></script>
   <script src="app.js"></script>
   <script src="scanner.js"></script>
 </body>
