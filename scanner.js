@@ -60,6 +60,25 @@
     return map[s] || s.replace(/_/g, ' ');
   }
 
+  // Rank barcode symbols so we pick a real *product* barcode, never a QR/2D
+  // marketing code (e.g. a SmartLabel QR sitting next to the UPC on a chip bag).
+  function symRank(typeName) {
+    var t = String(typeName || '');
+    if (/EAN13|UPCA|UPCE|EAN8|ISBN/.test(t)) return 3;              // retail linear
+    if (/DATABAR/.test(t)) return 3;                                // meat/deli variable-weight
+    if (/CODE128|CODE39|CODE93|CODABAR|I25|ITF/.test(t)) return 2;  // other linear
+    return 0;  // QR / PDF417 / DataMatrix — not used for inventory, ignore
+  }
+  function pickBest(syms) {
+    if (!syms || !syms.length) return null;
+    var best = null, bestRank = 0;
+    for (var i = 0; i < syms.length; i++) {
+      var r = symRank(syms[i].typeName);
+      if (r > bestRank) { bestRank = r; best = syms[i]; }
+    }
+    return best;   // null when only QR/2D codes were present → keep scanning
+  }
+
   // Run zbar on a canvas. Returns { text, type } or null.
   function zbarScan(cnv) {
     if (!window.zbarWasm) { diag.zbar = 'not loaded'; return Promise.resolve(null); }
@@ -67,8 +86,8 @@
                .getImageData(0, 0, cnv.width, cnv.height);
     return window.zbarWasm.scanImageData(id).then(function (syms) {
       diag.zbar = 'ready'; diag.err = '';
-      if (syms && syms.length) {
-        var s = syms[0];
+      var s = pickBest(syms);
+      if (s) {
         var text = (typeof s.decode === 'function') ? s.decode() : String(s.data || '');
         return { text: text, type: s.typeName };
       }
