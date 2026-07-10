@@ -1,6 +1,6 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.14.0**
+Current app version: **v0.14.1**
 
 Last synced: 2026-07-09
 
@@ -31,6 +31,8 @@ The app is a cached offline PWA, so version fidelity matters. When any app file 
 - Rescan now clears toast state, resets same-code cooldown, and restarts the decode loop if needed.
 - Duplicate entries in both scan logs use red warning styling and show product names when a barcode is mapped.
 - Sessions can be saved locally, cleared from the Session tab, and selected from Export.
+- Scan tab recent entries use the same red duplicate styling and swipe actions as Session.
+- Save Session auto-names sessions from the local saved date and time.
 
 ## Fidelity Notes
 

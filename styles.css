@@ -349,6 +349,13 @@ body {
   touch-action: pan-y;
   transition: transform .16s ease;
 }
+.scan-swipe .recent-item {
+  position: relative;
+  z-index: 2;
+  margin-bottom: 0;
+  touch-action: pan-y;
+  transition: transform .16s ease;
+}
 .scan-swipe.is-duplicate .scan-row {
   border-color: rgba(193,39,45,.9);
   background: rgba(193,39,45,.16);
@@ -386,6 +393,7 @@ body {
   padding: 0 10px;
 }
 .scan-keep { background: var(--ok); }
+.scan-edit { background: #495057; }
 .scan-delete { background: var(--accent); }
 .export-panel {
   display: grid;
@@ -395,6 +403,16 @@ body {
   display: grid;
   gap: 12px;
   margin-top: 26px;
+}
+.session-action-note {
+  min-height: 18px;
+  margin: 0;
+  color: var(--ink-dim);
+  font-size: 13px;
+  font-weight: 700;
+}
+.session-action-note.is-error {
+  color: #ff8a8f;
 }
 .field-label {
   color: var(--ink-dim);

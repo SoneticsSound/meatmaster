@@ -46,6 +46,21 @@
   /* ---------- product list ---------- */
   var productList = document.getElementById('product-list');
   var productCount = document.getElementById('product-count');
+  function editProduct(p) {
+    if (!p || !window.MMProducts) return;
+    var next = window.prompt('Product name', p.name || '');
+    if (!next) return;
+    window.MMProducts.save({
+      plu: p.plu,
+      upc: p.upc,
+      name: next.trim(),
+      sheetName: p.sheetName || 'Saved on phone',
+      category: p.category || 'Unknown',
+      casePosition: p.casePosition || 9999
+    });
+    renderProducts();
+    if (window.MMSession) window.MMSession.render();
+  }
   function renderProducts() {
     if (!productList || !window.MMProducts) return;
     productList.innerHTML = '';
@@ -76,19 +91,7 @@
       edit.className = 'btn product-edit';
       edit.type = 'button';
       edit.textContent = 'Edit';
-      edit.addEventListener('click', function () {
-        var next = window.prompt('Product name', p.name || '');
-        if (!next) return;
-        window.MMProducts.save({
-          plu: p.plu,
-          upc: p.upc,
-          name: next.trim(),
-          sheetName: p.sheetName || 'Saved on phone',
-          category: p.category || 'Unknown',
-          casePosition: p.casePosition || 9999
-        });
-        renderProducts();
-      });
+      edit.addEventListener('click', function () { editProduct(p); });
       li.appendChild(plu);
       li.appendChild(body);
       li.appendChild(edit);
@@ -97,25 +100,54 @@
   }
   renderProducts();
   window.MMRenderProducts = renderProducts;
+  window.MMEditProduct = editProduct;
+  window.MMEditProductByCode = function (code) {
+    if (!window.MMProducts) return;
+    var product = window.MMProducts.findByCode(code);
+    if (product) editProduct(product);
+  };
 
   /* ---------- count session actions ---------- */
   var exportBtn = document.getElementById('btn-export-csv');
   var clearBtn = document.getElementById('btn-clear-session');
   var saveSessionBtn = document.getElementById('btn-save-session');
   var exportSelect = document.getElementById('export-session-select');
+  var sessionNote = document.getElementById('session-action-note');
+  function setSessionNote(text, isError) {
+    if (!sessionNote) return;
+    sessionNote.textContent = text || '';
+    sessionNote.classList.toggle('is-error', !!isError);
+  }
+  function ordinal(n) {
+    var mod100 = n % 100;
+    if (mod100 >= 11 && mod100 <= 13) return n + 'th';
+    var mod10 = n % 10;
+    return n + (mod10 === 1 ? 'st' : mod10 === 2 ? 'nd' : mod10 === 3 ? 'rd' : 'th');
+  }
+  function sessionLabelNow() {
+    var d = new Date();
+    var month = d.toLocaleString([], { month: 'long' });
+    var time = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    return month + ' ' + ordinal(d.getDate()) + ', ' + d.getFullYear() + ' ' + time;
+  }
   if (exportBtn) exportBtn.addEventListener('click', function () {
     if (window.MMSession) window.MMSession.exportCsv(exportSelect ? exportSelect.value : 'active');
   });
   if (saveSessionBtn) saveSessionBtn.addEventListener('click', function () {
     if (!window.MMSession) return;
-    var label = window.prompt('Session name', 'Meat count ' + new Date().toLocaleDateString());
-    if (label === null) return;
-    var saved = window.MMSession.saveSession(label.trim());
-    if (!saved) window.alert('No scans to save yet.');
+    var saved = window.MMSession.saveSession(sessionLabelNow());
+    if (!saved) {
+      setSessionNote('No scans to save yet.', true);
+      return;
+    }
+    setSessionNote('Saved "' + saved.label + '" with ' + saved.scans.length + ' scans.');
   });
   if (clearBtn) clearBtn.addEventListener('click', function () {
     if (!window.MMSession) return;
-    if (window.confirm('Clear the current count session?')) window.MMSession.clear();
+    if (window.confirm('Clear the current count session?')) {
+      window.MMSession.clear();
+      setSessionNote('Active session cleared.');
+    }
   });
   if (window.MMSession) window.MMSession.render();
 

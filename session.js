@@ -256,6 +256,14 @@
         keep.addEventListener('click', function () { confirmNotDuplicate(s.id); });
         actions.appendChild(keep);
       }
+      var edit = document.createElement('button');
+      edit.className = 'scan-action scan-edit';
+      edit.type = 'button';
+      edit.textContent = 'Edit';
+      edit.addEventListener('click', function () {
+        if (window.MMEditProductByCode) window.MMEditProductByCode(s.code);
+      });
+      actions.appendChild(edit);
       var remove = document.createElement('button');
       remove.className = 'scan-action scan-delete';
       remove.type = 'button';
@@ -293,7 +301,7 @@
   function wireSwipe(li, row) {
     var startX = 0, currentX = 0, dragging = false;
     function setX(x) {
-      currentX = Math.max(-152, Math.min(0, x));
+      currentX = Math.max(-228, Math.min(0, x));
       row.style.transform = 'translateX(' + currentX + 'px)';
       li.classList.toggle('is-open', currentX < -48);
     }
@@ -312,7 +320,7 @@
     });
     row.addEventListener('pointerup', function () {
       dragging = false;
-      setX(currentX < -56 ? -152 : 0);
+      setX(currentX < -56 ? -228 : 0);
     });
     row.addEventListener('pointercancel', function () {
       dragging = false;

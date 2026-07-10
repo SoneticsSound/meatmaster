@@ -431,7 +431,7 @@
         product: product,
         price: price
       });
-      recent.unshift({ code: code, fmt: prettyType(result.type), at: new Date(), name: product.name, duplicate: scan && scan.duplicate });
+      recent.unshift({ id: scan && scan.id, code: code, fmt: prettyType(result.type), at: new Date(), name: product.name, duplicate: scan && scan.duplicate });
       renderRecent();
       toast(scan && scan.duplicate ? 'dupe' : 'ok', product.name, scan && scan.duplicate ? 'Possible duplicate - not counted again if repeated quickly' : 'Counted +1');
       return;
@@ -458,7 +458,7 @@
       name: 'Unknown product',
       price: price
     });
-    recent.unshift({ code: code, fmt: prettyType(result.type), at: new Date(), name: 'Unknown product', duplicate: unknownScan && unknownScan.duplicate });
+    recent.unshift({ id: unknownScan && unknownScan.id, code: code, fmt: prettyType(result.type), at: new Date(), name: 'Unknown product', duplicate: unknownScan && unknownScan.duplicate });
     renderRecent();
     paused = true;
     resName.textContent = 'Unknown product';
@@ -539,6 +539,113 @@
       if (r.duplicate) meta.textContent = 'Duplicate Scan - ' + r.fmt + ' - ' + t;
       li.appendChild(code); li.appendChild(meta);
       recentList.appendChild(li);
+    });
+  }
+
+  function renderRecent() {
+    recentNum.textContent = recent.length;
+    show(recentBox, recent.length > 0);
+    recentList.innerHTML = '';
+    recent.slice(0, 40).forEach(function (r) {
+      var li = document.createElement('li');
+      li.className = 'scan-swipe recent-swipe' + (r.duplicate ? ' is-duplicate' : '');
+      var actions = document.createElement('div');
+      actions.className = 'scan-actions';
+      if (r.duplicate) {
+        var keep = document.createElement('button');
+        keep.className = 'scan-action scan-keep';
+        keep.type = 'button';
+        keep.textContent = 'Confirm';
+        keep.addEventListener('click', function () { confirmRecent(r.id); });
+        actions.appendChild(keep);
+      }
+      var edit = document.createElement('button');
+      edit.className = 'scan-action scan-edit';
+      edit.type = 'button';
+      edit.textContent = 'Edit';
+      edit.addEventListener('click', function () {
+        if (window.MMEditProductByCode) window.MMEditProductByCode(r.code);
+      });
+      actions.appendChild(edit);
+      var remove = document.createElement('button');
+      remove.className = 'scan-action scan-delete';
+      remove.type = 'button';
+      remove.textContent = 'Remove';
+      remove.addEventListener('click', function () { removeRecent(r.id); });
+      actions.appendChild(remove);
+
+      var row = document.createElement('div');
+      row.className = 'recent-item' + (r.duplicate ? ' is-duplicate' : '');
+      var t = r.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      var product = (!r.name && window.MMProducts) ? window.MMProducts.findByCode(r.code) : null;
+      var code = document.createElement('span');
+      code.className = 'ri-code';
+      code.textContent = r.name || (product && product.name) || r.code;
+      if (r.duplicate) {
+        var badge = document.createElement('span');
+        badge.className = 'dupe-badge';
+        badge.textContent = 'Duplicate Scan';
+        code.appendChild(badge);
+      }
+      var meta = document.createElement('span');
+      meta.className = 'ri-meta';
+      meta.textContent = (r.duplicate ? 'Duplicate Scan - ' : '') + r.fmt + ' - ' + t;
+      row.appendChild(code);
+      row.appendChild(meta);
+      li.appendChild(actions);
+      li.appendChild(row);
+      wireRecentSwipe(li, row);
+      recentList.appendChild(li);
+    });
+  }
+
+  function confirmRecent(scanId) {
+    recent = recent.map(function (r) {
+      if (r.id === scanId) {
+        var copy = {};
+        Object.keys(r).forEach(function (k) { copy[k] = r[k]; });
+        copy.duplicate = false;
+        return copy;
+      }
+      return r;
+    });
+    if (window.MMSession && window.MMSession.confirmNotDuplicate) window.MMSession.confirmNotDuplicate(scanId);
+    renderRecent();
+  }
+
+  function removeRecent(scanId) {
+    recent = recent.filter(function (r) { return r.id !== scanId; });
+    if (window.MMSession && window.MMSession.removeScan) window.MMSession.removeScan(scanId);
+    renderRecent();
+  }
+
+  function wireRecentSwipe(li, row) {
+    var startX = 0, currentX = 0, dragging = false;
+    function setX(x) {
+      currentX = Math.max(-228, Math.min(0, x));
+      row.style.transform = 'translateX(' + currentX + 'px)';
+      li.classList.toggle('is-open', currentX < -48);
+    }
+    row.addEventListener('pointerdown', function (e) {
+      startX = e.clientX - currentX;
+      dragging = true;
+      row.setPointerCapture(e.pointerId);
+    });
+    row.addEventListener('pointermove', function (e) {
+      if (!dragging) return;
+      var next = e.clientX - startX;
+      if (next < 0) {
+        e.preventDefault();
+        setX(next);
+      }
+    });
+    row.addEventListener('pointerup', function () {
+      dragging = false;
+      setX(currentX < -56 ? -228 : 0);
+    });
+    row.addEventListener('pointercancel', function () {
+      dragging = false;
+      setX(0);
     });
   }
 
