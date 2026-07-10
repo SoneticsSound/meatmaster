@@ -46,10 +46,10 @@
   /* ---------- product list ---------- */
   var productList = document.getElementById('product-list');
   var productCount = document.getElementById('product-count');
-  if (productList && window.MMProducts) {
-    var products = window.MMProducts.all.slice().sort(function (a, b) {
-      return a.casePosition - b.casePosition;
-    });
+  function renderProducts() {
+    if (!productList || !window.MMProducts) return;
+    productList.innerHTML = '';
+    var products = window.MMProducts.refresh ? window.MMProducts.refresh() : window.MMProducts.all.slice();
     if (productCount) productCount.textContent = products.length;
     products.forEach(function (p) {
       var li = document.createElement('li');
@@ -61,16 +61,42 @@
       var name = document.createElement('div');
       name.className = 'product-name';
       name.textContent = p.name;
+      if (p.isCustom) {
+        var tag = document.createElement('span');
+        tag.className = 'product-tag';
+        tag.textContent = 'saved';
+        name.appendChild(tag);
+      }
       var meta = document.createElement('div');
       meta.className = 'product-meta';
       meta.textContent = p.upc + ' - ' + p.sheetName;
       body.appendChild(name);
       body.appendChild(meta);
+      var edit = document.createElement('button');
+      edit.className = 'btn product-edit';
+      edit.type = 'button';
+      edit.textContent = 'Edit';
+      edit.addEventListener('click', function () {
+        var next = window.prompt('Product name', p.name || '');
+        if (!next) return;
+        window.MMProducts.save({
+          plu: p.plu,
+          upc: p.upc,
+          name: next.trim(),
+          sheetName: p.sheetName || 'Saved on phone',
+          category: p.category || 'Unknown',
+          casePosition: p.casePosition || 9999
+        });
+        renderProducts();
+      });
       li.appendChild(plu);
       li.appendChild(body);
+      li.appendChild(edit);
       productList.appendChild(li);
     });
   }
+  renderProducts();
+  window.MMRenderProducts = renderProducts;
 
   /* ---------- iOS "Add to Home Screen" hint ---------- */
   // Show only in mobile Safari, only when not already installed, only once dismissed.

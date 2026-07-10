@@ -60,24 +60,104 @@
     return item.replace(/^0+/, '');   // "07059" -> "7059"
   }
 
-  var byPlu = {}, byUpc = {};
-  products.forEach(function (p) {
-    byPlu[p.plu] = p;
-    byUpc[normalizeCode(p.upc)] = p;
-  });
+  var STORE_KEY = 'mm.products.custom.v1';
+  var custom = [];
+  var byPlu = {}, byUpc = {}, allProducts = [];
+
+  function cloneProduct(p) {
+    var out = {};
+    Object.keys(p || {}).forEach(function (k) { out[k] = p[k]; });
+    return out;
+  }
+
+  function loadCustom() {
+    try {
+      var raw = localStorage.getItem(STORE_KEY);
+      custom = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(custom)) custom = [];
+    } catch (e) {
+      custom = [];
+    }
+  }
+
+  function saveCustom() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(custom)); } catch (e) {}
+  }
+
+  function productKey(p) {
+    if (p.plu) return 'plu:' + String(p.plu).replace(/^0+/, '');
+    if (p.upc) return 'upc:' + normalizeCode(p.upc);
+    return 'name:' + String(p.name || '').toLowerCase();
+  }
+
+  function rebuild() {
+    byPlu = {};
+    byUpc = {};
+    var merged = {};
+    products.forEach(function (p) { merged[productKey(p)] = cloneProduct(p); });
+    custom.forEach(function (p) {
+      var c = cloneProduct(p);
+      c.isCustom = true;
+      merged[productKey(c)] = c;
+    });
+    allProducts = Object.keys(merged).map(function (k) { return merged[k]; }).sort(function (a, b) {
+      var ap = Number(a.casePosition || 9999), bp = Number(b.casePosition || 9999);
+      if (ap !== bp) return ap - bp;
+      return String(a.name || '').localeCompare(String(b.name || ''));
+    });
+    allProducts.forEach(function (p) {
+      if (p.plu) byPlu[String(p.plu).replace(/^0+/, '')] = p;
+      if (p.upc) byUpc[normalizeCode(p.upc)] = p;
+    });
+  }
+
+  function upsertCustom(product) {
+    var p = cloneProduct(product);
+    if (!p.name) return null;
+    if (p.plu) p.plu = String(p.plu).replace(/^0+/, '');
+    if (p.upc) p.upc = normalizeCode(p.upc);
+    p.updatedAt = new Date().toISOString();
+    var key = productKey(p), replaced = false;
+    custom = custom.map(function (existing) {
+      if (productKey(existing) === key) {
+        replaced = true;
+        return p;
+      }
+      return existing;
+    });
+    if (!replaced) custom.push(p);
+    saveCustom();
+    rebuild();
+    window.MMProducts.all = allProducts;
+    return findByCode(p.upc) || (p.plu ? findByPlu(p.plu) : p);
+  }
+
+  function findByPlu(plu) {
+    return byPlu[String(plu).replace(/^0+/, '')] || null;
+  }
+
+  function findByCode(code) {
+    var n = normalizeCode(code);
+    if (byUpc[n]) return byUpc[n];               // exact match (fixed-price items)
+    var plu = extractPlu(n);                      // weighed item -> match by PLU
+    if (plu && byPlu[plu]) return byPlu[plu];
+    return null;
+  }
+
+  loadCustom();
+  rebuild();
 
   window.MMProducts = {
-    all: products,
-    extractPlu: extractPlu,
-    findByPlu: function (plu) {
-      return byPlu[String(plu).replace(/^0+/, '')] || null;
+    all: allProducts,
+    save: upsertCustom,
+    refresh: function () {
+      loadCustom();
+      rebuild();
+      this.all = allProducts;
+      return allProducts;
     },
-    findByCode: function (code) {
-      var n = normalizeCode(code);
-      if (byUpc[n]) return byUpc[n];               // exact match (fixed-price items)
-      var plu = extractPlu(n);                      // weighed item -> match by PLU
-      if (plu && byPlu[plu]) return byPlu[plu];
-      return null;
-    }
+    extractPlu: extractPlu,
+    findByPlu: findByPlu,
+    findByCode: findByCode
   };
 })();

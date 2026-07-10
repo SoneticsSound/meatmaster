@@ -26,6 +26,7 @@
   var resName   = el('result-name');
   var resCode   = el('result-code');
   var resNote   = el('result-note');
+  var saveBtn   = el('btn-save-product');
   var controls  = el('scan-controls');
   var recentBox = el('recent');
   var recentList= el('recent-list');
@@ -307,6 +308,7 @@
 
   /* ---------- turning a scan into a result card ---------- */
   var scanToken = 0;
+  var currentScan = null;
 
   function isUrl(s) { return /^https?:\/\//i.test(s); }
   // GS1 Digital Link URLs carry the GTIN after "/01/" — pull it for a lookup.
@@ -371,14 +373,18 @@
     var price = inferPrice(code);
     var product = window.MMProducts && window.MMProducts.findByCode(code);
     if (product) {
+      currentScan = { code: code, product: product, price: price };
       resName.textContent = product.name;
       resNote.textContent = 'PLU ' + product.plu + (price ? (' · ~$' + price) : '');
+      show(saveBtn, false);
     } else {
+      currentScan = { code: code, product: null, price: price };
       resName.textContent = isUrl(code) ? 'Scanned link' : 'Unknown product';
       var bits = [];
       if (price) bits.push('reads ~$' + price);
       bits.push(isUrl(code) ? 'tap the link above' : 'not in the list yet');
       resNote.textContent = bits.join(' · ');
+      show(saveBtn, !isUrl(code));
       // best-effort web identification (national brands); needs a connection
       var lookupCode = isUrl(code) ? gtinFromUrl(code) : code;
       if (lookupCode) enrichOnline(lookupCode, token, price);
@@ -391,6 +397,30 @@
     renderRecent();
     show(card, false);
     paused = false;
+  }
+
+  function saveProduct() {
+    if (!currentScan || !window.MMProducts) return;
+    var code = currentScan.code;
+    var plu = window.MMProducts.extractPlu ? window.MMProducts.extractPlu(code) : null;
+    var suggested = resName.textContent === 'Unknown product' ? '' : resName.textContent;
+    var name = window.prompt('Product name', suggested);
+    if (!name) return;
+    var saved = window.MMProducts.save({
+      plu: plu || '',
+      upc: code,
+      name: name.trim(),
+      sheetName: 'Saved from scan',
+      category: plu ? 'Beef' : 'Unknown',
+      casePosition: 9999
+    });
+    if (saved) {
+      currentScan.product = saved;
+      resName.textContent = saved.name;
+      resNote.textContent = (saved.plu ? ('PLU ' + saved.plu) : 'Saved on phone') + (currentScan.price ? (' · ~$' + currentScan.price) : '');
+      show(saveBtn, false);
+      if (window.MMRenderProducts) window.MMRenderProducts();
+    }
   }
 
   function rescan() { show(card, false); paused = false; }
@@ -430,6 +460,7 @@
   el('btn-stop').addEventListener('click', stop);
   el('btn-confirm').addEventListener('click', confirmScan);
   el('btn-rescan').addEventListener('click', rescan);
+  if (saveBtn) saveBtn.addEventListener('click', saveProduct);
 
   // turn the camera off when navigating away from the Scan tab
   document.querySelectorAll('.tab').forEach(function (t) {

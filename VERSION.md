@@ -1,6 +1,6 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.11.0**
+Current app version: **v0.12.0**
 
 Last synced: 2026-07-09
 
@@ -20,8 +20,9 @@ The app is a cached offline PWA, so version fidelity matters. When any app file 
 - Bottom tabs: Scan, Products, Session, Export.
 - Bundled zbar WASM barcode scanner.
 - Camera decode path reads real-world barcode photos and live camera frames.
-- Local static product database seeded from `../Reference/IMG_7236.jpeg`.
-- Scan results show friendly product names when the barcode exists in the seed database.
+- Local seed product database seeded from `../Reference/IMG_7236.jpeg`.
+- Saved local product edits and unknown-scan quick-add via browser storage.
+- Scan results show friendly product names when the barcode exists in the seed or saved database.
 
 ## Fidelity Notes
 
