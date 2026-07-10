@@ -67,7 +67,7 @@
     if (/EAN13|UPCA|UPCE|EAN8|ISBN/.test(t)) return 3;              // retail linear
     if (/DATABAR/.test(t)) return 3;                                // meat/deli variable-weight
     if (/CODE128|CODE39|CODE93|CODABAR|I25|ITF/.test(t)) return 2;  // other linear
-    return 0;  // QR / PDF417 / DataMatrix — not used for inventory, ignore
+    return 1;  // QR / PDF417 / DataMatrix — only if nothing better (shown as a tappable link)
   }
   function pickBest(syms) {
     if (!syms || !syms.length) return null;
@@ -305,24 +305,84 @@
     }
   }
 
+  /* ---------- turning a scan into a result card ---------- */
+  var scanToken = 0;
+
+  function isUrl(s) { return /^https?:\/\//i.test(s); }
+  // GS1 Digital Link URLs carry the GTIN after "/01/" — pull it for a lookup.
+  function gtinFromUrl(s) { var m = String(s).match(/\/01\/(\d{8,14})/); return m ? m[1] : null; }
+
+  // Sprouts weighed barcodes embed the total price in a 4-digit field.
+  // 13-digit "02…" -> digits 8-11; 12-digit "2…" -> digits 7-10. Returns "12.99" or null.
+  function inferPrice(code) {
+    var d = String(code || '').replace(/\D/g, ''), p = null;
+    if (d.length === 13 && d.slice(0, 2) === '02') p = d.slice(8, 12);
+    else if (d.length === 12 && d.charAt(0) === '2') p = d.slice(7, 11);
+    if (p === null) return null;
+    var cents = parseInt(p, 10);
+    return cents ? (cents / 100).toFixed(2) : null;    // 0000 = reference, no price
+  }
+
+  function setCode(code) {
+    if (isUrl(code)) {
+      resCode.textContent = '';
+      var a = document.createElement('a');
+      a.href = code; a.textContent = code; a.target = '_blank'; a.rel = 'noopener';
+      a.className = 'result-link';
+      resCode.appendChild(a);
+    } else {
+      resCode.textContent = code;
+    }
+  }
+
+  // Ask a free public database (Open Food Facts) to name an unknown barcode.
+  // Online-only, best-effort: offline or no-match simply leaves it "unknown".
+  function enrichOnline(lookupCode, token, price) {
+    if (!navigator.onLine) return;
+    var gtin = String(lookupCode).replace(/\D/g, '');
+    if (gtin.length < 8) return;
+    fetch('https://world.openfoodfacts.org/api/v2/product/' + gtin + '.json?fields=product_name,brands')
+      .then(function (r) { return r.json(); })
+      .then(function (dat) {
+        if (token !== scanToken) return;             // a newer scan replaced this one
+        if (!dat || dat.status !== 1 || !dat.product) return;
+        var nm = (dat.product.product_name || '').trim();
+        var br = (dat.product.brands || '').split(',')[0].trim();
+        var label = (br && nm && nm.toLowerCase().indexOf(br.toLowerCase()) < 0) ? (br + ' ' + nm) : (nm || br);
+        if (!label) return;
+        resName.textContent = label;
+        resNote.textContent = 'Found online — Confirm to save' + (price ? (' · ~$' + price) : '');
+      })
+      .catch(function () {});
+  }
+
   function onDecode(result) {
     var code = result.text;
     var now = Date.now();
     if (code === lastCode && (now - lastTime) < 2500) return; // debounce repeats
     lastCode = code; lastTime = now;
+    var token = ++scanToken;
 
     paused = true;
     feedback();
+    resFmt.textContent = prettyType(result.type);
+    setCode(code);
+
+    var price = inferPrice(code);
     var product = window.MMProducts && window.MMProducts.findByCode(code);
     if (product) {
       resName.textContent = product.name;
-      resNote.textContent = 'PLU ' + product.plu + ' - ' + product.sheetName;
+      resNote.textContent = 'PLU ' + product.plu + (price ? (' · ~$' + price) : '');
     } else {
-      resName.textContent = 'Unknown product';
-      resNote.textContent = 'Not in the product list yet. Confirm to keep the raw scan.';
+      resName.textContent = isUrl(code) ? 'Scanned link' : 'Unknown product';
+      var bits = [];
+      if (price) bits.push('reads ~$' + price);
+      bits.push(isUrl(code) ? 'tap the link above' : 'not in the list yet');
+      resNote.textContent = bits.join(' · ');
+      // best-effort web identification (national brands); needs a connection
+      var lookupCode = isUrl(code) ? gtinFromUrl(code) : code;
+      if (lookupCode) enrichOnline(lookupCode, token, price);
     }
-    resCode.textContent = code;
-    resFmt.textContent = prettyType(result.type);
     show(card, true);
   }
 

@@ -185,6 +185,14 @@ body {
   word-break: break-all;
 }
 .result-note { font-size: 13px; color: var(--ink-dim); margin-bottom: 14px; }
+.result-link {
+  color: var(--accent);
+  font-size: 15px;
+  font-weight: 600;
+  word-break: break-all;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .result-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
 .scan-controls { margin-top: 12px; }
