@@ -87,6 +87,22 @@
     render();
   }
 
+  function confirmNotDuplicate(scanId) {
+    load();
+    state.scans = state.scans.map(function (s) {
+      if (s.id === scanId) {
+        var copy = {};
+        Object.keys(s).forEach(function (k) { copy[k] = s[k]; });
+        copy.duplicate = false;
+        copy.confirmedAt = new Date().toISOString();
+        return copy;
+      }
+      return s;
+    });
+    save();
+    render();
+  }
+
   function clearSession() {
     state = { startedAt: new Date().toISOString(), scans: [] };
     save();
@@ -182,25 +198,77 @@
     var scans = activeScans();
     scans.slice(0, 80).forEach(function (s) {
       var li = document.createElement('li');
-      li.className = 'scan-row' + (s.duplicate ? ' is-duplicate' : '');
+      li.className = 'scan-swipe' + (s.duplicate ? ' is-duplicate' : '');
+      var actions = document.createElement('div');
+      actions.className = 'scan-actions';
+      if (s.duplicate) {
+        var keep = document.createElement('button');
+        keep.className = 'scan-action scan-keep';
+        keep.type = 'button';
+        keep.textContent = 'Confirm';
+        keep.addEventListener('click', function () { confirmNotDuplicate(s.id); });
+        actions.appendChild(keep);
+      }
+      var remove = document.createElement('button');
+      remove.className = 'scan-action scan-delete';
+      remove.type = 'button';
+      remove.textContent = 'Remove';
+      remove.addEventListener('click', function () { removeScan(s.id); });
+      actions.appendChild(remove);
+
+      var row = document.createElement('div');
+      row.className = 'scan-row';
       var body = document.createElement('div');
       var name = document.createElement('div');
       name.className = 'scan-row-name';
       name.textContent = s.productName;
+      if (s.duplicate) {
+        var badge = document.createElement('span');
+        badge.className = 'dupe-badge';
+        badge.textContent = 'Duplicate Scan';
+        name.appendChild(badge);
+      }
       var meta = document.createElement('div');
       meta.className = 'scan-row-meta';
       var t = new Date(s.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      meta.textContent = t + ' - ' + s.code + (s.duplicate ? ' - possible duplicate' : '');
+      meta.textContent = t + ' - ' + s.code;
       body.appendChild(name);
       body.appendChild(meta);
-      var remove = document.createElement('button');
-      remove.className = 'btn scan-remove';
-      remove.type = 'button';
-      remove.textContent = 'Remove';
-      remove.addEventListener('click', function () { removeScan(s.id); });
-      li.appendChild(body);
-      li.appendChild(remove);
+      row.appendChild(body);
+      li.appendChild(actions);
+      li.appendChild(row);
+      wireSwipe(li, row);
       list.appendChild(li);
+    });
+  }
+
+  function wireSwipe(li, row) {
+    var startX = 0, currentX = 0, dragging = false;
+    function setX(x) {
+      currentX = Math.max(-152, Math.min(0, x));
+      row.style.transform = 'translateX(' + currentX + 'px)';
+      li.classList.toggle('is-open', currentX < -48);
+    }
+    row.addEventListener('pointerdown', function (e) {
+      startX = e.clientX - currentX;
+      dragging = true;
+      row.setPointerCapture(e.pointerId);
+    });
+    row.addEventListener('pointermove', function (e) {
+      if (!dragging) return;
+      var next = e.clientX - startX;
+      if (next < 0) {
+        e.preventDefault();
+        setX(next);
+      }
+    });
+    row.addEventListener('pointerup', function () {
+      dragging = false;
+      setX(currentX < -56 ? -152 : 0);
+    });
+    row.addEventListener('pointercancel', function () {
+      dragging = false;
+      setX(0);
     });
   }
 
@@ -238,6 +306,7 @@
   window.MMSession = {
     addScan: addScan,
     removeScan: removeScan,
+    confirmNotDuplicate: confirmNotDuplicate,
     applyProductToCode: applyProductToCode,
     clear: clearSession,
     grouped: grouped,
