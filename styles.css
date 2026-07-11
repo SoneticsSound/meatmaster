@@ -37,8 +37,8 @@ body {
   font-size: 17px;
   line-height: 1.4;
   -webkit-font-smoothing: antialiased;
-  /* leave room for the fixed tab bar */
-  padding-bottom: calc(var(--tabbar-h) + var(--safe-bottom));
+  /* tab-bar clearance now lives on .screen; body just honors the home-bar inset */
+  padding-bottom: var(--safe-bottom);
   overscroll-behavior-y: contain;
 }
 
@@ -64,7 +64,8 @@ body {
 
 /* ---- screens ---- */
 #screens { min-height: 60vh; }
-.screen { padding: 8px 16px 24px; animation: fade .18s ease; }
+/* bottom padding clears the fixed tab bar so the last row is never hidden */
+.screen { padding: 8px 16px calc(28px + var(--tabbar-h) + var(--safe-bottom)); animation: fade .18s ease; }
 .screen[hidden] { display: none; }
 @keyframes fade { from { opacity: 0; transform: translateY(4px);} to { opacity:1; transform:none; } }
 
@@ -366,7 +367,9 @@ body {
 }
 .scan-swipe.is-duplicate .scan-row {
   border-color: rgba(193,39,45,.9);
-  background: rgba(193,39,45,.16);
+  /* opaque: red tint layered over the solid surface so the swipe buttons
+     behind the row can't show through */
+  background: linear-gradient(rgba(193,39,45,.16), rgba(193,39,45,.16)), var(--surface);
 }
 .scan-swipe.is-duplicate .scan-row-meta {
   color: #ff8a8f;
@@ -376,7 +379,7 @@ body {
 }
 .scan-swipe.is-confirmed .scan-row {
   border-color: rgba(55,178,77,.8);
-  background: rgba(55,178,77,.14);
+  background: linear-gradient(rgba(55,178,77,.14), rgba(55,178,77,.14)), var(--surface);
 }
 .scan-swipe.is-confirmed .scan-row-name,
 .scan-swipe.is-confirmed .scan-row-meta {
