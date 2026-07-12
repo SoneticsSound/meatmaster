@@ -254,67 +254,92 @@
       reportWarning.hidden = duplicateCount === 0;
       reportWarning.textContent = duplicateCount ? (duplicateCount + ' duplicate scan' + (duplicateCount === 1 ? '' : 's') + ' need review before this report is final.') : '';
     }
+    // Counts section: only what was actually scanned.
     list.innerHTML = '';
-    if (reportList) reportList.innerHTML = '';
     if (!groups.length) {
       var empty = document.createElement('li');
       empty.className = 'session-empty';
       empty.textContent = 'No counted scans yet.';
       list.appendChild(empty);
-      if (reportList) {
-        var reportEmpty = document.createElement('li');
-        reportEmpty.className = 'session-empty';
-        reportEmpty.textContent = 'No counted scans yet.';
-        reportList.appendChild(reportEmpty);
-      }
-      return;
+    } else {
+      groups.forEach(function (g) {
+        var li = document.createElement('li');
+        li.className = 'count-item';
+        var qty = document.createElement('div');
+        qty.className = 'count-qty';
+        qty.textContent = g.count;
+        var body = document.createElement('div');
+        var name = document.createElement('div');
+        name.className = 'count-name';
+        name.textContent = g.productName;
+        var meta = document.createElement('div');
+        meta.className = 'count-meta';
+        meta.textContent = (g.plu ? ('PLU ' + g.plu + ' - ') : '') + (g.category || 'Unknown');
+        body.appendChild(name);
+        body.appendChild(meta);
+        li.appendChild(qty);
+        li.appendChild(body);
+        list.appendChild(li);
+      });
     }
-    groups.forEach(function (g) {
-      var li = document.createElement('li');
-      li.className = 'count-item';
-      var qty = document.createElement('div');
-      qty.className = 'count-qty';
-      qty.textContent = g.count;
-      var body = document.createElement('div');
-      var name = document.createElement('div');
-      name.className = 'count-name';
-      name.textContent = g.productName;
-      var meta = document.createElement('div');
-      meta.className = 'count-meta';
-      meta.textContent = (g.plu ? ('PLU ' + g.plu + ' - ') : '') + (g.category || 'Unknown');
-      body.appendChild(name);
-      body.appendChild(meta);
-      li.appendChild(qty);
-      li.appendChild(body);
-      list.appendChild(li);
 
-      if (reportList) {
-        var reportRow = document.createElement('li');
-        reportRow.className = 'periscope-item';
-        var info = document.createElement('div');
-        var reportName = document.createElement('div');
-        reportName.className = 'periscope-name';
-        reportName.textContent = g.productName;
-        var reportCode = document.createElement('div');
-        reportCode.className = 'periscope-code';
-        reportCode.textContent = g.sheetName || 'No checklist name saved yet';
-        var reportMeta = document.createElement('div');
-        reportMeta.className = 'periscope-meta';
-        reportMeta.textContent = [
-          g.plu ? ('PLU ' + g.plu) : '',
-          g.category || ''
-        ].filter(Boolean).join(' - ');
-        var reportCount = document.createElement('div');
-        reportCount.className = 'periscope-count';
-        reportCount.textContent = g.count;
-        info.appendChild(reportName);
-        info.appendChild(reportCode);
-        info.appendChild(reportMeta);
-        reportRow.appendChild(info);
-        reportRow.appendChild(reportCount);
-        reportList.appendChild(reportRow);
-      }
+    // Periscope Report: the FULL checklist, every item shown (0 included, since
+    // 0s inform production), in checklist/case order.
+    renderPeriscopeChecklist(groups);
+  }
+
+  function periscopeRow(name, sheetName, plu, category, count) {
+    var row = document.createElement('li');
+    row.className = 'periscope-item' + (count === 0 ? ' is-zero' : '');
+    var info = document.createElement('div');
+    var nm = document.createElement('div');
+    nm.className = 'periscope-name';
+    nm.textContent = name;
+    var code = document.createElement('div');
+    code.className = 'periscope-code';
+    code.textContent = sheetName || 'No checklist name saved yet';
+    var meta = document.createElement('div');
+    meta.className = 'periscope-meta';
+    meta.textContent = [plu ? ('PLU ' + plu) : '', category || ''].filter(Boolean).join(' - ');
+    info.appendChild(nm);
+    info.appendChild(code);
+    info.appendChild(meta);
+    var cnt = document.createElement('div');
+    cnt.className = 'periscope-count';
+    cnt.textContent = count;
+    row.appendChild(info);
+    row.appendChild(cnt);
+    return row;
+  }
+
+  function renderPeriscopeChecklist(groups) {
+    var reportList = document.getElementById('periscope-report-list');
+    if (!reportList) return;
+    reportList.innerHTML = '';
+    // scanned counts keyed by PLU; scanned items without a PLU are "extras"
+    var countByPlu = {}, extras = [];
+    groups.forEach(function (g) {
+      var plu = g.plu ? String(g.plu).replace(/^0+/, '') : '';
+      if (plu) countByPlu[plu] = (countByPlu[plu] || 0) + g.count;
+      else extras.push(g);
     });
+    // every known checklist product, in case order (MMProducts.all is sorted by casePosition)
+    var checklist = (window.MMProducts && window.MMProducts.all) ? window.MMProducts.all : [];
+    checklist.forEach(function (p) {
+      var plu = p.plu ? String(p.plu).replace(/^0+/, '') : '';
+      var count = plu ? (countByPlu[plu] || 0) : 0;
+      reportList.appendChild(periscopeRow(p.name, p.sheetName, p.plu, p.category, count));
+    });
+    // then anything scanned that isn't on the checklist (unknowns)
+    extras.forEach(function (g) {
+      reportList.appendChild(periscopeRow(g.productName, g.sheetName, g.plu, g.category, g.count));
+    });
+    if (!checklist.length && !extras.length) {
+      var empty = document.createElement('li');
+      empty.className = 'session-empty';
+      empty.textContent = 'No checklist loaded yet.';
+      reportList.appendChild(empty);
+    }
   }
 
   function renderLog() {

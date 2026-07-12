@@ -423,6 +423,16 @@ body {
   text-align: center;
   padding: 10px 0;
 }
+/* not-yet-counted checklist items: shown (0s inform production) but muted,
+   with a neutral count chip so the counted items stand out */
+.periscope-item.is-zero {
+  border-color: var(--line);
+  opacity: .82;
+}
+.periscope-item.is-zero .periscope-count {
+  background: var(--panel-2, #303038);
+  color: var(--ink-dim);
+}
 .scan-swipe {
   position: relative;
   overflow: hidden;
