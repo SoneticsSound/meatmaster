@@ -1,6 +1,6 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.15.7**
+Current app version: **v0.15.9**
 
 Last synced: 2026-07-09
 
@@ -47,6 +47,8 @@ The app is a cached offline PWA, so version fidelity matters. When any app file 
 - Count, CSV, Copy Counts, and Periscope Report now sort by checklist/case position before product name.
 - Periscope Report shows both the normal product name and the checklist/store-code name.
 - Opening Periscope Report scrolls the report into view.
+- Periscope Report warns when unresolved duplicate rows still need review.
+- Session tab can sweep-remove all unresolved duplicate rows.
 
 ## Fidelity Notes
 

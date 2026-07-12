@@ -134,6 +134,7 @@
   var clearBtn = document.getElementById('btn-clear-session');
   var saveSessionBtn = document.getElementById('btn-save-session');
   var copyCountsBtn = document.getElementById('btn-copy-counts');
+  var removeDupesBtn = document.getElementById('btn-remove-dupes');
   var periscopeBtn = document.getElementById('btn-periscope-report');
   var periscopeReport = document.getElementById('periscope-report');
   var exportSelect = document.getElementById('export-session-select');
@@ -185,6 +186,11 @@
       window.prompt('Copy counts', text);
       setSessionNote('Counts ready to copy.');
     }
+  });
+  if (removeDupesBtn) removeDupesBtn.addEventListener('click', function () {
+    if (!window.MMSession || !window.MMSession.removeDuplicateScans) return;
+    var removed = window.MMSession.removeDuplicateScans();
+    setSessionNote(removed ? ('Removed ' + removed + ' duplicate scan' + (removed === 1 ? '.' : 's.')) : 'No duplicate scans to remove.', !removed);
   });
   if (saveSessionBtn) saveSessionBtn.addEventListener('click', function () {
     if (!window.MMSession) return;

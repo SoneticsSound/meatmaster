@@ -104,6 +104,24 @@
     render();
   }
 
+  function removeDuplicateScans() {
+    load();
+    var removed = 0;
+    state.scans = state.scans.map(function (s) {
+      if (s.removed || !s.duplicate) return s;
+      var copy = {};
+      Object.keys(s).forEach(function (k) { copy[k] = s[k]; });
+      copy.removed = true;
+      copy.removedAt = new Date().toISOString();
+      copy.removedReason = 'duplicate sweep';
+      removed++;
+      return copy;
+    });
+    if (removed) save();
+    render();
+    return removed;
+  }
+
   function confirmNotDuplicate(scanId) {
     if (!scanId) return;
     load();
@@ -221,6 +239,7 @@
   function renderSummary() {
     var list = document.getElementById('session-count-list');
     var reportList = document.getElementById('periscope-report-list');
+    var reportWarning = document.getElementById('periscope-warning');
     var total = document.getElementById('session-total');
     var unique = document.getElementById('session-unique');
     var dupes = document.getElementById('session-dupes');
@@ -231,6 +250,10 @@
     if (total) total.textContent = scans.length;
     if (unique) unique.textContent = groups.length;
     if (dupes) dupes.textContent = duplicateCount;
+    if (reportWarning) {
+      reportWarning.hidden = duplicateCount === 0;
+      reportWarning.textContent = duplicateCount ? (duplicateCount + ' duplicate scan' + (duplicateCount === 1 ? '' : 's') + ' need review before this report is final.') : '';
+    }
     list.innerHTML = '';
     if (reportList) reportList.innerHTML = '';
     if (!groups.length) {
@@ -472,6 +495,7 @@
   window.MMSession = {
     addScan: addScan,
     removeScan: removeScan,
+    removeDuplicateScans: removeDuplicateScans,
     confirmNotDuplicate: confirmNotDuplicate,
     applyProductToCode: applyProductToCode,
     clear: clearSession,

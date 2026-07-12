@@ -367,6 +367,17 @@ body {
   margin: 12px 0 0;
   padding: 0;
 }
+.periscope-warning {
+  color: #ffced0;
+  background: rgba(193,39,45,.18);
+  border: 1px solid rgba(193,39,45,.75);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 900;
+  margin: 10px 0 0;
+  padding: 10px 12px;
+}
+.periscope-warning[hidden] { display: none; }
 .periscope-item {
   display: grid;
   grid-template-columns: 1fr 70px;
