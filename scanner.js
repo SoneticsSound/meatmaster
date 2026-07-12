@@ -553,11 +553,21 @@
       resNote.textContent = (saved.plu ? ('PLU ' + saved.plu) : 'Saved on phone') + (currentScan.price ? (' · ~$' + currentScan.price) : '');
       show(saveBtn, false);
       // update the scan-tab log entries for this code, then re-render everything
-      recent.forEach(function (r) { if (r.code === code) r.name = saved.name; });
+      recent.forEach(function (r) {
+        if (r.code === code) {
+          r.name = saved.name;
+          r.sheetName = saved.sheetName || r.sheetName || '';
+        }
+      });
       renderRecent();
       if (window.MMRenderProducts) window.MMRenderProducts();
       if (window.MMSession && window.MMSession.applyProductToCode) window.MMSession.applyProductToCode(code, saved);
       if (window.MMSession) window.MMSession.render();
+      show(card, false);
+      paused = false;
+      lastCode = null;
+      lastTime = 0;
+      if (running && !scanTimer) loop();
     }
   }
 
