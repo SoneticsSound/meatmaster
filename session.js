@@ -168,12 +168,20 @@
     return state.scans.filter(function (s) { return !s.removed; });
   }
 
+  function countableScansFrom(scans) {
+    return scans.filter(function (s) { return !s.removed && !s.duplicate; });
+  }
+
+  function countableScans() {
+    return countableScansFrom(activeScans());
+  }
+
   function scansForExport(sessionId) {
     load();
     loadSaved();
-    if (!sessionId || sessionId === 'active') return activeScans();
+    if (!sessionId || sessionId === 'active') return countableScans();
     var found = savedSessions.find(function (s) { return s.id === sessionId; });
-    return found ? found.scans.filter(function (s) { return !s.removed; }) : [];
+    return found ? countableScansFrom(found.scans || []) : [];
   }
 
   function groupedFrom(scans) {
@@ -198,7 +206,7 @@
   }
 
   function grouped() {
-    return groupedFrom(activeScans());
+    return groupedFrom(countableScans());
   }
 
   function renderSummary() {
@@ -207,14 +215,14 @@
     var unique = document.getElementById('session-unique');
     if (!list) return;
     var groups = grouped();
-    var scans = activeScans();
+    var scans = countableScans();
     if (total) total.textContent = scans.length;
     if (unique) unique.textContent = groups.length;
     list.innerHTML = '';
     if (!groups.length) {
       var empty = document.createElement('li');
       empty.className = 'session-empty';
-      empty.textContent = 'No confirmed scans yet.';
+      empty.textContent = 'No counted scans yet.';
       list.appendChild(empty);
       return;
     }
@@ -367,12 +375,12 @@
     select.innerHTML = '';
     var active = document.createElement('option');
     active.value = 'active';
-    active.textContent = 'Active session';
+    active.textContent = 'Active session (' + countableScans().length + ' counted)';
     select.appendChild(active);
     savedSessions.forEach(function (s) {
       var opt = document.createElement('option');
       opt.value = s.id;
-      opt.textContent = s.label + ' (' + (s.scans || []).filter(function (row) { return !row.removed; }).length + ' scans)';
+      opt.textContent = s.label + ' (' + countableScansFrom(s.scans || []).length + ' counted)';
       select.appendChild(opt);
     });
     select.value = Array.prototype.some.call(select.options, function (o) { return o.value === current; }) ? current : 'active';
@@ -414,6 +422,7 @@
     saveSession: snapshotSession,
     grouped: grouped,
     activeScans: activeScans,
+    countableScans: countableScans,
     render: render,
     renderExportOptions: renderExportOptions,
     exportCsv: exportCsv

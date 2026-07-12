@@ -1,6 +1,6 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.14.5**
+Current app version: **v0.14.6**
 
 Last synced: 2026-07-09
 
@@ -35,6 +35,7 @@ The app is a cached offline PWA, so version fidelity matters. When any app file 
 - Save Session auto-names sessions from the local saved date and time.
 - Confirming a duplicate now only affects duplicate rows and leaves a green Confirmed badge.
 - Swipe actions wait for clear horizontal intent so Scan and Session logs can scroll normally.
+- Unconfirmed duplicate scans remain visible as evidence but are excluded from counts and CSV export.
 
 ## Fidelity Notes
 

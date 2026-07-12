@@ -147,7 +147,8 @@
       setSessionNote('No scans to save yet.', true);
       return;
     }
-    setSessionNote('Saved "' + saved.label + '" with ' + saved.scans.length + ' scans.');
+    var counted = saved.scans.filter(function (s) { return !s.removed && !s.duplicate; }).length;
+    setSessionNote('Saved "' + saved.label + '" with ' + counted + ' counted scans.');
   });
   if (clearBtn) clearBtn.addEventListener('click', function () {
     if (!window.MMSession) return;
