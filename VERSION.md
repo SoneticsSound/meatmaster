@@ -1,6 +1,6 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.16.9**
+Current app version: **v0.16.10**
 
 Last synced: 2026-07-09
 
@@ -53,6 +53,7 @@ The app is a cached offline PWA, so version fidelity matters. When any app file 
 - Periscope Report is limited to meat-dept checklist categories, so saved grocery/produce items do not appear there.
 - Duplicate sweep buttons are visually separated: green for counting units, red for removing dupes.
 - Duplicate warning card on the Scan tab has a Unit button to count that duplicate immediately.
+- Same-code ignore window is 1.0s and duplicate classification window is 2.0s for faster unit-count workflows.
 
 ## Fidelity Notes
 

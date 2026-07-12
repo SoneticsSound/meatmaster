@@ -414,7 +414,7 @@
   function onDecode(result) {
     var code = result.text;
     var now = Date.now();
-    if (code === lastCode && (now - lastTime) < 10000) return; // suppress same-package repeats
+    if (code === lastCode && (now - lastTime) < 1000) return; // suppress same-frame repeats
     lastCode = code; lastTime = now;
     var token = ++scanToken;
 
@@ -450,7 +450,7 @@
   function onDecodeAuto(result) {
     var code = result.text;
     var now = Date.now();
-    if (code === lastCode && (now - lastTime) < 2500) return; // debounce repeats
+    if (code === lastCode && (now - lastTime) < 1000) return; // debounce repeats
     lastCode = code; lastTime = now;
     var token = ++scanToken;
 
