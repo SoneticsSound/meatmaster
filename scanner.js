@@ -741,6 +741,11 @@
     if (changed) renderRecent();
   }
 
+  function clearRecent() {
+    recent = [];
+    renderRecent();
+  }
+
   function wireRecentSwipe(li, row) {
     var startX = 0, startY = 0, startOffsetX = 0, currentX = 0, dragging = false, swiping = false;
     function setX(x) {
@@ -831,6 +836,7 @@
     start: start,
     stop: stop,
     getRecent: function () { return recent.slice(); },
+    clearRecent: clearRecent,
     markDuplicatesCounted: markDuplicatesCounted,
     decodeImage: function (url) {
       return new Promise(function (resolve, reject) {

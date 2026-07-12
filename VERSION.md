@@ -1,6 +1,6 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.16.11**
+Current app version: **v0.16.12**
 
 Last synced: 2026-07-09
 
@@ -55,6 +55,7 @@ The app is a cached offline PWA, so version fidelity matters. When any app file 
 - Duplicate warning card on the Scan tab has a Unit button to count that duplicate immediately.
 - Same-code ignore window is 1.0s and duplicate classification window is 2.0s for faster unit-count workflows.
 - No-price/fixed-UPC duplicate scans automatically count as units; priced variable-weight labels still get duplicate protection.
+- Clear Session also clears the Scan tab's in-memory recent scan log.
 
 ## Fidelity Notes
 

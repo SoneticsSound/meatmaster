@@ -213,6 +213,7 @@
     if (!window.MMSession) return;
     if (window.confirm('Clear the current count session?')) {
       window.MMSession.clear();
+      if (window.MMScanner && window.MMScanner.clearRecent) window.MMScanner.clearRecent();
       setSessionNote('Active session cleared.');
     }
   });
