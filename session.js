@@ -77,6 +77,7 @@
       plu: product && product.plu ? product.plu : '',
       sheetName: product && product.sheetName ? product.sheetName : '',
       category: product && product.category ? product.category : 'Unknown',
+      casePosition: product && product.casePosition ? product.casePosition : 9999,
       price: payload.price || '',
       duplicate: recentDuplicate(code),
       removed: false
@@ -157,6 +158,7 @@
       copy.plu = product && product.plu ? product.plu : copy.plu;
       copy.sheetName = product && product.sheetName ? product.sheetName : copy.sheetName;
       copy.category = product && product.category ? product.category : copy.category;
+      copy.casePosition = product && product.casePosition ? product.casePosition : copy.casePosition;
       return copy;
     });
     save();
@@ -188,6 +190,8 @@
     var groups = {};
     scans.forEach(function (s) {
       var key = s.productKey || ('code:' + s.code);
+      var product = window.MMProducts && window.MMProducts.findByCode ? window.MMProducts.findByCode(s.code) : null;
+      var casePosition = s.casePosition || (product && product.casePosition) || 9999;
       if (!groups[key]) {
         groups[key] = {
           key: key,
@@ -195,12 +199,17 @@
           plu: s.plu,
           sheetName: s.sheetName,
           category: s.category,
+          casePosition: casePosition,
           count: 0
         };
       }
+      if (casePosition < (groups[key].casePosition || 9999)) groups[key].casePosition = casePosition;
       groups[key].count++;
     });
     return Object.keys(groups).map(function (k) { return groups[k]; }).sort(function (a, b) {
+      var ap = Number(a.casePosition || 9999);
+      var bp = Number(b.casePosition || 9999);
+      if (ap !== bp) return ap - bp;
       return String(a.productName).localeCompare(String(b.productName));
     });
   }
@@ -211,6 +220,7 @@
 
   function renderSummary() {
     var list = document.getElementById('session-count-list');
+    var reportList = document.getElementById('periscope-report-list');
     var total = document.getElementById('session-total');
     var unique = document.getElementById('session-unique');
     var dupes = document.getElementById('session-dupes');
@@ -222,11 +232,18 @@
     if (unique) unique.textContent = groups.length;
     if (dupes) dupes.textContent = duplicateCount;
     list.innerHTML = '';
+    if (reportList) reportList.innerHTML = '';
     if (!groups.length) {
       var empty = document.createElement('li');
       empty.className = 'session-empty';
       empty.textContent = 'No counted scans yet.';
       list.appendChild(empty);
+      if (reportList) {
+        var reportEmpty = document.createElement('li');
+        reportEmpty.className = 'session-empty';
+        reportEmpty.textContent = 'No counted scans yet.';
+        reportList.appendChild(reportEmpty);
+      }
       return;
     }
     groups.forEach(function (g) {
@@ -247,6 +264,30 @@
       li.appendChild(qty);
       li.appendChild(body);
       list.appendChild(li);
+
+      if (reportList) {
+        var reportRow = document.createElement('li');
+        reportRow.className = 'periscope-item';
+        var info = document.createElement('div');
+        var reportName = document.createElement('div');
+        reportName.className = 'periscope-name';
+        reportName.textContent = g.productName;
+        var reportMeta = document.createElement('div');
+        reportMeta.className = 'periscope-meta';
+        reportMeta.textContent = [
+          g.plu ? ('PLU ' + g.plu) : '',
+          g.category || '',
+          g.sheetName || ''
+        ].filter(Boolean).join(' - ');
+        var reportCount = document.createElement('div');
+        reportCount.className = 'periscope-count';
+        reportCount.textContent = g.count;
+        info.appendChild(reportName);
+        info.appendChild(reportMeta);
+        reportRow.appendChild(info);
+        reportRow.appendChild(reportCount);
+        reportList.appendChild(reportRow);
+      }
     });
   }
 

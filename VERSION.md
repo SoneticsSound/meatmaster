@@ -1,6 +1,6 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.15.3**
+Current app version: **v0.15.5**
 
 Last synced: 2026-07-09
 
@@ -43,6 +43,8 @@ The app is a cached offline PWA, so version fidelity matters. When any app file 
 - Session stats show pending duplicate rows separately from counted scans.
 - Session tab can copy counted product totals as compact text.
 - Old manual-confirm wording was cleaned up now that scans auto-record.
+- Session tab has a Periscope Report view with large counted quantities for manual checklist entry.
+- Count, CSV, Copy Counts, and Periscope Report now sort by checklist/case position before product name.
 
 ## Fidelity Notes
 

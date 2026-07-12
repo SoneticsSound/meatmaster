@@ -134,6 +134,8 @@
   var clearBtn = document.getElementById('btn-clear-session');
   var saveSessionBtn = document.getElementById('btn-save-session');
   var copyCountsBtn = document.getElementById('btn-copy-counts');
+  var periscopeBtn = document.getElementById('btn-periscope-report');
+  var periscopeReport = document.getElementById('periscope-report');
   var exportSelect = document.getElementById('export-session-select');
   var sessionNote = document.getElementById('session-action-note');
   function setSessionNote(text, isError) {
@@ -155,6 +157,12 @@
   }
   if (exportBtn) exportBtn.addEventListener('click', function () {
     if (window.MMSession) window.MMSession.exportCsv(exportSelect ? exportSelect.value : 'active');
+  });
+  if (periscopeBtn && periscopeReport) periscopeBtn.addEventListener('click', function () {
+    var open = periscopeReport.hidden;
+    periscopeReport.hidden = !open;
+    periscopeBtn.textContent = open ? 'Hide Periscope Report' : 'Show Periscope Report';
+    if (open && window.MMSession) window.MMSession.render();
   });
   if (copyCountsBtn) copyCountsBtn.addEventListener('click', function () {
     if (!window.MMSession || !window.MMSession.countsText) return;
