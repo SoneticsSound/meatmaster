@@ -368,11 +368,15 @@
         confirmed.textContent = 'Confirmed';
         name.appendChild(confirmed);
       }
+      var sheet = document.createElement('div');
+      sheet.className = 'scan-row-sheet';
+      sheet.textContent = s.sheetName || (product && product.sheetName) || '—';
       var meta = document.createElement('div');
       meta.className = 'scan-row-meta';
       var t = new Date(s.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      meta.textContent = t + ' - ' + s.code;
+      meta.textContent = s.code + ' · ' + t;
       body.appendChild(name);
+      body.appendChild(sheet);
       body.appendChild(meta);
       row.appendChild(body);
       li.appendChild(actions);

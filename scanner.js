@@ -578,7 +578,7 @@
       var row = document.createElement('div');
       row.className = 'recent-item' + (r.duplicate ? ' is-duplicate' : '') + (r.confirmed ? ' is-confirmed' : '');
       var t = r.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      var product = (!r.name && window.MMProducts) ? window.MMProducts.findByCode(r.code) : null;
+      var product = window.MMProducts ? window.MMProducts.findByCode(r.code) : null;
       var code = document.createElement('span');
       code.className = 'ri-code';
       code.textContent = r.name || (product && product.name) || r.code;
@@ -593,10 +593,14 @@
         confirmed.textContent = 'Confirmed';
         code.appendChild(confirmed);
       }
+      var sheet = document.createElement('span');
+      sheet.className = 'ri-sheet';
+      sheet.textContent = r.sheetName || (product && product.sheetName) || '—';
       var meta = document.createElement('span');
       meta.className = 'ri-meta';
-      meta.textContent = (r.duplicate ? 'Duplicate Scan - ' : '') + r.fmt + ' - ' + t;
+      meta.textContent = r.code + ' · ' + t;
       row.appendChild(code);
+      row.appendChild(sheet);
       row.appendChild(meta);
       li.appendChild(actions);
       li.appendChild(row);
