@@ -46,6 +46,7 @@
   /* ---------- product list ---------- */
   var productList = document.getElementById('product-list');
   var productCount = document.getElementById('product-count');
+  var productSearch = document.getElementById('product-search');
   function editProduct(p) {
     if (!p || !window.MMProducts) return;
     var next = window.prompt('Product name', p.name || '');
@@ -66,7 +67,15 @@
     if (!productList || !window.MMProducts) return;
     productList.innerHTML = '';
     var products = window.MMProducts.refresh ? window.MMProducts.refresh() : window.MMProducts.all.slice();
-    if (productCount) productCount.textContent = products.length;
+    var q = productSearch ? productSearch.value.trim().toLowerCase() : '';
+    if (q) {
+      products = products.filter(function (p) {
+        return [p.name, p.plu, p.upc, p.sheetName, p.category].some(function (v) {
+          return String(v || '').toLowerCase().indexOf(q) !== -1;
+        });
+      });
+    }
+    if (productCount) productCount.textContent = q ? (products.length + ' shown') : products.length;
     products.forEach(function (p) {
       var li = document.createElement('li');
       li.className = 'product-item';
@@ -104,6 +113,7 @@
     });
   }
   renderProducts();
+  if (productSearch) productSearch.addEventListener('input', renderProducts);
   window.MMRenderProducts = renderProducts;
   window.MMEditProduct = editProduct;
   window.MMEditProductByCode = function (code) {
