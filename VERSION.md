@@ -1,6 +1,6 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.16.6**
+Current app version: **v0.16.7**
 
 Last synced: 2026-07-09
 
@@ -50,6 +50,7 @@ The app is a cached offline PWA, so version fidelity matters. When any app file 
 - Periscope Report warns when unresolved duplicate rows still need review.
 - Session tab can sweep-remove all unresolved duplicate rows.
 - Session tab can sweep-count all unresolved duplicate rows as physical units for fixed-UPC items.
+- Periscope Report is limited to meat-dept checklist categories, so saved grocery/produce items do not appear there.
 
 ## Fidelity Notes
 

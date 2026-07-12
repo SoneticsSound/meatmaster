@@ -330,32 +330,35 @@
     return row;
   }
 
+  function isMeatDeptChecklistProduct(product) {
+    if (!product || !product.plu) return false;
+    var cat = String(product && product.category || '').toLowerCase();
+    return cat === 'beef' || cat === 'ready-made';
+  }
+
   function renderPeriscopeChecklist(groups) {
     var reportList = document.getElementById('periscope-report-list');
     if (!reportList) return;
     reportList.innerHTML = '';
-    // scanned counts keyed by PLU; scanned items without a PLU are "extras"
-    var countByPlu = {}, extras = [];
+    // scanned counts keyed by PLU. The Periscope Report is the meat-dept
+    // checklist only; saved grocery/produce/snack products stay in Counts/Log.
+    var countByPlu = {};
     groups.forEach(function (g) {
       var plu = g.plu ? String(g.plu).replace(/^0+/, '') : '';
       if (plu) countByPlu[plu] = (countByPlu[plu] || 0) + g.count;
-      else extras.push(g);
     });
     // every known checklist product, in case order (MMProducts.all is sorted by casePosition)
-    var checklist = (window.MMProducts && window.MMProducts.all) ? window.MMProducts.all : [];
+    var checklist = (window.MMProducts && window.MMProducts.all) ?
+      window.MMProducts.all.filter(isMeatDeptChecklistProduct) : [];
     checklist.forEach(function (p) {
       var plu = p.plu ? String(p.plu).replace(/^0+/, '') : '';
       var count = plu ? (countByPlu[plu] || 0) : 0;
       reportList.appendChild(periscopeRow(p.name, p.sheetName, p.plu, p.category, count));
     });
-    // then anything scanned that isn't on the checklist (unknowns)
-    extras.forEach(function (g) {
-      reportList.appendChild(periscopeRow(g.productName, g.sheetName, g.plu, g.category, g.count));
-    });
-    if (!checklist.length && !extras.length) {
+    if (!checklist.length) {
       var empty = document.createElement('li');
       empty.className = 'session-empty';
-      empty.textContent = 'No checklist loaded yet.';
+      empty.textContent = 'No meat-dept checklist loaded yet.';
       reportList.appendChild(empty);
     }
   }
