@@ -133,6 +133,7 @@
   var exportBtn = document.getElementById('btn-export-csv');
   var clearBtn = document.getElementById('btn-clear-session');
   var saveSessionBtn = document.getElementById('btn-save-session');
+  var copyCountsBtn = document.getElementById('btn-copy-counts');
   var exportSelect = document.getElementById('export-session-select');
   var sessionNote = document.getElementById('session-action-note');
   function setSessionNote(text, isError) {
@@ -154,6 +155,25 @@
   }
   if (exportBtn) exportBtn.addEventListener('click', function () {
     if (window.MMSession) window.MMSession.exportCsv(exportSelect ? exportSelect.value : 'active');
+  });
+  if (copyCountsBtn) copyCountsBtn.addEventListener('click', function () {
+    if (!window.MMSession || !window.MMSession.countsText) return;
+    var text = window.MMSession.countsText('active');
+    if (!text) {
+      setSessionNote('No counted scans to copy yet.', true);
+      return;
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () {
+        setSessionNote('Counts copied.');
+      }).catch(function () {
+        window.prompt('Copy counts', text);
+        setSessionNote('Counts ready to copy.');
+      });
+    } else {
+      window.prompt('Copy counts', text);
+      setSessionNote('Counts ready to copy.');
+    }
   });
   if (saveSessionBtn) saveSessionBtn.addEventListener('click', function () {
     if (!window.MMSession) return;

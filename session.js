@@ -413,6 +413,15 @@
     setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
   }
 
+  function countsText(sessionId) {
+    var rows = groupedFrom(scansForExport(sessionId || 'active'));
+    return rows.map(function (r) {
+      return r.count + ' x ' + r.productName +
+        (r.plu ? (' | PLU ' + r.plu) : '') +
+        (r.category ? (' | ' + r.category) : '');
+    }).join('\n');
+  }
+
   load();
   loadSaved();
 
@@ -428,6 +437,7 @@
     countableScans: countableScans,
     render: render,
     renderExportOptions: renderExportOptions,
+    countsText: countsText,
     exportCsv: exportCsv
   };
 
