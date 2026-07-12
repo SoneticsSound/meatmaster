@@ -486,12 +486,14 @@
     var suggested = resName.textContent === 'Unknown product' ? '' : resName.textContent;
     var name = window.prompt('Product name', suggested);
     if (!name) return;
+    var defaultCategory = /chicken|truffle|saute|meal|marry/i.test(name) ? 'Ready-Made' : (plu ? 'Beef' : 'Unknown');
+    var category = window.prompt('Category', defaultCategory);
     var saved = window.MMProducts.save({
       plu: plu || '',
       upc: code,
       name: name.trim(),
       sheetName: 'Saved from scan',
-      category: plu ? 'Beef' : 'Unknown',
+      category: category && category.trim() ? category.trim() : defaultCategory,
       casePosition: 9999
     });
     if (saved) {

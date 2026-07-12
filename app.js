@@ -50,12 +50,13 @@
     if (!p || !window.MMProducts) return;
     var next = window.prompt('Product name', p.name || '');
     if (!next) return;
+    var category = window.prompt('Category', p.category || 'Unknown');
     window.MMProducts.save({
       plu: p.plu,
       upc: p.upc,
       name: next.trim(),
       sheetName: p.sheetName || 'Saved on phone',
-      category: p.category || 'Unknown',
+      category: category && category.trim() ? category.trim() : (p.category || 'Unknown'),
       casePosition: p.casePosition || 9999
     });
     renderProducts();
@@ -84,7 +85,11 @@
       }
       var meta = document.createElement('div');
       meta.className = 'product-meta';
-      meta.textContent = p.upc + ' - ' + p.sheetName;
+      meta.textContent = [
+        p.upc || (p.plu ? ('PLU ' + p.plu) : ''),
+        p.category || 'Unknown',
+        p.sheetName || ''
+      ].filter(Boolean).join(' - ');
       body.appendChild(name);
       body.appendChild(meta);
       var edit = document.createElement('button');
