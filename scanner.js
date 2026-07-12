@@ -371,6 +371,12 @@
         if (!label) return;
         resName.textContent = label;
         resNote.textContent = 'Found online - Save product to keep name' + (price ? (' - ~$' + price) : '');
+        // reflect the found name in the scan-tab log too (not just the card)
+        var changed = false;
+        recent.forEach(function (r) {
+          if (r.code === lookupCode && (!r.name || r.name === 'Unknown product')) { r.name = label; changed = true; }
+        });
+        if (changed) renderRecent();
       })
       .catch(function () {});
   }
@@ -500,6 +506,9 @@
       resName.textContent = saved.name;
       resNote.textContent = (saved.plu ? ('PLU ' + saved.plu) : 'Saved on phone') + (currentScan.price ? (' · ~$' + currentScan.price) : '');
       show(saveBtn, false);
+      // update the scan-tab log entries for this code, then re-render everything
+      recent.forEach(function (r) { if (r.code === code) r.name = saved.name; });
+      renderRecent();
       if (window.MMRenderProducts) window.MMRenderProducts();
       if (window.MMSession && window.MMSession.applyProductToCode) window.MMSession.applyProductToCode(code, saved);
       if (window.MMSession) window.MMSession.render();
@@ -581,7 +590,10 @@
       var product = window.MMProducts ? window.MMProducts.findByCode(r.code) : null;
       var code = document.createElement('span');
       code.className = 'ri-code';
-      code.textContent = r.name || (product && product.name) || r.code;
+      // prefer the live product name so entries re-resolve once an item becomes
+      // known (a stored "Unknown product" must not stick forever)
+      var known = product && product.name;
+      code.textContent = known || (r.name && r.name !== 'Unknown product' ? r.name : null) || r.name || r.code;
       if (r.duplicate) {
         var badge = document.createElement('span');
         badge.className = 'dupe-badge';
