@@ -8,8 +8,8 @@
    and on a miss scan an Otsu-thresholded copy (rescues glare/low contrast).
    Both proven against real photos. Plain vanilla JS, no build step.
 
-   Flow: tap Start -> camera opens -> a barcode is read -> confirm card ->
-   Confirm (records it) or Rescan. Camera stops when you leave the Scan tab. */
+   Flow: tap Start -> camera opens -> recognized barcodes auto-record.
+   Unknown products pause on a card so the user can save or dismiss. */
 
 (function () {
   'use strict';
@@ -370,7 +370,7 @@
         var label = (br && nm && nm.toLowerCase().indexOf(br.toLowerCase()) < 0) ? (br + ' ' + nm) : (nm || br);
         if (!label) return;
         resName.textContent = label;
-        resNote.textContent = 'Found online — Confirm to save' + (price ? (' · ~$' + price) : '');
+        resNote.textContent = 'Found online - Save product to keep name' + (price ? (' - ~$' + price) : '');
       })
       .catch(function () {});
   }

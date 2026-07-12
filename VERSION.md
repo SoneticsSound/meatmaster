@@ -1,6 +1,6 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.15.2**
+Current app version: **v0.15.3**
 
 Last synced: 2026-07-09
 
@@ -42,6 +42,7 @@ The app is a cached offline PWA, so version fidelity matters. When any app file 
 - Products tab has local search across name, PLU, barcode, sheet name, and category.
 - Session stats show pending duplicate rows separately from counted scans.
 - Session tab can copy counted product totals as compact text.
+- Old manual-confirm wording was cleaned up now that scans auto-record.
 
 ## Fidelity Notes
 
