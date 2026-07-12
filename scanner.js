@@ -313,7 +313,17 @@
         if (nowT - fpsMark >= 1000) { diag.fps = fpsCount; fpsCount = 0; fpsMark = nowT; }
         if (res && res.text) { diag.hits++; diag.last = res.text + ' (' + prettyType(res.type) + ')'; }
         renderDiag();
-        if (res && res.text && running && !paused) onDecodeAuto(res);
+        if (res && res.text && running && !paused) {
+          // require two consecutive identical, plausible reads before counting —
+          // a single misdecode of a blurry/curved barcode won't survive this
+          if (!isPlausibleCode(res.text, res.type)) {
+            confirmCode = null; confirmHits = 0;
+          } else if (res.text === confirmCode) {
+            if (++confirmHits >= 2) { confirmCode = null; confirmHits = 0; onDecodeAuto(res); }
+          } else {
+            confirmCode = res.text; confirmHits = 1;
+          }
+        }
         if (running) scanTimer = setTimeout(loop, 60);
       });
     } catch (e) {
@@ -326,6 +336,19 @@
   /* ---------- turning a scan into a result card ---------- */
   var scanToken = 0;
   var currentScan = null;
+  var confirmCode = null, confirmHits = 0;   // require 2 consecutive identical reads
+
+  // Reject implausible reads: formats prone to short misreads (I25/Code39) and
+  // codes that aren't a valid retail length. Stops garbage (e.g. "561127") or a
+  // one-off misdecode from being counted.
+  function isPlausibleCode(text, type) {
+    if (isUrl(text)) return true;
+    var t = String(type || '');
+    if (/I25|ITF|CODE39|CODABAR/.test(t)) return false;         // logistics / misread-prone
+    var digits = String(text || '').replace(/\D/g, '');
+    if (/DATABAR|CODE128/.test(t)) return digits.length >= 8;   // GS1 / variable length
+    return digits.length === 8 || digits.length === 12 || digits.length === 13 || digits.length === 14;
+  }
 
   function isUrl(s) { return /^https?:\/\//i.test(s); }
   // GS1 Digital Link URLs carry the GTIN after "/01/" — pull it for a lookup.
