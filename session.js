@@ -52,7 +52,11 @@
     return 'code:' + codeText(code);
   }
 
-  function recentDuplicate(code) {
+  function recentDuplicate(code, price) {
+    // Fixed-UPC / no-price items are unit-count items: two identical barcodes
+    // usually mean two physical units. Variable-weight labels carry price, so
+    // an exact repeat inside the short window is probably the same package.
+    if (!price) return false;
     var c = codeText(code);
     if (!c) return false;
     var now = Date.now();
@@ -79,7 +83,7 @@
       category: product && product.category ? product.category : 'Unknown',
       casePosition: product && product.casePosition ? product.casePosition : 9999,
       price: payload.price || '',
-      duplicate: recentDuplicate(code),
+      duplicate: recentDuplicate(code, payload.price),
       removed: false
     };
     state.scans.unshift(scan);

@@ -1,6 +1,6 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.16.10**
+Current app version: **v0.16.11**
 
 Last synced: 2026-07-09
 
@@ -26,7 +26,7 @@ The app is a cached offline PWA, so version fidelity matters. When any app file 
 - Recognized scans auto-record into a persistent count session without requiring Confirm.
 - Session tab shows grouped counts plus removable scan evidence rows.
 - Export tab downloads a CSV with product name, PLU, count, store code, and category.
-- Exact same barcode repeats are suppressed for 10 seconds to prevent duplicate-toast loops.
+- Exact same barcode reads are debounced for 1 second to prevent duplicate-toast loops.
 - Duplicate scan rows are marked with a small badge and can be swiped to Count Unit or Remove.
 - Rescan now clears toast state, resets same-code cooldown, and restarts the decode loop if needed.
 - Duplicate entries in both scan logs use red warning styling and show product names when a barcode is mapped.
@@ -54,6 +54,7 @@ The app is a cached offline PWA, so version fidelity matters. When any app file 
 - Duplicate sweep buttons are visually separated: green for counting units, red for removing dupes.
 - Duplicate warning card on the Scan tab has a Unit button to count that duplicate immediately.
 - Same-code ignore window is 1.0s and duplicate classification window is 2.0s for faster unit-count workflows.
+- No-price/fixed-UPC duplicate scans automatically count as units; priced variable-weight labels still get duplicate protection.
 
 ## Fidelity Notes
 
