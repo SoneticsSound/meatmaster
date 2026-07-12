@@ -473,10 +473,9 @@
   }
 
   function confirmScan() {
-    recent.unshift({ code: resCode.textContent, fmt: resFmt.textContent, at: new Date() });
-    renderRecent();
     show(card, false);
     paused = false;
+    if (running && !scanTimer) loop();
   }
 
   function saveProduct() {
