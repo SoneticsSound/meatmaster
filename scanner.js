@@ -721,10 +721,20 @@
     if (running && !scanTimer) loop();
   }
 
-  function removeRecent(scanId) {
+  function forgetRecent(scanId) {
     recent = recent.filter(function (r) { return r.id !== scanId; });
-    if (window.MMSession && window.MMSession.removeScan) window.MMSession.removeScan(scanId);
     renderRecent();
+  }
+
+  function removeRecent(scanId) {
+    forgetRecent(scanId);
+    if (window.MMSession && window.MMSession.removeScan) window.MMSession.removeScan(scanId);
+  }
+
+  function forgetDuplicateRecent() {
+    var before = recent.length;
+    recent = recent.filter(function (r) { return !r.duplicate; });
+    if (recent.length !== before) renderRecent();
   }
 
   function markDuplicatesCounted() {
@@ -837,6 +847,8 @@
     stop: stop,
     getRecent: function () { return recent.slice(); },
     clearRecent: clearRecent,
+    forgetRecent: forgetRecent,
+    forgetDuplicateRecent: forgetDuplicateRecent,
     markDuplicatesCounted: markDuplicatesCounted,
     decodeImage: function (url) {
       return new Promise(function (resolve, reject) {

@@ -403,7 +403,10 @@
       remove.className = 'scan-action scan-delete';
       remove.type = 'button';
       remove.textContent = 'Remove';
-      remove.addEventListener('click', function () { removeScan(s.id); });
+      remove.addEventListener('click', function () {
+        removeScan(s.id);
+        if (window.MMScanner && window.MMScanner.forgetRecent) window.MMScanner.forgetRecent(s.id);
+      });
       actions.appendChild(remove);
 
       var row = document.createElement('div');

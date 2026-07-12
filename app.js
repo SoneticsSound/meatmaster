@@ -191,6 +191,7 @@
   if (removeDupesBtn) removeDupesBtn.addEventListener('click', function () {
     if (!window.MMSession || !window.MMSession.removeDuplicateScans) return;
     var removed = window.MMSession.removeDuplicateScans();
+    if (removed && window.MMScanner && window.MMScanner.forgetDuplicateRecent) window.MMScanner.forgetDuplicateRecent();
     setSessionNote(removed ? ('Removed ' + removed + ' duplicate scan' + (removed === 1 ? '.' : 's.')) : 'No duplicate scans to remove.', !removed);
   });
   if (countDupesBtn) countDupesBtn.addEventListener('click', function () {

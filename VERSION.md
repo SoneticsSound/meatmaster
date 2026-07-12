@@ -1,6 +1,6 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.16.13**
+Current app version: **v0.16.14**
 
 Last synced: 2026-07-09
 
@@ -57,6 +57,7 @@ The app is a cached offline PWA, so version fidelity matters. When any app file 
 - No-price/fixed-UPC duplicate scans automatically count as units; priced variable-weight labels still get duplicate protection.
 - Clear Session also clears the Scan tab's in-memory recent scan log.
 - No-price Beef/Ready-Made PLU repeats still get duplicate protection because they are likely checklist/reference barcodes.
+- Removing duplicate scans from Session also removes matching duplicate rows from the Scan tab recent log.
 
 ## Fidelity Notes
 
