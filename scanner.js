@@ -692,6 +692,11 @@
 
   function confirmRecent(scanId) {
     if (!scanId) return;
+    markRecentCounted(scanId);
+    if (window.MMSession && window.MMSession.confirmNotDuplicate) window.MMSession.confirmNotDuplicate(scanId);
+  }
+
+  function markRecentCounted(scanId) {
     recent = recent.map(function (r) {
       if (r.id === scanId && r.duplicate) {
         var copy = {};
@@ -702,7 +707,6 @@
       }
       return r;
     });
-    if (window.MMSession && window.MMSession.confirmNotDuplicate) window.MMSession.confirmNotDuplicate(scanId);
     renderRecent();
   }
 
@@ -849,6 +853,7 @@
     clearRecent: clearRecent,
     forgetRecent: forgetRecent,
     forgetDuplicateRecent: forgetDuplicateRecent,
+    markRecentCounted: markRecentCounted,
     markDuplicatesCounted: markDuplicatesCounted,
     decodeImage: function (url) {
       return new Promise(function (resolve, reject) {

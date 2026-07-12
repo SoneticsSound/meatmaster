@@ -1,6 +1,6 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.16.14**
+Current app version: **v0.16.15**
 
 Last synced: 2026-07-09
 
@@ -58,6 +58,7 @@ The app is a cached offline PWA, so version fidelity matters. When any app file 
 - Clear Session also clears the Scan tab's in-memory recent scan log.
 - No-price Beef/Ready-Made PLU repeats still get duplicate protection because they are likely checklist/reference barcodes.
 - Removing duplicate scans from Session also removes matching duplicate rows from the Scan tab recent log.
+- Counting an individual duplicate as a unit from Session also updates the matching Scan tab row.
 
 ## Fidelity Notes
 

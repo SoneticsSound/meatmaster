@@ -388,7 +388,10 @@
         keep.className = 'scan-action scan-keep';
         keep.type = 'button';
         keep.textContent = 'Count Unit';
-        keep.addEventListener('click', function () { confirmNotDuplicate(s.id); });
+        keep.addEventListener('click', function () {
+          confirmNotDuplicate(s.id);
+          if (window.MMScanner && window.MMScanner.markRecentCounted) window.MMScanner.markRecentCounted(s.id);
+        });
         actions.appendChild(keep);
       }
       var edit = document.createElement('button');
