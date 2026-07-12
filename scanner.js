@@ -27,6 +27,7 @@
   var resCode   = el('result-code');
   var resNote   = el('result-note');
   var saveBtn   = el('btn-save-product');
+  var unitBtn   = el('btn-unit-scan');
   var controls  = el('scan-controls');
   var recentBox = el('recent');
   var recentList= el('recent-list');
@@ -41,6 +42,7 @@
   var lastCode = null, lastTime = 0;
   var recent = [];       // this-session scans (in memory)
   var toastTimer = null;
+  var toastScanId = null;
 
   // reusable work canvases (avoid per-frame allocation)
   var cropCanvas = null, cropCtx = null;   // the framed box, at full res
@@ -48,8 +50,9 @@
 
   function show(node, on) { if (node) node.hidden = !on; }
 
-  function toast(kind, title, sheetName, note) {
+  function toast(kind, title, sheetName, note, scanId) {
     if (toastTimer) { clearTimeout(toastTimer); toastTimer = null; }
+    toastScanId = kind === 'dupe' ? scanId : null;
     resFmt.textContent = kind === 'dupe' ? 'POSSIBLE DUPLICATE' : 'RECORDED';
     resName.textContent = title;
     resCode.textContent = sheetName || '';
@@ -58,11 +61,14 @@
     card.classList.toggle('is-ok', kind !== 'dupe');
     card.classList.toggle('is-dupe', kind === 'dupe');
     show(saveBtn, false);
+    show(unitBtn, kind === 'dupe' && !!scanId);
     show(card, true);
     toastTimer = setTimeout(function () {
       show(card, false);
       card.classList.remove('is-ok', 'is-dupe', 'is-toast');
-    }, kind === 'dupe' ? 1600 : 1000);
+      show(unitBtn, false);
+      toastScanId = null;
+    }, kind === 'dupe' ? 1500 : 1000);
   }
 
   /* ---------- decode engine (zbar) ---------- */
@@ -415,6 +421,7 @@
     paused = true;
     feedback();
     card.classList.remove('is-toast');
+    show(unitBtn, false);
     resFmt.textContent = prettyType(result.type);
     setCode(code);
 
@@ -475,7 +482,7 @@
       renderRecent();
       var scanTime = scanAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       var scanMeta = code + ' · ' + scanTime + ' · ' + (scan && scan.duplicate ? 'Duplicate scan' : 'Counted +1');
-      toast(scan && scan.duplicate ? 'dupe' : 'ok', product.name, product.sheetName || '', scanMeta);
+      toast(scan && scan.duplicate ? 'dupe' : 'ok', product.name, product.sheetName || '', scanMeta, scan && scan.id);
       return;
     }
 
@@ -525,6 +532,8 @@
   function confirmScan() {
     show(card, false);
     card.classList.remove('is-toast');
+    show(unitBtn, false);
+    toastScanId = null;
     paused = false;
     if (running && !scanTimer) loop();
   }
@@ -532,6 +541,7 @@
   function saveProduct() {
     if (!currentScan || !window.MMProducts) return;
     card.classList.remove('is-toast');
+    show(unitBtn, false);
     var code = currentScan.code;
     var plu = window.MMProducts.extractPlu ? window.MMProducts.extractPlu(code) : null;
     var suggested = resName.textContent === 'Unknown product' ? '' : resName.textContent;
@@ -576,6 +586,8 @@
     show(card, false);
     card.classList.remove('is-ok', 'is-dupe');
     card.classList.remove('is-toast');
+    show(unitBtn, false);
+    toastScanId = null;
     paused = false;
     lastCode = null;
     lastTime = 0;
@@ -694,6 +706,21 @@
     renderRecent();
   }
 
+  function countToastAsUnit() {
+    if (!toastScanId) return;
+    var scanId = toastScanId;
+    if (toastTimer) { clearTimeout(toastTimer); toastTimer = null; }
+    confirmRecent(scanId);
+    toastScanId = null;
+    show(unitBtn, false);
+    show(card, false);
+    card.classList.remove('is-ok', 'is-dupe', 'is-toast');
+    paused = false;
+    lastCode = null;
+    lastTime = 0;
+    if (running && !scanTimer) loop();
+  }
+
   function removeRecent(scanId) {
     recent = recent.filter(function (r) { return r.id !== scanId; });
     if (window.MMSession && window.MMSession.removeScan) window.MMSession.removeScan(scanId);
@@ -781,6 +808,7 @@
   el('btn-stop').addEventListener('click', stop);
   el('btn-confirm').addEventListener('click', confirmScan);
   el('btn-rescan').addEventListener('click', rescan);
+  if (unitBtn) unitBtn.addEventListener('click', countToastAsUnit);
   if (saveBtn) saveBtn.addEventListener('click', saveProduct);
 
   // turn the camera off when navigating away from the Scan tab

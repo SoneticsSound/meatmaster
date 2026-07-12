@@ -1,6 +1,6 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.16.8**
+Current app version: **v0.16.9**
 
 Last synced: 2026-07-09
 
@@ -52,6 +52,7 @@ The app is a cached offline PWA, so version fidelity matters. When any app file 
 - Session tab can sweep-count all unresolved duplicate rows as physical units for fixed-UPC items.
 - Periscope Report is limited to meat-dept checklist categories, so saved grocery/produce items do not appear there.
 - Duplicate sweep buttons are visually separated: green for counting units, red for removing dupes.
+- Duplicate warning card on the Scan tab has a Unit button to count that duplicate immediately.
 
 ## Fidelity Notes
 

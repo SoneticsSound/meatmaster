@@ -223,7 +223,7 @@ body {
   text-underline-offset: 3px;
 }
 .result-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.result-actions .btn-primary:last-child:nth-child(3) { grid-column: 1 / -1; }
+.result-actions .btn-primary:last-child { grid-column: 1 / -1; }
 
 .scan-controls { margin-top: 12px; }
 
