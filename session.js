@@ -213,11 +213,14 @@
     var list = document.getElementById('session-count-list');
     var total = document.getElementById('session-total');
     var unique = document.getElementById('session-unique');
+    var dupes = document.getElementById('session-dupes');
     if (!list) return;
     var groups = grouped();
     var scans = countableScans();
+    var duplicateCount = activeScans().filter(function (s) { return s.duplicate; }).length;
     if (total) total.textContent = scans.length;
     if (unique) unique.textContent = groups.length;
+    if (dupes) dupes.textContent = duplicateCount;
     list.innerHTML = '';
     if (!groups.length) {
       var empty = document.createElement('li');
