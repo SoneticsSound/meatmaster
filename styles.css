@@ -379,6 +379,13 @@ body {
   margin-bottom: 8px;
 }
 .periscope-name { font-weight: 900; }
+.periscope-code {
+  color: #ffd8a8;
+  font-size: 12px;
+  font-weight: 900;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
 .periscope-meta {
   color: var(--ink-dim);
   font-size: 12px;

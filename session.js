@@ -272,17 +272,20 @@
         var reportName = document.createElement('div');
         reportName.className = 'periscope-name';
         reportName.textContent = g.productName;
+        var reportCode = document.createElement('div');
+        reportCode.className = 'periscope-code';
+        reportCode.textContent = g.sheetName || 'No checklist name saved yet';
         var reportMeta = document.createElement('div');
         reportMeta.className = 'periscope-meta';
         reportMeta.textContent = [
           g.plu ? ('PLU ' + g.plu) : '',
-          g.category || '',
-          g.sheetName || ''
+          g.category || ''
         ].filter(Boolean).join(' - ');
         var reportCount = document.createElement('div');
         reportCount.className = 'periscope-count';
         reportCount.textContent = g.count;
         info.appendChild(reportName);
+        info.appendChild(reportCode);
         info.appendChild(reportMeta);
         reportRow.appendChild(info);
         reportRow.appendChild(reportCount);
