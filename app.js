@@ -162,7 +162,10 @@
     var open = periscopeReport.hidden;
     periscopeReport.hidden = !open;
     periscopeBtn.textContent = open ? 'Hide Periscope Report' : 'Show Periscope Report';
-    if (open && window.MMSession) window.MMSession.render();
+    if (open && window.MMSession) {
+      window.MMSession.render();
+      periscopeReport.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   });
   if (copyCountsBtn) copyCountsBtn.addEventListener('click', function () {
     if (!window.MMSession || !window.MMSession.countsText) return;

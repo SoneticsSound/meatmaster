@@ -1,6 +1,6 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.15.6**
+Current app version: **v0.15.7**
 
 Last synced: 2026-07-09
 
@@ -46,6 +46,7 @@ The app is a cached offline PWA, so version fidelity matters. When any app file 
 - Session tab has a Periscope Report view with large counted quantities for manual checklist entry.
 - Count, CSV, Copy Counts, and Periscope Report now sort by checklist/case position before product name.
 - Periscope Report shows both the normal product name and the checklist/store-code name.
+- Opening Periscope Report scrolls the report into view.
 
 ## Fidelity Notes
 
