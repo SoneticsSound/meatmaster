@@ -135,6 +135,7 @@
   var saveSessionBtn = document.getElementById('btn-save-session');
   var copyCountsBtn = document.getElementById('btn-copy-counts');
   var removeDupesBtn = document.getElementById('btn-remove-dupes');
+  var countDupesBtn = document.getElementById('btn-count-dupes');
   var periscopeBtn = document.getElementById('btn-periscope-report');
   var periscopeReport = document.getElementById('periscope-report');
   var exportSelect = document.getElementById('export-session-select');
@@ -191,6 +192,12 @@
     if (!window.MMSession || !window.MMSession.removeDuplicateScans) return;
     var removed = window.MMSession.removeDuplicateScans();
     setSessionNote(removed ? ('Removed ' + removed + ' duplicate scan' + (removed === 1 ? '.' : 's.')) : 'No duplicate scans to remove.', !removed);
+  });
+  if (countDupesBtn) countDupesBtn.addEventListener('click', function () {
+    if (!window.MMSession || !window.MMSession.countDuplicateScansAsUnits) return;
+    var counted = window.MMSession.countDuplicateScansAsUnits();
+    if (window.MMScanner && window.MMScanner.markDuplicatesCounted) window.MMScanner.markDuplicatesCounted();
+    setSessionNote(counted ? ('Counted ' + counted + ' duplicate scan' + (counted === 1 ? ' as a unit.' : 's as units.')) : 'No duplicate scans to count as units.', !counted);
   });
   if (saveSessionBtn) saveSessionBtn.addEventListener('click', function () {
     if (!window.MMSession) return;

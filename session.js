@@ -122,6 +122,24 @@
     return removed;
   }
 
+  function countDuplicateScansAsUnits() {
+    load();
+    var counted = 0;
+    state.scans = state.scans.map(function (s) {
+      if (s.removed || !s.duplicate) return s;
+      var copy = {};
+      Object.keys(s).forEach(function (k) { copy[k] = s[k]; });
+      copy.duplicate = false;
+      copy.confirmedAt = new Date().toISOString();
+      copy.confirmedReason = 'count duplicate as unit';
+      counted++;
+      return copy;
+    });
+    if (counted) save();
+    render();
+    return counted;
+  }
+
   function confirmNotDuplicate(scanId) {
     if (!scanId) return;
     load();
@@ -356,7 +374,7 @@
         var keep = document.createElement('button');
         keep.className = 'scan-action scan-keep';
         keep.type = 'button';
-        keep.textContent = 'Confirm';
+        keep.textContent = 'Count Unit';
         keep.addEventListener('click', function () { confirmNotDuplicate(s.id); });
         actions.appendChild(keep);
       }
@@ -390,7 +408,7 @@
       } else if (s.confirmedAt) {
         var confirmed = document.createElement('span');
         confirmed.className = 'confirmed-badge';
-        confirmed.textContent = 'Confirmed';
+        confirmed.textContent = 'Counted Unit';
         name.appendChild(confirmed);
       }
       var sheet = document.createElement('div');
@@ -525,6 +543,7 @@
     addScan: addScan,
     removeScan: removeScan,
     removeDuplicateScans: removeDuplicateScans,
+    countDuplicateScansAsUnits: countDuplicateScansAsUnits,
     confirmNotDuplicate: confirmNotDuplicate,
     applyProductToCode: applyProductToCode,
     clear: clearSession,

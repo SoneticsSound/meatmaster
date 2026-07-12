@@ -622,7 +622,7 @@
         var keep = document.createElement('button');
         keep.className = 'scan-action scan-keep';
         keep.type = 'button';
-        keep.textContent = 'Confirm';
+        keep.textContent = 'Count Unit';
         keep.addEventListener('click', function () { confirmRecent(r.id); });
         actions.appendChild(keep);
       }
@@ -659,7 +659,7 @@
       } else if (r.confirmed) {
         var confirmed = document.createElement('span');
         confirmed.className = 'confirmed-badge';
-        confirmed.textContent = 'Confirmed';
+        confirmed.textContent = 'Counted Unit';
         code.appendChild(confirmed);
       }
       var sheet = document.createElement('span');
@@ -698,6 +698,20 @@
     recent = recent.filter(function (r) { return r.id !== scanId; });
     if (window.MMSession && window.MMSession.removeScan) window.MMSession.removeScan(scanId);
     renderRecent();
+  }
+
+  function markDuplicatesCounted() {
+    var changed = false;
+    recent = recent.map(function (r) {
+      if (!r.duplicate) return r;
+      var copy = {};
+      Object.keys(r).forEach(function (k) { copy[k] = r[k]; });
+      copy.duplicate = false;
+      copy.confirmed = true;
+      changed = true;
+      return copy;
+    });
+    if (changed) renderRecent();
   }
 
   function wireRecentSwipe(li, row) {
@@ -789,6 +803,7 @@
     start: start,
     stop: stop,
     getRecent: function () { return recent.slice(); },
+    markDuplicatesCounted: markDuplicatesCounted,
     decodeImage: function (url) {
       return new Promise(function (resolve, reject) {
         var img = new Image();

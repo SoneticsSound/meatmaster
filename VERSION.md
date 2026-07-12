@@ -1,6 +1,6 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.16.5**
+Current app version: **v0.16.6**
 
 Last synced: 2026-07-09
 
@@ -27,13 +27,13 @@ The app is a cached offline PWA, so version fidelity matters. When any app file 
 - Session tab shows grouped counts plus removable scan evidence rows.
 - Export tab downloads a CSV with product name, PLU, count, store code, and category.
 - Exact same barcode repeats are suppressed for 10 seconds to prevent duplicate-toast loops.
-- Duplicate scan rows are marked with a small badge and can be swiped to Confirm or Remove.
+- Duplicate scan rows are marked with a small badge and can be swiped to Count Unit or Remove.
 - Rescan now clears toast state, resets same-code cooldown, and restarts the decode loop if needed.
 - Duplicate entries in both scan logs use red warning styling and show product names when a barcode is mapped.
 - Sessions can be saved locally, cleared from the Session tab, and selected from Export.
 - Scan tab recent entries use the same red duplicate styling and swipe actions as Session.
 - Save Session auto-names sessions from the local saved date and time.
-- Confirming a duplicate now only affects duplicate rows and leaves a green Confirmed badge.
+- Counting a duplicate as a unit now only affects duplicate rows and leaves a green Counted Unit badge.
 - Swipe actions wait for clear horizontal intent so Scan and Session logs can scroll normally.
 - Unconfirmed duplicate scans remain visible as evidence but are excluded from counts and CSV export.
 - Seed DB now includes ready-made PLUs 7411 Black Truffle Saute and 7492 Marry Me Chicken.
@@ -49,6 +49,7 @@ The app is a cached offline PWA, so version fidelity matters. When any app file 
 - Opening Periscope Report scrolls the report into view.
 - Periscope Report warns when unresolved duplicate rows still need review.
 - Session tab can sweep-remove all unresolved duplicate rows.
+- Session tab can sweep-count all unresolved duplicate rows as physical units for fixed-UPC items.
 
 ## Fidelity Notes
 
