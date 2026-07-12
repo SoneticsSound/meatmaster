@@ -1,6 +1,6 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.14.6**
+Current app version: **v0.14.7**
 
 Last synced: 2026-07-09
 
@@ -36,6 +36,7 @@ The app is a cached offline PWA, so version fidelity matters. When any app file 
 - Confirming a duplicate now only affects duplicate rows and leaves a green Confirmed badge.
 - Swipe actions wait for clear horizontal intent so Scan and Session logs can scroll normally.
 - Unconfirmed duplicate scans remain visible as evidence but are excluded from counts and CSV export.
+- Seed DB now includes ready-made PLUs 7411 Black Truffle Saute and 7492 Marry Me Chicken.
 
 ## Fidelity Notes
 

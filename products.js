@@ -42,7 +42,9 @@
     { plu: '9990', upc: '0209990000001', name: 'Grassfed Angus Tenderloin Steak', sheetName: 'SPROUTS BEEF-STEAK-TENDERLOIN-ANGUS GP 1 LB', category: 'Beef', casePosition: 21 },
     { plu: '9992', upc: '0209992000009', name: 'Grassfed Angus Top Sirloin Filet', sheetName: 'SPROUTS BEEF-STEAK TOP SIRLOIN FILET-G 1 LB', category: 'Beef', casePosition: 22 },
     { plu: '9994', upc: '0209994000007', name: 'Grassfed Angus Stew Meat', sheetName: 'SPROUTS BEEF-STEW MEAT-ANGUS GRASSFED 1 LB', category: 'Beef', casePosition: 23 },
-    { plu: '9996', upc: '0209996000005', name: 'Grassfed Angus Stir Fry', sheetName: 'SPROUTS BEEF-STIR FRY-ANGUS GRASSFED 1 LB', category: 'Beef', casePosition: 24 }
+    { plu: '9996', upc: '0209996000005', name: 'Grassfed Angus Stir Fry', sheetName: 'SPROUTS BEEF-STIR FRY-ANGUS GRASSFED 1 LB', category: 'Beef', casePosition: 24 },
+    { plu: '7411', name: 'Black Truffle Saute', sheetName: 'Ready-made label photo', category: 'Ready-Made', casePosition: 101 },
+    { plu: '7492', name: 'Marry Me Chicken', sheetName: 'Ready-made label photo', category: 'Ready-Made', casePosition: 102 }
   ];
 
   function normalizeCode(code) {
