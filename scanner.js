@@ -48,19 +48,20 @@
 
   function show(node, on) { if (node) node.hidden = !on; }
 
-  function toast(kind, title, note) {
+  function toast(kind, title, sheetName, note) {
     if (toastTimer) { clearTimeout(toastTimer); toastTimer = null; }
     resFmt.textContent = kind === 'dupe' ? 'POSSIBLE DUPLICATE' : 'RECORDED';
     resName.textContent = title;
-    resCode.textContent = '';
+    resCode.textContent = sheetName || '';
     resNote.textContent = note || '';
+    card.classList.add('is-toast');
     card.classList.toggle('is-ok', kind !== 'dupe');
     card.classList.toggle('is-dupe', kind === 'dupe');
     show(saveBtn, false);
     show(card, true);
     toastTimer = setTimeout(function () {
       show(card, false);
-      card.classList.remove('is-ok', 'is-dupe');
+      card.classList.remove('is-ok', 'is-dupe', 'is-toast');
     }, kind === 'dupe' ? 1600 : 1000);
   }
 
@@ -413,6 +414,7 @@
 
     paused = true;
     feedback();
+    card.classList.remove('is-toast');
     resFmt.textContent = prettyType(result.type);
     setCode(code);
 
@@ -460,9 +462,20 @@
         product: product,
         price: price
       });
-      recent.unshift({ id: scan && scan.id, code: code, fmt: prettyType(result.type), at: new Date(), name: product.name, duplicate: scan && scan.duplicate });
+      var scanAt = new Date();
+      recent.unshift({
+        id: scan && scan.id,
+        code: code,
+        fmt: prettyType(result.type),
+        at: scanAt,
+        name: product.name,
+        sheetName: product.sheetName || '',
+        duplicate: scan && scan.duplicate
+      });
       renderRecent();
-      toast(scan && scan.duplicate ? 'dupe' : 'ok', product.name, scan && scan.duplicate ? 'Possible duplicate - not counted again if repeated quickly' : 'Counted +1');
+      var scanTime = scanAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      var scanMeta = code + ' · ' + scanTime + ' · ' + (scan && scan.duplicate ? 'Duplicate scan' : 'Counted +1');
+      toast(scan && scan.duplicate ? 'dupe' : 'ok', product.name, product.sheetName || '', scanMeta);
       return;
     }
 
@@ -487,7 +500,15 @@
       name: 'Unknown product',
       price: price
     });
-    recent.unshift({ id: unknownScan && unknownScan.id, code: code, fmt: prettyType(result.type), at: new Date(), name: 'Unknown product', duplicate: unknownScan && unknownScan.duplicate });
+    recent.unshift({
+      id: unknownScan && unknownScan.id,
+      code: code,
+      fmt: prettyType(result.type),
+      at: new Date(),
+      name: 'Unknown product',
+      sheetName: '',
+      duplicate: unknownScan && unknownScan.duplicate
+    });
     renderRecent();
     paused = true;
     resName.textContent = 'Unknown product';
@@ -503,12 +524,14 @@
 
   function confirmScan() {
     show(card, false);
+    card.classList.remove('is-toast');
     paused = false;
     if (running && !scanTimer) loop();
   }
 
   function saveProduct() {
     if (!currentScan || !window.MMProducts) return;
+    card.classList.remove('is-toast');
     var code = currentScan.code;
     var plu = window.MMProducts.extractPlu ? window.MMProducts.extractPlu(code) : null;
     var suggested = resName.textContent === 'Unknown product' ? '' : resName.textContent;
@@ -542,6 +565,7 @@
     if (toastTimer) { clearTimeout(toastTimer); toastTimer = null; }
     show(card, false);
     card.classList.remove('is-ok', 'is-dupe');
+    card.classList.remove('is-toast');
     paused = false;
     lastCode = null;
     lastTime = 0;
