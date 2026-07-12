@@ -627,31 +627,50 @@
   }
 
   function wireRecentSwipe(li, row) {
-    var startX = 0, currentX = 0, dragging = false;
+    var startX = 0, startY = 0, startOffsetX = 0, currentX = 0, dragging = false, swiping = false;
     function setX(x) {
       currentX = Math.max(-228, Math.min(0, x));
       row.style.transform = 'translateX(' + currentX + 'px)';
       li.classList.toggle('is-open', currentX < -48);
     }
     row.addEventListener('pointerdown', function (e) {
-      startX = e.clientX - currentX;
+      startX = e.clientX;
+      startY = e.clientY;
+      startOffsetX = currentX;
       dragging = true;
-      row.setPointerCapture(e.pointerId);
+      swiping = false;
     });
     row.addEventListener('pointermove', function (e) {
       if (!dragging) return;
-      var next = e.clientX - startX;
-      if (next < 0) {
+      var dx = e.clientX - startX;
+      var dy = e.clientY - startY;
+      if (!swiping) {
+        if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) {
+          dragging = false;
+          return;
+        }
+        if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy)) return;
+        swiping = true;
+        row.setPointerCapture(e.pointerId);
+      }
+      var next = startOffsetX + dx;
+      if (next < 0 || startOffsetX < 0) {
         e.preventDefault();
         setX(next);
       }
     });
     row.addEventListener('pointerup', function () {
+      if (!swiping) {
+        dragging = false;
+        return;
+      }
       dragging = false;
+      swiping = false;
       setX(currentX < -56 ? -228 : 0);
     });
     row.addEventListener('pointercancel', function () {
       dragging = false;
+      swiping = false;
       setX(0);
     });
   }
