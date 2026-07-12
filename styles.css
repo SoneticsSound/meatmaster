@@ -225,7 +225,8 @@ body {
   border: 1px solid var(--line); border-radius: 12px; margin-bottom: 8px;
 }
 .recent-item.is-duplicate {
-  background: rgba(193,39,45,.16);
+  /* opaque: tint over solid so the swipe buttons behind stay hidden until swiped */
+  background: linear-gradient(rgba(193,39,45,.16), rgba(193,39,45,.16)), var(--surface);
   border-color: rgba(193,39,45,.95);
 }
 .recent-item.is-duplicate .ri-code,
@@ -233,7 +234,7 @@ body {
   color: #ff8a8f;
 }
 .recent-item.is-confirmed {
-  background: rgba(55,178,77,.14);
+  background: linear-gradient(rgba(55,178,77,.14), rgba(55,178,77,.14)), var(--surface);
   border-color: rgba(55,178,77,.8);
 }
 .recent-item.is-confirmed .ri-code,

@@ -104,7 +104,14 @@
   window.MMEditProductByCode = function (code) {
     if (!window.MMProducts) return;
     var product = window.MMProducts.findByCode(code);
-    if (product) editProduct(product);
+    if (!product) {
+      // Unknown scan: open the editor on a new stub so the user can name it
+      // (naming it saves it, so future scans of this code resolve).
+      var plu = window.MMProducts.extractPlu ? window.MMProducts.extractPlu(code) : null;
+      var digits = String(code || '').replace(/\D/g, '');
+      product = plu ? { plu: plu } : { upc: digits };
+    }
+    editProduct(product);
   };
 
   /* ---------- count session actions ---------- */
