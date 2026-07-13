@@ -43,8 +43,28 @@
     { plu: '9992', upc: '0209992000009', name: 'Grassfed Angus Top Sirloin Filet', sheetName: 'SPROUTS BEEF-STEAK TOP SIRLOIN FILET-G 1 LB', category: 'Beef', casePosition: 23 },
     { plu: '9994', upc: '0209994000007', name: 'Grassfed Angus Stew Meat', sheetName: 'SPROUTS BEEF-STEW MEAT-ANGUS GRASSFED 1 LB', category: 'Beef', casePosition: 12 },
     { plu: '9996', upc: '0209996000005', name: 'Grassfed Angus Stir Fry', sheetName: 'SPROUTS BEEF-STIR FRY-ANGUS GRASSFED 1 LB', category: 'Beef', casePosition: 24 },
-    { plu: '7411', name: 'Black Truffle Saute', sheetName: 'Ready-made label photo', category: 'Ready-Made', casePosition: 101 },
-    { plu: '7492', name: 'Marry Me Chicken', sheetName: 'Ready-made label photo', category: 'Ready-Made', casePosition: 102 }
+    // Ready-Made "One Pan Meals" — seeded from the Production Count Sheet Report (IMG_7411).
+    // casePosition 101-120 follows the sheet's PLU-sorted print order.
+    { plu: '7063', upc: '0020706300000', name: 'Garlic Lemon Chicken', sheetName: 'SPROUTS MEAL-GARLIC LEMON CHICKEN-PF 1 LB', category: 'Ready-Made', casePosition: 101 },
+    { plu: '7114', upc: '0020711400000', name: 'Grass Fed Beef Stuffed Pepper', sheetName: 'SPROUTS MEAL-GRASS FED BEEF STUFFED PEPPER LB', category: 'Ready-Made', casePosition: 102 },
+    { plu: '7286', upc: '0020728600000', name: 'Steak w/ Chimichurri', sheetName: 'SPROUTS MEAL-STEAK W/CHIMICHURRI-JBS 1 LB', category: 'Ready-Made', casePosition: 103 },
+    { plu: '7294', upc: '0020729400000', name: 'Shrimp Scampi', sheetName: 'SPROUTS MEAL-SHRIMP SCAMPI 1 LB', category: 'Ready-Made', casePosition: 104 },
+    { plu: '7295', upc: '0020729500000', name: 'Salmon Citrus Herb', sheetName: 'SPROUTS MEAL-SALMON CITRUS HERB 1 LB', category: 'Ready-Made', casePosition: 105 },
+    { plu: '7296', upc: '0020729600000', name: 'Citrus Herb Chicken', sheetName: 'SPROUTS MEAL-CITRUS HERB CHICKEN-PF 1 LB', category: 'Ready-Made', casePosition: 106 },
+    { plu: '7411', upc: '0020741100000', name: 'Black Truffle Sirloin Mushroom Saute', sheetName: 'SPROUTS MEAL-BLK TRFL SIRLOIN MSHRM SA 1 LB', category: 'Ready-Made', casePosition: 107 },
+    { plu: '7455', upc: '0020745500000', name: 'Firecracker Chicken', sheetName: 'SPROUTS MEAL-FIRECRACKER CHICKEN WEST 1 LB', category: 'Ready-Made', casePosition: 108 },
+    { plu: '7462', upc: '0020746200000', name: 'Firecracker Shrimp', sheetName: 'SPROUTS MEAL-FIRECRACKER SHRIMP 1 LB', category: 'Ready-Made', casePosition: 109 },
+    { plu: '7492', upc: '0020749200000', name: 'Marry Me Chicken', sheetName: 'SPROUTS MEAL-MARRY ME CHICKEN - PF 1 LB', category: 'Ready-Made', casePosition: 110 },
+    { plu: '7521', upc: '0020752100000', name: 'Hot Honey Chipotle Chicken', sheetName: 'MEAL-HOT HONEY CHIPOTLE CHICKE 1 LB', category: 'Ready-Made', casePosition: 111 },
+    { plu: '7535', upc: '0020753500000', name: 'Rstd Garlic Lemon Pepper Beef', sheetName: 'SPROUTS MEAL-RSTD GRLC LMN PEPPR BEEF 1 LB', category: 'Ready-Made', casePosition: 112 },
+    { plu: '7736', upc: '0020773600000', name: 'Italian Meatballs', sheetName: 'SPROUTS MEAL-ITALIAN MEATBALLS 1 LB', category: 'Ready-Made', casePosition: 113 },
+    { plu: '7856', upc: '0020785600000', name: 'Garlic Chicken Mushrooms', sheetName: 'SPROUTS MEAL-GARLIC CHICKEN MUSHROOMS 1 LB', category: 'Ready-Made', casePosition: 114 },
+    { plu: '7874', upc: '0020787400000', name: 'Chicken Fajitas', sheetName: 'SPROUTS MEAL-CHICKEN FAJITAS-PF 1 LB', category: 'Ready-Made', casePosition: 115 },
+    { plu: '9126', upc: '0020912600000', name: 'Hot Honey Chipotle Salmon', sheetName: 'SPROUTS MEAL-HOT HONEY CHIPOTLE SALMON 1 LB', category: 'Ready-Made', casePosition: 116 },
+    { plu: '9142', upc: '0020914200000', name: 'Cajun Butter Shrimp', sheetName: 'SPROUTS MEAL-CAJUN BUTTER SHRIMP 1 LB', category: 'Ready-Made', casePosition: 117 },
+    { plu: '9752', upc: '0020975200000', name: 'Herb Butter Salmon', sheetName: 'SPROUTS MEAL-HERB BUTTER SALMON 1 LB', category: 'Ready-Made', casePosition: 118 },
+    { plu: '9753', upc: '0020975300000', name: 'Herb Butter Shrimp', sheetName: 'SPROUTS MEAL-HERB BUTTER SHRIMP 1 LB', category: 'Ready-Made', casePosition: 119 },
+    { plu: '9754', upc: '0020975400000', name: 'Island Jerk Salmon', sheetName: 'SPROUTS MEAL-ISLAND JERK SALMON 1 LB', category: 'Ready-Made', casePosition: 120 }
   ];
 
   function normalizeCode(code) {

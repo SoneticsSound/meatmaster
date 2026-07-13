@@ -1,8 +1,8 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.16.15**
+Current app version: **v0.16.16**
 
-Last synced: 2026-07-09
+Last synced: 2026-07-13
 
 ## Version Sources
 
