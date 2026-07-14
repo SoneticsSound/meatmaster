@@ -1,6 +1,6 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.16.17**
+Current app version: **v0.16.18**
 
 Last synced: 2026-07-13
 
@@ -60,6 +60,8 @@ The app is a cached offline PWA, so version fidelity matters. When any app file 
 - Removing duplicate scans from Session also removes matching duplicate rows from the Scan tab recent log.
 - Counting an individual duplicate as a unit from Session also updates the matching Scan tab row.
 - Priced variable-weight labels (weighed meat / ready-made meals) now treat an exact-barcode repeat as a duplicate for the whole count, not just a 2-second window, since the embedded price fingerprints each physical package. Genuinely different packages have different weights/prices/codes and still count separately; a rare exact-weight collision can still be kept via Count Unit.
+- Show Periscope Report button moved to the top of the Session tab (with the report itself), so the count entry view is reachable without scrolling past the scan log.
+- Counts list and Periscope Report now show category section headers (Beef / Ready-Made Meals) so the two sections read as distinct groups. Rows are grouped by category first, so a custom-saved item without a case position no longer splits its section with a duplicate header.
 
 ## Fidelity Notes
 

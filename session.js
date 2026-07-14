@@ -305,7 +305,13 @@
       empty.textContent = 'No counted scans yet.';
       list.appendChild(empty);
     } else {
-      groups.forEach(function (g) {
+      var lastCountCat = null;
+      groups.slice().sort(byCategoryThenPosition).forEach(function (g) {
+        var cat = g.category || 'Unknown';
+        if (cat !== lastCountCat) {
+          list.appendChild(sectionHeaderRow(categoryLabel(cat)));
+          lastCountCat = cat;
+        }
         var li = document.createElement('li');
         li.className = 'count-item';
         var qty = document.createElement('div');
@@ -329,6 +335,40 @@
     // Periscope Report: the FULL checklist, every item shown (0 included, since
     // 0s inform production), in checklist/case order.
     renderPeriscopeChecklist(groups);
+  }
+
+  function categoryLabel(cat) {
+    var c = String(cat || '').toLowerCase();
+    if (c === 'beef') return 'Beef';
+    if (c === 'ready-made') return 'Ready-Made Meals';
+    if (c === 'unknown' || !c) return 'Other items';
+    return cat;
+  }
+
+  // Keep each category's rows contiguous so the section header appears once,
+  // even for custom-saved items that have no case position (they'd otherwise
+  // sort to the end and split their category with a second header).
+  function categoryRank(cat) {
+    var c = String(cat || '').toLowerCase();
+    if (c === 'beef') return 0;
+    if (c === 'ready-made') return 1;
+    if (c === 'unknown' || !c) return 3;
+    return 2;
+  }
+
+  function byCategoryThenPosition(a, b) {
+    var ra = categoryRank(a.category), rb = categoryRank(b.category);
+    if (ra !== rb) return ra - rb;
+    var pa = Number(a.casePosition || 9999), pb = Number(b.casePosition || 9999);
+    if (pa !== pb) return pa - pb;
+    return String(a.productName || a.name || '').localeCompare(String(b.productName || b.name || ''));
+  }
+
+  function sectionHeaderRow(label) {
+    var li = document.createElement('li');
+    li.className = 'section-header';
+    li.textContent = label;
+    return li;
   }
 
   function periscopeRow(name, sheetName, plu, category, count) {
@@ -375,7 +415,14 @@
     // every known checklist product, in case order (MMProducts.all is sorted by casePosition)
     var checklist = (window.MMProducts && window.MMProducts.all) ?
       window.MMProducts.all.filter(isMeatDeptChecklistProduct) : [];
+    checklist.sort(byCategoryThenPosition);
+    var lastReportCat = null;
     checklist.forEach(function (p) {
+      var cat = p.category || '';
+      if (cat !== lastReportCat) {
+        reportList.appendChild(sectionHeaderRow(categoryLabel(cat)));
+        lastReportCat = cat;
+      }
       var plu = p.plu ? String(p.plu).replace(/^0+/, '') : '';
       var count = plu ? (countByPlu[plu] || 0) : 0;
       reportList.appendChild(periscopeRow(p.name, p.sheetName, p.plu, p.category, count));

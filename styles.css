@@ -664,3 +664,25 @@ body {
   cursor: pointer;
   z-index: 26;
 }
+
+/* Category dividers inside the Counts list and Periscope Report so the
+   Beef section and the Ready-Made Meals section read as separate groups. */
+.count-list .section-header,
+.periscope-list .section-header {
+  list-style: none;
+  padding: 16px 6px 8px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.count-list .section-header:not(:first-child),
+.periscope-list .section-header:not(:first-child) {
+  border-top: 1px solid var(--line);
+  margin-top: 10px;
+}
+
+/* Show Periscope Report promoted to the top of the Session tab. */
+.session-top-action { margin: 2px 0 12px; }
+.btn-block { width: 100%; display: block; }
