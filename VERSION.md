@@ -1,6 +1,6 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.16.16**
+Current app version: **v0.16.17**
 
 Last synced: 2026-07-13
 
@@ -59,6 +59,7 @@ The app is a cached offline PWA, so version fidelity matters. When any app file 
 - No-price Beef/Ready-Made PLU repeats still get duplicate protection because they are likely checklist/reference barcodes.
 - Removing duplicate scans from Session also removes matching duplicate rows from the Scan tab recent log.
 - Counting an individual duplicate as a unit from Session also updates the matching Scan tab row.
+- Priced variable-weight labels (weighed meat / ready-made meals) now treat an exact-barcode repeat as a duplicate for the whole count, not just a 2-second window, since the embedded price fingerprints each physical package. Genuinely different packages have different weights/prices/codes and still count separately; a rare exact-weight collision can still be kept via Count Unit.
 
 ## Fidelity Notes
 

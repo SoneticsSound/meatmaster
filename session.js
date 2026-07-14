@@ -65,6 +65,21 @@
     if (!price && !protectNoPricePlu(product)) return false;
     var c = codeText(code);
     if (!c) return false;
+    // Priced, variable-weight labels (weighed meat / ready-made meals): each
+    // package is weighed individually, so its price — embedded in the barcode —
+    // makes the full code a fingerprint for that one physical package. If we've
+    // already recorded this exact code this session, a repeat is almost certainly
+    // an accidental re-scan of the same package, so flag it for the WHOLE count,
+    // not just a brief window. Genuinely different packages weigh differently, so
+    // their prices (and codes) differ and still count separately. On the rare
+    // exact-weight collision, the flagged scan can still be kept via Count Unit.
+    if (price) {
+      return state.scans.some(function (s) {
+        return !s.removed && s.code === c;
+      });
+    }
+    // No-price Beef/Ready-Made PLU codes (reference/checklist barcodes): keep the
+    // short same-code window that only guards against a rapid repeat read.
     var now = Date.now();
     return state.scans.some(function (s) {
       if (s.removed || s.code !== c) return false;
