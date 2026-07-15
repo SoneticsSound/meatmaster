@@ -1,6 +1,6 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.16.21**
+Current app version: **v0.16.22**
 
 Last synced: 2026-07-13
 
@@ -66,6 +66,7 @@ The app is a cached offline PWA, so version fidelity matters. When any app file 
 - Case Layout pages now use a top-down orientation: a Customer Glass banner on top, a Front row and a Back row (each left-to-right), and a Service Glass banner on the bottom — matching how the case physically sits. Known items are seeded into the Front row; Back rows are placeholders to be filled per case.
 - The "possible duplicate" scan card now stays up (with its "Count as unit" button) until you tap it or scan the next item, instead of vanishing after 1.5s. This matters for the rare-but-real case of a second package that shares the exact same PLU AND weight — you now always have time to count it as a separate unit. The button label is clearer ("Count as unit").
 - Case Layout rotated to two side-by-side columns — Customer Glass (front) on the left, Service Glass (back) on the right — so each row shows two PLUs (one front, one back).
+- Ready-Made checklist reordered to column-major (straight down the columns) so the Counts / Periscope Report reads the same way as the beef sheet. Both sections are now consistent: read straight down each column.
 
 ## Fidelity Notes
 
