@@ -18,7 +18,7 @@
     {
       title: 'Beef — Fresh Cuts',
       note: 'Left to right, as they sit in the case.',
-      tiles: [
+      front: [
         { plu: '73260', name: 'Boneless NY Steak' },
         { plu: '73320', name: 'Boneless Tenderloin Steak' },
         { plu: '98010', name: 'Grassfed NY Strip Steak' },
@@ -29,7 +29,7 @@
     },
     {
       title: 'Beef — Ground & Burgers',
-      tiles: [
+      front: [
         { plu: '9800', name: '100% Grassfed Ground Beef' },
         { plu: '7072', name: 'Chuck & Brisket Ground' },
         { plu: '7070', name: 'Cowboy Beef Burgers' },
@@ -39,7 +39,7 @@
     },
     {
       title: 'Beef — Marinated',
-      tiles: [
+      front: [
         { plu: '7635', name: 'Black Garlic Steak Kabobs' },
         { plu: '7279', name: 'Chimichurri Steak' },
         { plu: '7659', name: 'Carne Asada' },
@@ -51,7 +51,7 @@
     {
       title: 'Marinated Chicken',
       note: 'Wings & thighs, then stuffed breasts & skewers.',
-      tiles: [
+      front: [
         { plu: '8248', name: 'Rstd Garlic Lemon Pepper Wings' },
         { plu: '8058', name: 'Jamaican Jerk Wings' },
         { plu: '8325', name: 'Hot Honey Chipotle Wings' },
@@ -68,7 +68,7 @@
     },
     {
       title: 'Seafood — Fresh Fish',
-      tiles: [
+      front: [
         { plu: '9145', name: 'Wild Sockeye Salmon' },
         { plu: '9144', name: 'Atlantic Salmon Fillet' },
         { plu: '9180', name: 'Tilapia Fillet' },
@@ -83,7 +83,7 @@
     },
     {
       title: 'Seafood — Shrimp, Poke & Marinated',
-      tiles: [
+      front: [
         { plu: '9367', name: 'Raw Wild Shrimp 16/20' },
         { plu: '9312', name: 'Raw Shrimp 16/20 PDTO' },
         { plu: '9022', name: 'Cooked Shrimp 16/20' },
@@ -163,11 +163,45 @@
     return d;
   }
 
-  function renderTiles(page) {
+  function rowGrid(items) {
     var grid = document.createElement('div');
     grid.className = 'case-grid';
-    page.tiles.forEach(function (t) { grid.appendChild(tileNode(t)); });
+    (items || []).forEach(function (t) { grid.appendChild(tileNode(t)); });
     return grid;
+  }
+
+  function glassBanner(text) {
+    var b = document.createElement('div');
+    b.className = 'case-glass';
+    b.textContent = text;
+    return b;
+  }
+
+  function rowLabel(text) {
+    var l = document.createElement('div');
+    l.className = 'case-rowlabel';
+    l.textContent = text;
+    return l;
+  }
+
+  // Top-down case view: Customer Glass on top, Front row then Back row
+  // (each left -> right), Service Glass on the bottom.
+  function renderCase(page) {
+    var wrap = document.createElement('div');
+    wrap.appendChild(glassBanner('Customer Glass'));
+    wrap.appendChild(rowLabel('Front — left to right'));
+    wrap.appendChild(rowGrid(page.front));
+    wrap.appendChild(rowLabel('Back — left to right'));
+    if (page.back && page.back.length) {
+      wrap.appendChild(rowGrid(page.back));
+    } else {
+      var ph = document.createElement('div');
+      ph.className = 'case-backempty';
+      ph.textContent = 'Back row — tell me what sits here and I’ll add it.';
+      wrap.appendChild(ph);
+    }
+    wrap.appendChild(glassBanner('Service Glass'));
+    return wrap;
   }
 
   function renderGarnish(page) {
@@ -221,7 +255,7 @@
       note.textContent = page.note;
       pageEl.appendChild(note);
     }
-    pageEl.appendChild(page.type === 'garnish' ? renderGarnish(page) : renderTiles(page));
+    pageEl.appendChild(page.type === 'garnish' ? renderGarnish(page) : renderCase(page));
 
     var draft = document.createElement('p');
     draft.className = 'case-draft';
