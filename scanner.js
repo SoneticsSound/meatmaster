@@ -63,12 +63,17 @@
     show(saveBtn, false);
     show(unitBtn, kind === 'dupe' && !!scanId);
     show(card, true);
-    toastTimer = setTimeout(function () {
-      show(card, false);
-      card.classList.remove('is-ok', 'is-dupe', 'is-toast');
-      show(unitBtn, false);
-      toastScanId = null;
-    }, kind === 'dupe' ? 1500 : 1000);
+    // A "RECORDED" confirmation auto-dismisses. A "POSSIBLE DUPLICATE" stays put
+    // until the next scan or a tap, so there is always time to hit "Count Unit"
+    // (e.g. a real second package that happens to share the exact PLU + weight).
+    if (kind !== 'dupe') {
+      toastTimer = setTimeout(function () {
+        show(card, false);
+        card.classList.remove('is-ok', 'is-dupe', 'is-toast');
+        show(unitBtn, false);
+        toastScanId = null;
+      }, 1000);
+    }
   }
 
   /* ---------- decode engine (zbar) ---------- */

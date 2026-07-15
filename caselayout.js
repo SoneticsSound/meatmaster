@@ -184,23 +184,30 @@
     return l;
   }
 
-  // Top-down case view: Customer Glass on top, Front row then Back row
-  // (each left -> right), Service Glass on the bottom.
-  function renderCase(page) {
-    var wrap = document.createElement('div');
-    wrap.appendChild(glassBanner('Customer Glass'));
-    wrap.appendChild(rowLabel('Front — left to right'));
-    wrap.appendChild(rowGrid(page.front));
-    wrap.appendChild(rowLabel('Back — left to right'));
-    if (page.back && page.back.length) {
-      wrap.appendChild(rowGrid(page.back));
+  // Rotated case view: two columns side by side — Customer Glass (front) on the
+  // left, Service Glass (back) on the right. Each row lines up two PLUs, one
+  // front and one back, top to bottom the way you walk the case.
+  function caseColumn(glassText, rowText, items, emptyText) {
+    var col = document.createElement('div');
+    col.className = 'case-col';
+    col.appendChild(glassBanner(glassText));
+    col.appendChild(rowLabel(rowText));
+    if (items && items.length) {
+      items.forEach(function (t) { col.appendChild(tileNode(t)); });
     } else {
       var ph = document.createElement('div');
       ph.className = 'case-backempty';
-      ph.textContent = 'Back row — tell me what sits here and I’ll add it.';
-      wrap.appendChild(ph);
+      ph.textContent = emptyText;
+      col.appendChild(ph);
     }
-    wrap.appendChild(glassBanner('Service Glass'));
+    return col;
+  }
+
+  function renderCase(page) {
+    var wrap = document.createElement('div');
+    wrap.className = 'case-rotated';
+    wrap.appendChild(caseColumn('Customer Glass', 'Front', page.front, 'Add from the case'));
+    wrap.appendChild(caseColumn('Service Glass', 'Back', page.back, 'Tell me what sits here'));
     return wrap;
   }
 

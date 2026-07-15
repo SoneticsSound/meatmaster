@@ -1,6 +1,6 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.16.20**
+Current app version: **v0.16.21**
 
 Last synced: 2026-07-13
 
@@ -64,6 +64,8 @@ The app is a cached offline PWA, so version fidelity matters. When any app file 
 - Counts list and Periscope Report now show category section headers (Beef / Ready-Made Meals) so the two sections read as distinct groups. Rows are grouped by category first, so a custom-saved item without a case position no longer splits its section with a duplicate header.
 - New "View Case Layout" button on the Products tab (above the search bar) opens a paged, swipeable reference overlay of where each PLU sits in the physical cases, oriented from the clerk's side: Case 1 (Meat then Chicken, left) and Case 2 (Seafood, right), plus a Garnish Guide page. Flip with the arrows/swipe/left-right keys, close with X or Esc. Fully self-contained in caselayout.js — it does not touch the scan/count/session logic. Layout data is a best-effort transcription from case photos and is meant to be verified/edited against the physical case.
 - Case Layout pages now use a top-down orientation: a Customer Glass banner on top, a Front row and a Back row (each left-to-right), and a Service Glass banner on the bottom — matching how the case physically sits. Known items are seeded into the Front row; Back rows are placeholders to be filled per case.
+- The "possible duplicate" scan card now stays up (with its "Count as unit" button) until you tap it or scan the next item, instead of vanishing after 1.5s. This matters for the rare-but-real case of a second package that shares the exact same PLU AND weight — you now always have time to count it as a separate unit. The button label is clearer ("Count as unit").
+- Case Layout rotated to two side-by-side columns — Customer Glass (front) on the left, Service Glass (back) on the right — so each row shows two PLUs (one front, one back).
 
 ## Fidelity Notes
 
