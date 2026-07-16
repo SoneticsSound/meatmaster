@@ -19,11 +19,13 @@
       title: 'Beef — Fresh Cuts',
       note: 'Left to right, as they sit in the case.',
       front: [
-        { plu: '73260', name: 'Boneless NY Steak' },
-        { plu: '73320', name: 'Boneless Tenderloin Steak' },
         { plu: '98010', name: 'Grassfed NY Strip Steak' },
+        { plu: '73320', name: 'Boneless Tenderloin Steak' },
+        { plu: '73260', name: 'Boneless NY Steak' }
+      ],
+      back: [
+        { plu: '73160', name: 'Boneless Ribeye Steak' },
         { plu: '98050', name: 'Grassfed Filet Mignon' },
-        { plu: '73160', name: 'Boneless Beef Steak' },
         { plu: '7290',  name: 'Uncured Smokey Bacon' }
       ]
     },
@@ -31,73 +33,90 @@
       title: 'Beef — Ground & Burgers',
       front: [
         { plu: '9800', name: '100% Grassfed Ground Beef' },
+        { plu: '7071', name: 'Chuck & Brisket Burgers' }
+      ],
+      back: [
         { plu: '7072', name: 'Chuck & Brisket Ground' },
-        { plu: '7070', name: 'Cowboy Beef Burgers' },
-        { plu: '7071', name: 'Chuck & Brisket Burgers' },
-        { plu: '9988', name: 'Angus Grassfed NY Steak' }
+        { plu: '7070', name: 'Cowboy Beef Burgers' }
       ]
     },
     {
       title: 'Beef — Marinated',
       front: [
-        { plu: '7635', name: 'Black Garlic Steak Kabobs' },
-        { plu: '7279', name: 'Chimichurri Steak' },
-        { plu: '7659', name: 'Carne Asada' },
-        { plu: '7074', name: 'Black Truffle Beef' },
         { plu: '7539', name: 'Org 85% Lean Grassfed' },
-        { plu: '7010', name: 'Cowboy Beef Burgers' }
+        { plu: '7879', name: 'Chimichurri Steak' },
+        { plu: '7635', name: 'Black Garlic Steak Kabobs' },
+        { plu: '7672', name: 'Korean BBQ Beef Skewers' }
+      ],
+      back: [
+        { plu: '7010', name: 'Cowboy Beef Burgers' },
+        { plu: '7659', name: 'Carne Asada' },
+        { plu: '7547', name: 'Angus Grassfed Beef' },
+        { plu: '7074', name: 'Black Truffle Beef Skewers' }
       ]
     },
     {
       title: 'Marinated Chicken',
       note: 'Wings & thighs, then stuffed breasts & skewers.',
       front: [
-        { plu: '8248', name: 'Rstd Garlic Lemon Pepper Wings' },
-        { plu: '8058', name: 'Jamaican Jerk Wings' },
-        { plu: '8325', name: 'Hot Honey Chipotle Wings' },
-        { plu: '8346', name: 'Korean BBQ Chicken Wings' },
-        { plu: '8343', name: 'Cajun Butter Wings' },
-        { plu: '8349', name: 'Jamaican Jerk Thighs' },
-        { plu: '8355', name: 'Parmesan Stuffed Breast' },
-        { plu: '8354', name: 'Pesto Fontina Stuffed Breast' },
-        { plu: '8352', name: 'Mediterranean Stuffed Breast' },
-        { plu: '8162', name: 'Citrus Lemon Chicken Kabob' },
         { plu: '8246', name: 'Korean BBQ Chicken Skewers' },
-        { plu: '8235', name: 'Black Garlic Chicken Skewers' }
+        { plu: '8162', name: 'Citrus Lemon Chicken Kabob' },
+        { plu: '8354', name: 'Pesto Fontina Stuffed Breast' },
+        { plu: '8355', name: 'Parmesan Stuffed Breast' },
+        { plu: '8718', name: 'Citrus Herb B/L Chicken' },
+        { plu: '8157', name: 'Pollo Asado' },
+        { plu: '8349', name: 'Jamaican Jerk Thighs' },
+        { plu: '8325', name: 'Hot Honey Chipotle Wings' },
+        { plu: '8058', name: 'Jamaican Jerk Wings' },
+        { plu: '8248', name: 'Rstd Garlic Lemon Pepper Wings' }
+      ],
+      back: [
+        { plu: '8235', name: 'Black Garlic Chicken Skewers' },
+        { plu: '8352', name: 'Mediterranean Stuffed Breast' },
+        { plu: '8353', name: 'Prosciutto Stuffed Breast' },
+        { plu: '8351', name: 'Herb Butter Breast' },
+        { plu: '8157', name: 'Pollo Asado' },
+        { plu: '8328', name: 'Hot Honey Chipotle Breast' },
+        { plu: '8957', name: 'Chicken Wings' },
+        { plu: '8343', name: 'Cajun Butter Wings' },
+        { plu: '8346', name: 'Korean BBQ Chicken Wings' },
+        { plu: '8363', name: 'BBQ Chicken Wings' }
       ]
     },
     {
       title: 'Seafood — Fresh Fish',
       front: [
         { plu: '9145', name: 'Wild Sockeye Salmon' },
-        { plu: '9144', name: 'Atlantic Salmon Fillet' },
         { plu: '9180', name: 'Tilapia Fillet' },
-        { plu: '9109', name: 'Wild Halibut Portions' },
-        { plu: '9056', name: 'Wild Cod Fillet' },
-        { plu: '9167', name: 'Steelhead Trout Fillet' },
         { plu: '9132', name: 'Wild Sea Scallops' },
-        { plu: '9053', name: 'Wild Ahi Tuna' },
+        { plu: '9109', name: 'Wild Halibut Portions' },
+        { plu: '9413', name: 'Black Garlic Barramundi' },
+        { plu: '9367', name: 'Raw Wild Shrimp' }
+      ],
+      back: [
+        { plu: '9144', name: 'Atlantic Salmon Fillet' },
+        { plu: '9460', name: 'Atlantic Salmon Farmed' },
+        { plu: '9567', name: 'Steelhead Trout Fillet' },
+        { plu: '9056', name: 'Wild Cod Fillet' },
         { plu: '9043', name: 'Wild Swordfish Steak' },
-        { plu: '9460', name: 'Atlantic Salmon Filet' }
+        { plu: '9053', name: 'Wild Ahi Tuna' }
       ]
     },
     {
       title: 'Seafood — Shrimp, Poke & Marinated',
       front: [
-        { plu: '9367', name: 'Raw Wild Shrimp 16/20' },
-        { plu: '9312', name: 'Raw Shrimp 16/20 PDTO' },
-        { plu: '9022', name: 'Cooked Shrimp 16/20' },
-        { plu: '9310', name: 'Raw Shrimp 16/20' },
-        { plu: '9175', name: 'Garlic Lemon Pepper Shrimp Skewers' },
-        { plu: '9268', name: 'Cajun Butter Shrimp Skewers' },
-        { plu: '9504', name: 'Poke Ahi Tuna (Marinated)' },
-        { plu: '9413', name: 'Black Garlic Barramundi' },
-        { plu: '9532', name: 'Black Garlic Salmon' },
-        { plu: '9105', name: 'Lemon Pepper Garlic Salmon' },
+        { plu: '9367', name: 'Raw Wild Shrimp' },
+        { plu: '9504', name: 'Poke Ahi Tuna Marinated' },
         { plu: '9165', name: 'Red Chimichurri Salmon' },
-        { plu: '9128', name: 'Hot Honey Chipotle Salmon' },
+        { plu: '9105', name: 'Lemon Pepper Garlic Salmon' },
+        { plu: '9532', name: 'Black Garlic Salmon Portion' }
+      ],
+      back: [
+        { plu: '9310', name: 'Raw Shrimp 16/20' },
+        { plu: '9040', name: 'Black Garlic Ahi Tuna' },
         { plu: '9038', name: 'Black Garlic Wild Salmon' },
-        { plu: '9040', name: 'Black Garlic Ahi Tuna' }
+        { plu: '9128', name: 'Hot Honey Chipotle Salmon' },
+        { plu: '9587', name: 'Lemon Pepper Steelhead' }
       ]
     },
     {
@@ -190,13 +209,16 @@
     DISPLAY = [];
     PAGES.forEach(function (section) {
       if (section.type === 'garnish') { DISPLAY.push({ garnish: section }); return; }
-      var items = (section.front || []).slice();
-      var total = Math.max(1, Math.ceil(items.length / 4));
+      var f = section.front || [], b = section.back || [];
+      var n = Math.max(f.length, b.length);
+      var total = Math.max(1, Math.ceil(n / 2));
       for (var c = 0; c < total; c++) {
+        var i = c * 2;
         DISPLAY.push({
           section: section,
           title: section.title + (total > 1 ? ' (' + (c + 1) + '/' + total + ')' : ''),
-          cells: items.slice(c * 4, c * 4 + 4)
+          top: [f[i], f[i + 1]],       // customer glass (far)
+          bottom: [b[i], b[i + 1]]     // service glass (closest to you)
         });
       }
     });
@@ -204,21 +226,21 @@
 
   // One page = a 2x2 grid. Top row = Customer glass (far side); bottom row =
   // Service glass, the PLUs closest to the clerk. Left to right within each row.
-  function render2x2(cells) {
+  function render2x2(dp) {
     var wrap = document.createElement('div');
     wrap.className = 'case-2x2';
     wrap.appendChild(glassBanner('Customer glass · far'));
     var grid = document.createElement('div');
     grid.className = 'case-grid2';
-    for (var i = 0; i < 4; i++) {
-      if (cells[i]) {
-        grid.appendChild(tileNode(cells[i]));
+    [dp.top[0], dp.top[1], dp.bottom[0], dp.bottom[1]].forEach(function (t) {
+      if (t) {
+        grid.appendChild(tileNode(t));
       } else {
         var e = document.createElement('div');
         e.className = 'case-tile is-empty';
         grid.appendChild(e);
       }
-    }
+    });
     wrap.appendChild(grid);
     wrap.appendChild(glassBanner('Closest to you · service glass'));
     return wrap;
@@ -277,7 +299,7 @@
       note.textContent = section.note;
       pageEl.appendChild(note);
     }
-    pageEl.appendChild(dp.garnish ? renderGarnish(dp.garnish) : render2x2(dp.cells));
+    pageEl.appendChild(dp.garnish ? renderGarnish(dp.garnish) : render2x2(dp));
 
     var draft = document.createElement('p');
     draft.className = 'case-draft';

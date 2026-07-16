@@ -1,6 +1,6 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.16.24**
+Current app version: **v0.16.25**
 
 Last synced: 2026-07-13
 
@@ -69,6 +69,7 @@ The app is a cached offline PWA, so version fidelity matters. When any app file 
 - Ready-Made checklist reordered to column-major (straight down the columns) so the Counts / Periscope Report reads the same way as the beef sheet. Both sections are now consistent: read straight down each column.
 - The Scan-tab "Scanned this session" log now rebuilds from the saved session after a reload or crash, so a mid-count refresh restores the visible scan list too (it used to go blank even though the counts survived). The session stays the single source of truth; the scan log just mirrors it on load.
 - Case Layout is now a 2x2 grid per page (4 PLUs), from the clerk's side: top row = customer glass (far), bottom row = the PLUs closest to you (service glass), left to right. Each section chunks into as many 2x2 pages as it needs. Frosted plastic-divider markers are drawn between the pans (vertical + horizontal), matching the real case dividers.
+- Case Layout data now has real front/back rows per position, transcribed from Kyle's full left-to-right case photos. front[i] and back[i] are the same physical position (front = customer/far, back = service/closest-to-you); a PLU can appear in both rows (e.g. Pollo Asado). Each 2x2 page shows two adjacent positions with their front (top) and back (bottom) pans. Still a best-effort DRAFT to verify against the case.
 
 ## Fidelity Notes
 
