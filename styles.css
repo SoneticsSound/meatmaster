@@ -762,12 +762,20 @@ body {
   padding: 16px; text-align: center; color: var(--ink-dim); font-size: 12px;
 }
 
-/* Rotated two-column case view: Customer Glass (front) | Service Glass (back). */
-.case-rotated { display: flex; gap: 10px; align-items: flex-start; }
-.case-col { flex: 1 1 0; min-width: 0; }
-.case-col .case-tile { margin-bottom: 10px; }
-.case-col .case-tile:last-child { margin-bottom: 0; }
-.case-col .case-rowlabel { margin-top: 8px; }
+/* 2x2 case page: top row = customer glass (far), bottom row = closest to you. */
+.case-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; position: relative; }
+.case-grid2 .case-tile { min-height: 92px; }
+.case-tile.is-empty { background: transparent; border: 1px dashed var(--line); min-height: 92px; }
+.case-2x2 .case-glass { margin: 10px 0; }
+/* frosted plastic dividers between the pans (vertical + horizontal cross) */
+.case-grid2::before, .case-grid2::after {
+  content: ''; position: absolute; pointer-events: none;
+  background: rgba(255, 255, 255, .18);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .06);
+  border-radius: 3px;
+}
+.case-grid2::before { top: 2px; bottom: 2px; left: 50%; width: 4px; transform: translateX(-50%); }
+.case-grid2::after { left: 2px; right: 2px; top: 50%; height: 4px; transform: translateY(-50%); }
 
 .case-garnish-head {
   font-size: 12px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;

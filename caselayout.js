@@ -145,6 +145,7 @@
   ];
 
   var idx = 0;
+  var DISPLAY = [];   // sections flattened into 2x2 (4-tile) display pages
   var overlay, pageEl, titleEl, dotsEl, prevBtn, nextBtn;
 
   function el(id) { return document.getElementById(id); }
@@ -184,30 +185,42 @@
     return l;
   }
 
-  // Rotated case view: two columns side by side — Customer Glass (front) on the
-  // left, Service Glass (back) on the right. Each row lines up two PLUs, one
-  // front and one back, top to bottom the way you walk the case.
-  function caseColumn(glassText, rowText, items, emptyText) {
-    var col = document.createElement('div');
-    col.className = 'case-col';
-    col.appendChild(glassBanner(glassText));
-    col.appendChild(rowLabel(rowText));
-    if (items && items.length) {
-      items.forEach(function (t) { col.appendChild(tileNode(t)); });
-    } else {
-      var ph = document.createElement('div');
-      ph.className = 'case-backempty';
-      ph.textContent = emptyText;
-      col.appendChild(ph);
-    }
-    return col;
+  // Flatten each section's item list into 2x2 (4-tile) display pages, in order.
+  function buildDisplay() {
+    DISPLAY = [];
+    PAGES.forEach(function (section) {
+      if (section.type === 'garnish') { DISPLAY.push({ garnish: section }); return; }
+      var items = (section.front || []).slice();
+      var total = Math.max(1, Math.ceil(items.length / 4));
+      for (var c = 0; c < total; c++) {
+        DISPLAY.push({
+          section: section,
+          title: section.title + (total > 1 ? ' (' + (c + 1) + '/' + total + ')' : ''),
+          cells: items.slice(c * 4, c * 4 + 4)
+        });
+      }
+    });
   }
 
-  function renderCase(page) {
+  // One page = a 2x2 grid. Top row = Customer glass (far side); bottom row =
+  // Service glass, the PLUs closest to the clerk. Left to right within each row.
+  function render2x2(cells) {
     var wrap = document.createElement('div');
-    wrap.className = 'case-rotated';
-    wrap.appendChild(caseColumn('Customer Glass', 'Front', page.front, 'Add from the case'));
-    wrap.appendChild(caseColumn('Service Glass', 'Back', page.back, 'Tell me what sits here'));
+    wrap.className = 'case-2x2';
+    wrap.appendChild(glassBanner('Customer glass · far'));
+    var grid = document.createElement('div');
+    grid.className = 'case-grid2';
+    for (var i = 0; i < 4; i++) {
+      if (cells[i]) {
+        grid.appendChild(tileNode(cells[i]));
+      } else {
+        var e = document.createElement('div');
+        e.className = 'case-tile is-empty';
+        grid.appendChild(e);
+      }
+    }
+    wrap.appendChild(grid);
+    wrap.appendChild(glassBanner('Closest to you · service glass'));
     return wrap;
   }
 
@@ -246,23 +259,25 @@
 
   function render() {
     if (!pageEl) return;
-    var page = PAGES[idx];
-    titleEl.textContent = page.title;
+    if (!DISPLAY.length) buildDisplay();
+    var dp = DISPLAY[idx];
+    var section = dp.garnish || dp.section;
+    titleEl.textContent = dp.garnish ? dp.garnish.title : dp.title;
     pageEl.innerHTML = '';
     pageEl.scrollTop = 0;
 
     var cl = document.createElement('p');
     cl.className = 'case-caselabel';
-    cl.textContent = caseLabelFor(page);
+    cl.textContent = caseLabelFor(section);
     pageEl.appendChild(cl);
 
-    if (page.note) {
+    if (dp.garnish && section.note) {
       var note = document.createElement('p');
       note.className = 'case-note';
-      note.textContent = page.note;
+      note.textContent = section.note;
       pageEl.appendChild(note);
     }
-    pageEl.appendChild(page.type === 'garnish' ? renderGarnish(page) : renderCase(page));
+    pageEl.appendChild(dp.garnish ? renderGarnish(dp.garnish) : render2x2(dp.cells));
 
     var draft = document.createElement('p');
     draft.className = 'case-draft';
@@ -271,18 +286,18 @@
 
     // dots
     dotsEl.innerHTML = '';
-    PAGES.forEach(function (_, i) {
+    DISPLAY.forEach(function (_, i) {
       var dot = document.createElement('span');
       dot.className = 'case-dot' + (i === idx ? ' is-on' : '');
       dotsEl.appendChild(dot);
     });
     prevBtn.disabled = idx === 0;
-    nextBtn.disabled = idx === PAGES.length - 1;
+    nextBtn.disabled = idx === DISPLAY.length - 1;
   }
 
-  function open() { if (overlay) { idx = 0; overlay.hidden = false; render(); } }
+  function open() { if (overlay) { buildDisplay(); idx = 0; overlay.hidden = false; render(); } }
   function close() { if (overlay) overlay.hidden = true; }
-  function next() { if (idx < PAGES.length - 1) { idx++; render(); } }
+  function next() { if (idx < DISPLAY.length - 1) { idx++; render(); } }
   function prev() { if (idx > 0) { idx--; render(); } }
 
   function wire() {
