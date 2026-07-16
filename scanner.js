@@ -765,6 +765,29 @@
     renderRecent();
   }
 
+  // Rebuild the Scan-tab log from the persisted session after a reload/crash, so
+  // the visible scan list survives like the counts do. The session is the source
+  // of truth; this only mirrors it into the in-memory `recent` list once, on load.
+  function hydrateRecentFromSession() {
+    if (recent.length) return;
+    if (!window.MMSession || !window.MMSession.activeScans) return;
+    var scans;
+    try { scans = window.MMSession.activeScans() || []; } catch (e) { return; }
+    recent = scans.map(function (s) {
+      return {
+        id: s.id,
+        code: s.code,
+        fmt: s.format || '',
+        at: s.at ? new Date(s.at) : new Date(),
+        name: s.productName || '',
+        sheetName: s.sheetName || '',
+        duplicate: !!s.duplicate,
+        confirmed: !!s.confirmedAt
+      };
+    });
+    if (recent.length) renderRecent();
+  }
+
   function wireRecentSwipe(li, row) {
     var startX = 0, startY = 0, startOffsetX = 0, currentX = 0, dragging = false, swiping = false;
     function setX(x) {
@@ -841,6 +864,9 @@
       if (t.dataset.goto !== 'scan' && running) stop();
     });
   });
+
+  // restore the Scan-tab log from the persisted session on load
+  hydrateRecentFromSession();
 
   // tap the version number to show/hide the tech diagnostics
   var stamp = el('build-stamp');

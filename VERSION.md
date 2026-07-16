@@ -1,6 +1,6 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.16.22**
+Current app version: **v0.16.23**
 
 Last synced: 2026-07-13
 
@@ -67,6 +67,7 @@ The app is a cached offline PWA, so version fidelity matters. When any app file 
 - The "possible duplicate" scan card now stays up (with its "Count as unit" button) until you tap it or scan the next item, instead of vanishing after 1.5s. This matters for the rare-but-real case of a second package that shares the exact same PLU AND weight — you now always have time to count it as a separate unit. The button label is clearer ("Count as unit").
 - Case Layout rotated to two side-by-side columns — Customer Glass (front) on the left, Service Glass (back) on the right — so each row shows two PLUs (one front, one back).
 - Ready-Made checklist reordered to column-major (straight down the columns) so the Counts / Periscope Report reads the same way as the beef sheet. Both sections are now consistent: read straight down each column.
+- The Scan-tab "Scanned this session" log now rebuilds from the saved session after a reload or crash, so a mid-count refresh restores the visible scan list too (it used to go blank even though the counts survived). The session stays the single source of truth; the scan log just mirrors it on load.
 
 ## Fidelity Notes
 
