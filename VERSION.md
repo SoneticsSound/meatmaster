@@ -1,6 +1,6 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.16.27**
+Current app version: **v0.16.28**
 
 Last synced: 2026-07-13
 
@@ -72,6 +72,7 @@ The app is a cached offline PWA, so version fidelity matters. When any app file 
 - Case Layout data now has real front/back rows per position, transcribed from Kyle's full left-to-right case photos. front[i] and back[i] are the same physical position (front = customer/far, back = service/closest-to-you); a PLU can appear in both rows (e.g. Pollo Asado). Each 2x2 page shows two adjacent positions with their front (top) and back (bottom) pans. Still a best-effort DRAFT to verify against the case.
 
 - Case Layout correction: PLU 8328 is Hot Honey Chipotle Thighs, and PLU 8349 Jamaican Jerk Thighs is now placed to the left of the wings group in Marinated Chicken.
+- Case Layout now collapses odd one-position tail pages into 3-column pages, adds a separate Garnish Reference button, spaces the Products tools away from search, and uses accent-colored vertical case dividers instead of grey cross dividers.
 
 ## Fidelity Notes
 

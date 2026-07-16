@@ -92,10 +92,13 @@
         <div class="ph-icon">🗂️</div>
         <h2>Product database loaded</h2>
         <p>Seed products plus anything saved from unknown scans live on this phone.</p>
-        <span class="chip">v0.16.27</span>
+        <span class="chip">v0.16.28</span>
       </div>
       <section class="product-list-wrap">
-        <button class="btn btn-primary btn-block" id="btn-view-case-layout">View Case Layout</button>
+        <div class="product-tools">
+          <button class="btn btn-primary btn-block" id="btn-view-case-layout">View Case Layout</button>
+          <button class="btn btn-block" id="btn-view-garnish">Garnish Reference</button>
+        </div>
         <input class="product-search" id="product-search" type="search" placeholder="Search products, PLU, category" autocomplete="off" />
         <h2 class="recent-title">Seed products <span class="recent-count" id="product-count">0</span></h2>
         <ul class="product-list" id="product-list"></ul>
@@ -191,7 +194,7 @@
     </div>
   </div>
 
-  <div class="build-stamp" id="build-stamp">v0.16.27</div>
+  <div class="build-stamp" id="build-stamp">v0.16.28</div>
 
   <script src="vendor/zbar/index.js"></script>
   <script src="products.js"></script>

@@ -204,23 +204,42 @@
     return l;
   }
 
-  // Flatten each section's item list into 2x2 (4-tile) display pages, in order.
-  function buildDisplay() {
+  // Flatten each section's item list into display pages, in order. Two physical
+  // positions per page is the default; a 3-position tail collapses into one page
+  // so we do not leave a mostly-empty swipe page with dotted placeholders.
+  function buildDisplay(kind) {
     DISPLAY = [];
     PAGES.forEach(function (section) {
-      if (section.type === 'garnish') { DISPLAY.push({ garnish: section }); return; }
+      if (section.type === 'garnish') {
+        if (kind === 'garnish') DISPLAY.push({ garnish: section });
+        return;
+      }
+      if (kind === 'garnish') return;
       var f = section.front || [], b = section.back || [];
       var n = Math.max(f.length, b.length);
-      var total = Math.max(1, Math.ceil(n / 2));
-      for (var c = 0; c < total; c++) {
-        var i = c * 2;
+      var chunks = [];
+      var i = 0;
+      while (i < n) {
+        var remaining = n - i;
+        var size = remaining === 3 ? 3 : Math.min(2, remaining);
+        chunks.push({ start: i, size: size });
+        i += size;
+      }
+      if (!chunks.length) chunks.push({ start: 0, size: 1 });
+
+      chunks.forEach(function (chunk, c) {
+        var top = [], bottom = [];
+        for (var p = 0; p < chunk.size; p++) {
+          top.push(f[chunk.start + p]);
+          bottom.push(b[chunk.start + p]);
+        }
         DISPLAY.push({
           section: section,
-          title: section.title + (total > 1 ? ' (' + (c + 1) + '/' + total + ')' : ''),
-          top: [f[i], f[i + 1]],       // customer glass (far)
-          bottom: [b[i], b[i + 1]]     // service glass (closest to you)
+          title: section.title + (chunks.length > 1 ? ' (' + (c + 1) + '/' + chunks.length + ')' : ''),
+          top: top,          // customer glass (far)
+          bottom: bottom     // service glass (closest to you)
         });
-      }
+      });
     });
   }
 
@@ -232,7 +251,10 @@
     wrap.appendChild(glassBanner('Customer glass · far'));
     var grid = document.createElement('div');
     grid.className = 'case-grid2';
-    [dp.top[0], dp.top[1], dp.bottom[0], dp.bottom[1]].forEach(function (t) {
+    var cols = Math.max(dp.top.length, dp.bottom.length, 1);
+    grid.style.gridTemplateColumns = 'repeat(' + cols + ', minmax(0, 1fr))';
+    if (cols !== 2) grid.classList.add('case-grid' + cols);
+    dp.top.concat(dp.bottom).forEach(function (t) {
       if (t) {
         grid.appendChild(tileNode(t));
       } else {
@@ -317,7 +339,19 @@
     nextBtn.disabled = idx === DISPLAY.length - 1;
   }
 
-  function open() { if (overlay) { buildDisplay(); idx = 0; overlay.hidden = false; render(); } }
+  function openAt(kind, predicate) {
+    if (!overlay) return;
+    buildDisplay(kind);
+    idx = 0;
+    if (predicate) {
+      var found = DISPLAY.findIndex(predicate);
+      if (found >= 0) idx = found;
+    }
+    overlay.hidden = false;
+    render();
+  }
+  function open() { openAt('case'); }
+  function openGarnish() { openAt('garnish'); }
   function close() { if (overlay) overlay.hidden = true; }
   function next() { if (idx < DISPLAY.length - 1) { idx++; render(); } }
   function prev() { if (idx > 0) { idx--; render(); } }
@@ -330,8 +364,10 @@
     prevBtn = el('case-prev');
     nextBtn = el('case-next');
     var openBtn = el('btn-view-case-layout');
+    var garnishBtn = el('btn-view-garnish');
     var closeBtn = el('case-close');
     if (openBtn) openBtn.addEventListener('click', open);
+    if (garnishBtn) garnishBtn.addEventListener('click', openGarnish);
     if (closeBtn) closeBtn.addEventListener('click', close);
     if (prevBtn) prevBtn.addEventListener('click', prev);
     if (nextBtn) nextBtn.addEventListener('click', next);
@@ -363,5 +399,5 @@
     wire();
   }
 
-  window.MMCaseLayout = { open: open, pages: PAGES };
+  window.MMCaseLayout = { open: open, openGarnish: openGarnish, pages: PAGES };
 })();

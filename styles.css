@@ -272,6 +272,11 @@ body {
 .ri-meta { font-size: 12px; color: var(--ink-dim); }
 
 .product-list-wrap { margin-top: 24px; }
+.product-tools {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 16px;
+}
 .product-search {
   width: 100%;
   min-height: 48px;
@@ -765,17 +770,28 @@ body {
 /* 2x2 case page: top row = customer glass (far), bottom row = closest to you. */
 .case-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; position: relative; }
 .case-grid2 .case-tile { min-height: 92px; }
-.case-tile.is-empty { background: transparent; border: 1px dashed var(--line); min-height: 92px; }
+.case-tile.is-empty { background: transparent; border: 0; min-height: 92px; visibility: hidden; }
 .case-2x2 .case-glass { margin: 10px 0; }
-/* frosted plastic dividers between the pans (vertical + horizontal cross) */
+/* vertical divider marks between the pans */
 .case-grid2::before, .case-grid2::after {
   content: ''; position: absolute; pointer-events: none;
-  background: rgba(255, 255, 255, .18);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, .06);
+  background: var(--accent);
+  box-shadow: 0 0 0 1px rgba(193, 39, 45, .14);
   border-radius: 3px;
 }
 .case-grid2::before { top: 2px; bottom: 2px; left: 50%; width: 4px; transform: translateX(-50%); }
-.case-grid2::after { left: 2px; right: 2px; top: 50%; height: 4px; transform: translateY(-50%); }
+.case-grid2::after { display: none; }
+.case-grid2.case-grid1::before { display: none; }
+.case-grid2.case-grid3::before { left: 33.333%; }
+.case-grid2.case-grid3::after {
+  display: block;
+  top: 2px;
+  bottom: 2px;
+  left: 66.666%;
+  width: 4px;
+  transform: translateX(-50%);
+}
+.case-grid2.case-grid3 .case-tile { min-height: 84px; }
 
 .case-garnish-head {
   font-size: 12px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
