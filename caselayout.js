@@ -46,7 +46,7 @@
         { plu: '7539', name: 'Org 85% Lean Grassfed' },
         { plu: '7879', name: 'Chimichurri Steak' },
         { plu: '7635', name: 'Black Garlic Steak Kabobs' },
-        { plu: '7672', name: 'Korean BBQ Beef Skewers' }
+        { plu: '7073', name: 'Korean BBQ Beef Skewers' }
       ],
       back: [
         { plu: '7010', name: 'Cowboy Beef Burgers' },
@@ -65,22 +65,21 @@
         { plu: '8355', name: 'Parmesan Stuffed Breast' },
         { plu: '8718', name: 'Citrus Herb B/L Chicken' },
         { plu: '8157', name: 'Pollo Asado' },
-        { plu: '8349', name: 'Jamaican Jerk Thighs' },
-        { plu: '8325', name: 'Hot Honey Chipotle Wings' },
-        { plu: '8058', name: 'Jamaican Jerk Wings' },
-        { plu: '8248', name: 'Rstd Garlic Lemon Pepper Wings' }
+        { plu: '8346', name: 'Korean BBQ Wings' },
+        { plu: '8343', name: 'Cajun Butter Wings' },
+        { plu: '8363', name: 'Red Chimichurri Wings' },
+        { plu: '8197', name: 'Black Garlic Wings' }
       ],
       back: [
         { plu: '8235', name: 'Black Garlic Chicken Skewers' },
-        { plu: '8352', name: 'Mediterranean Stuffed Breast' },
-        { plu: '8353', name: 'Prosciutto Stuffed Breast' },
+        { plu: '8352', name: 'Mushroom Stuffed Breast' },
+        { plu: '8353', name: 'Mediterranean Stuffed Breast' },
         { plu: '8351', name: 'Herb Butter Breast' },
-        { plu: '8157', name: 'Pollo Asado' },
         { plu: '8328', name: 'Hot Honey Chipotle Breast' },
-        { plu: '8957', name: 'Chicken Wings' },
-        { plu: '8343', name: 'Cajun Butter Wings' },
-        { plu: '8346', name: 'Korean BBQ Chicken Wings' },
-        { plu: '8363', name: 'BBQ Chicken Wings' }
+        { plu: '8157', name: 'Pollo Asado' },
+        { plu: '8325', name: 'Hot Honey Chipotle Wings' },
+        { plu: '8058', name: 'Jamaican Jerk Wings' },
+        { plu: '8248', name: 'Roasted Garlic Lemon Pepper Wings' }
       ]
     },
     {
