@@ -75,8 +75,9 @@
         { plu: '8352', name: 'Mushroom Stuffed Breast' },
         { plu: '8353', name: 'Mediterranean Stuffed Breast' },
         { plu: '8351', name: 'Herb Butter Breast' },
-        { plu: '8328', name: 'Hot Honey Chipotle Breast' },
+        { plu: '8328', name: 'Hot Honey Chipotle Thighs' },
         { plu: '8157', name: 'Pollo Asado' },
+        { plu: '8349', name: 'Jamaican Jerk Thighs' },
         { plu: '8325', name: 'Hot Honey Chipotle Wings' },
         { plu: '8058', name: 'Jamaican Jerk Wings' },
         { plu: '8248', name: 'Roasted Garlic Lemon Pepper Wings' }
