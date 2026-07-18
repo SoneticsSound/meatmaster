@@ -328,13 +328,8 @@
     draft.textContent = 'Draft from case photos — check against the case.';
     pageEl.appendChild(draft);
 
-    // dots
-    dotsEl.innerHTML = '';
-    DISPLAY.forEach(function (_, i) {
-      var dot = document.createElement('span');
-      dot.className = 'case-dot' + (i === idx ? ' is-on' : '');
-      dotsEl.appendChild(dot);
-    });
+    // page counter (cleaner than one dot per page when a case has many pages)
+    dotsEl.textContent = (idx + 1) + ' / ' + DISPLAY.length;
     prevBtn.disabled = idx === 0;
     nextBtn.disabled = idx === DISPLAY.length - 1;
   }

@@ -1,6 +1,6 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.16.28**
+Current app version: **v0.16.29**
 
 Last synced: 2026-07-13
 
@@ -73,6 +73,7 @@ The app is a cached offline PWA, so version fidelity matters. When any app file 
 
 - Case Layout correction: PLU 8328 is Hot Honey Chipotle Thighs, and PLU 8349 Jamaican Jerk Thighs is now placed to the left of the wings group in Marinated Chicken.
 - Case Layout now collapses odd one-position tail pages into 3-column pages, adds a separate Garnish Reference button, spaces the Products tools away from search, and uses accent-colored vertical case dividers instead of grey cross dividers.
+- Case Layout paging control replaced the crowded one-dot-per-page row with a compact "N / total" page counter (a case can span ~14 pages).
 
 ## Fidelity Notes
 
