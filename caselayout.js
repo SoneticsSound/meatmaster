@@ -209,12 +209,19 @@
   // so we do not leave a mostly-empty swipe page with dotted placeholders.
   function buildDisplay(kind) {
     DISPLAY = [];
-    PAGES.forEach(function (section) {
-      if (section.type === 'garnish') {
-        if (kind === 'garnish') DISPLAY.push({ garnish: section });
-        return;
+    if (kind === 'garnish') {
+      // Prefer the DERIVED walk order (reference.js) — one continuous walk
+      // computed from the physical case — over the old static sheet embedded
+      // below. Same physical fact; deriving it keeps the two from drifting.
+      if (window.MMReference && window.MMReference.buildGarnishWalk) {
+        DISPLAY.push({ walk: window.MMReference.buildGarnishWalk(PAGES, window.MMReference.GARNISH) });
+      } else {
+        PAGES.forEach(function (s) { if (s.type === 'garnish') DISPLAY.push({ garnish: s }); });
       }
-      if (kind === 'garnish') return;
+      return;
+    }
+    PAGES.forEach(function (section) {
+      if (section.type === 'garnish') return;
       var f = section.front || [], b = section.back || [];
       var n = Math.max(f.length, b.length);
       var chunks = [];
@@ -293,6 +300,76 @@
     return wrap;
   }
 
+  // The garnish WALK: one numbered, continuous list in the order Kyle walks
+  // the case (far row, near row, then step right) so he never backtracks with
+  // the garnish tray. Order is derived from the case layout by reference.js;
+  // anything without a mapped case position is surfaced at the end, never dropped.
+  function renderWalk(walk) {
+    var wrap = document.createElement('div');
+    wrap.className = 'case-walk';
+
+    (walk.walk || []).forEach(function (r, i) {
+      var row = document.createElement('div');
+      row.className = 'case-walk-row';
+
+      var num = document.createElement('div');
+      num.className = 'case-walk-num';
+      num.textContent = (i + 1);
+      row.appendChild(num);
+
+      var body = document.createElement('div');
+      body.className = 'case-walk-body';
+
+      var item = document.createElement('div');
+      item.className = 'case-walk-item';
+      item.textContent = r.item + (r.plu ? '  ·  ' + r.plu : '');
+      if (r.verify) {
+        var vb = document.createElement('span');
+        vb.className = 'case-walk-verify';
+        vb.textContent = 'verify';
+        item.appendChild(document.createTextNode(' '));
+        item.appendChild(vb);
+      }
+      body.appendChild(item);
+
+      var val = document.createElement('div');
+      val.className = 'case-walk-val';
+      val.textContent = r.garnish;
+      body.appendChild(val);
+
+      if (r.where) {
+        var where = document.createElement('div');
+        where.className = 'case-walk-where';
+        where.textContent = r.where.section + '  ·  pos ' + r.where.position + '  ·  ' + r.where.row + ' row';
+        body.appendChild(where);
+      }
+
+      row.appendChild(body);
+      wrap.appendChild(row);
+    });
+
+    if (walk.unplaced && walk.unplaced.length) {
+      var head = document.createElement('div');
+      head.className = 'case-garnish-head';
+      head.textContent = 'No case position yet — place by hand';
+      wrap.appendChild(head);
+      walk.unplaced.forEach(function (r) {
+        var row = document.createElement('div');
+        row.className = 'case-garnish-row';
+        var i = document.createElement('div');
+        i.className = 'case-garnish-item';
+        i.textContent = r.item + (r.plu ? '  ·  ' + r.plu : '');
+        var v = document.createElement('div');
+        v.className = 'case-garnish-val';
+        v.textContent = r.garnish;
+        row.appendChild(i);
+        row.appendChild(v);
+        wrap.appendChild(row);
+      });
+    }
+    return wrap;
+  }
+
   // Physical orientation from the clerk's side: [ Meat -> Chicken ] | [ Seafood ]
   function caseLabelFor(page) {
     var t = page.title || '';
@@ -305,8 +382,9 @@
     if (!pageEl) return;
     if (!DISPLAY.length) buildDisplay();
     var dp = DISPLAY[idx];
-    var section = dp.garnish || dp.section;
-    titleEl.textContent = dp.garnish ? dp.garnish.title : dp.title;
+    var section = dp.walk || dp.garnish || dp.section;
+    titleEl.textContent = dp.walk ? (dp.walk.title + ' — Walk Order')
+                        : dp.garnish ? dp.garnish.title : dp.title;
     pageEl.innerHTML = '';
     pageEl.scrollTop = 0;
 
@@ -315,13 +393,14 @@
     cl.textContent = caseLabelFor(section);
     pageEl.appendChild(cl);
 
-    if (dp.garnish && section.note) {
+    if ((dp.walk || dp.garnish) && section.note) {
       var note = document.createElement('p');
       note.className = 'case-note';
       note.textContent = section.note;
       pageEl.appendChild(note);
     }
-    pageEl.appendChild(dp.garnish ? renderGarnish(dp.garnish) : render2x2(dp));
+    pageEl.appendChild(dp.walk ? renderWalk(dp.walk)
+                     : dp.garnish ? renderGarnish(dp.garnish) : render2x2(dp));
 
     var draft = document.createElement('p');
     draft.className = 'case-draft';

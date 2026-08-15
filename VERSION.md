@@ -1,8 +1,10 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.17.0**
+Current app version: **v0.17.1**
 
 Last synced: 2026-08-15
+
+- Garnish Walk (v0.17.1): the Products-tab "Garnish Walk" button now renders a single, numbered walk order derived from the case layout (far row, near row, then step right — `buildGarnishWalk()` in reference.js) instead of the old static sheet. Correcting a case position re-sorts the garnish order automatically. 16 items placed; 2 seafood service-case items with no PLU are surfaced under "No case position yet." Reference-only, does not touch scan/count.
 
 ## Version Sources
 

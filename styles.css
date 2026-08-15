@@ -805,6 +805,24 @@ body {
 .case-garnish-item { font-size: 13px; font-weight: 600; color: var(--ink); }
 .case-garnish-val { font-size: 13px; color: var(--ink-dim); }
 
+/* Garnish WALK — one numbered, continuous list in case-walk order. */
+.case-walk-row {
+  display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: start;
+  padding: 10px 0; border-bottom: 1px solid var(--line);
+}
+.case-walk-num {
+  flex: none; width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--accent); color: #fff; font-size: 13px; font-weight: 800;
+}
+.case-walk-item { font-size: 14px; font-weight: 700; color: var(--ink); }
+.case-walk-val { font-size: 13px; color: var(--ink-dim); margin-top: 2px; }
+.case-walk-where { font-size: 11px; color: var(--ink-dim); opacity: .8; margin-top: 3px; }
+.case-walk-verify {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+  color: var(--accent); border: 1px solid var(--accent); border-radius: 4px; padding: 0 4px;
+}
+
 .case-nav {
   display: flex; align-items: center; justify-content: space-between;
   gap: 12px; padding: 12px 16px; border-top: 1px solid var(--line); background: var(--surface);
