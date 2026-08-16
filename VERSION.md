@@ -1,6 +1,8 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.19.0**
+Current app version: **v0.19.1**
+
+- Sell-By/Markdown reworked + haptics removed (v0.19.1): the Sell-By/Markdown screen is now a zero-entry daily reference — PULL = today's date, MARK DOWN = tomorrow's date (Kyle's rule: pull on the Sell By day, mark down the day before). Manual date entry removed. NOTE: dates.js classify() still encodes the OLD boundary (past=pull/today=markdown) and must be updated to this rule when OCR auto-flagging is built. Web haptics confirmed non-working on Kyle's iPhone (iOS has no Vibration API; the 17.4+ switch trick didn't fire), so the Test Haptics button + hapticstest.js were removed and the iOS hack dropped from haptics.js (now a guarded Android-only no-op).
 
 - Case Production + Test Haptics (v0.19.0): new Products-tab "Case Production" button (caseproduction.js) — a Production-List-style refill worksheet whose line items come straight from the case layout (caselayout.js), grouped by section, +/- steppers, per-day localStorage, "Copy refill list" as text. New "Test Haptics" button (hapticstest.js) — per-pattern buzz buttons + Vibration-API support indicator, for on-device QA. Both self-contained; do not touch scan/count/session.
 

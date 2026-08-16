@@ -878,18 +878,14 @@ body {
    pull/markdown action, distinct from the reference lookups. */
 .btn-markdown { border-color: #f2c200; }
 
-/* Quiet button — for the Test Haptics QA tool, deliberately low-key. */
-.btn-quiet { opacity: .7; font-size: 13px; }
-
-/* Haptics Test panel (hapticstest.js). */
-.ht-status {
-  text-align: center; font-size: 13px; font-weight: 700;
-  padding: 10px 12px; border-radius: 10px; margin: 0 0 14px;
+/* Sell-By / Markdown daily reference cards (markdown.js). */
+.md-card {
+  border-radius: 16px; padding: 20px 16px; margin: 0 0 14px; text-align: center;
+  background: var(--vc, var(--surface)); color: #fff;
 }
-.ht-status.is-ok { color: #2f9e44; background: rgba(47, 158, 68, .10); }
-.ht-status.is-no { color: var(--accent); background: rgba(193, 39, 45, .08); }
-.ht-grid { display: flex; flex-direction: column; gap: 10px; margin: 6px 0 14px; }
-.ht-btn.is-pulsed { animation: md-flash .4s ease-in-out 1; }
+.md-card-tag { font-size: 15px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; opacity: .95; }
+.md-card-date { font-size: 40px; font-weight: 900; letter-spacing: .02em; margin: 4px 0 2px; }
+.md-card-sub { font-size: 13px; opacity: .92; line-height: 1.35; }
 
 .case-nav {
   display: flex; align-items: center; justify-content: space-between;

@@ -10,15 +10,12 @@
    certainly why earlier haptics "didn't land" on the iPhone: the code
    was correct, the platform just ignores it.
 
-   There is no officially supported web haptic on iOS. As a BEST-EFFORT
-   we also toggle a hidden <input type="checkbox" switch>, which on
-   iOS 17.4+ can emit a small system haptic when flipped inside a real
-   user gesture. It is unofficial, may do nothing, and Apple can remove
-   it. So: reliable on Android, best-effort on iOS, always safe to call.
-
-   buzz() is intentionally fire-and-forget and fully guarded — it can be
-   called from anywhere, including the scan path, without any risk to a
-   live count.
+   We tested the iOS 17.4+ <input switch> haptic trick on Kyle's iPhone
+   (2026-08-15): it does NOT fire. So there is no working web haptic on
+   his device, and this helper is a guarded no-op there. It still buzzes
+   on Android, and every call is safe from anywhere (including the scan
+   path) — so the buzz() calls scattered through the app do no harm and
+   light up for free if the app ever runs on Android.
    ================================================================== */
 (function (root) {
   'use strict';
@@ -36,40 +33,19 @@
     error:    [90, 50, 90]
   };
 
-  var iosSwitch = null;
-  function ensureIosSwitch() {
-    if (iosSwitch) return iosSwitch;
-    try {
-      var s = document.createElement('input');
-      s.type = 'checkbox';
-      s.setAttribute('switch', '');          // iOS 17.4+ haptic switch control
-      s.setAttribute('aria-hidden', 'true');
-      s.tabIndex = -1;
-      s.style.cssText =
-        'position:fixed;left:-9999px;top:0;width:0;height:0;opacity:0;pointer-events:none;';
-      (document.body || document.documentElement).appendChild(s);
-      iosSwitch = s;
-    } catch (e) { iosSwitch = null; }
-    return iosSwitch;
-  }
-
   function supported() {
     return !!(typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function');
   }
 
   /* buzz(kind) — kind is a key in PATTERNS (defaults to 'tick').
-     Returns true if the Android Vibration API accepted the pattern. The
-     iOS best-effort runs regardless and never throws. */
+     Returns true if the Vibration API (Android) accepted the pattern;
+     a harmless no-op on iOS. */
   function buzz(kind) {
     var pattern = PATTERNS[kind] || PATTERNS.tick;
-    var fired = false;
     if (supported()) {
-      try { fired = navigator.vibrate(pattern) === true; } catch (e) {}
+      try { return navigator.vibrate(pattern) === true; } catch (e) {}
     }
-    // iOS best-effort — only meaningful when called inside a user gesture.
-    var s = ensureIosSwitch();
-    if (s) { try { s.click(); } catch (e) {} }
-    return fired;
+    return false;
   }
 
   root.MMHaptic = { buzz: buzz, supported: supported, PATTERNS: PATTERNS };
