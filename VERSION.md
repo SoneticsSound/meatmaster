@@ -1,6 +1,8 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.18.0**
+Current app version: **v0.18.1**
+
+- One Pan Meals reference (v0.18.1): new Products-tab "One Pan Meals" button opens a photo + PLU reference of every one-pan meal (grouped Beef/Chicken/Seafood, tap-through to the recipe), rendered from recipes_data via production.js. Digital version of the corporate label sheet (reference.js DECK 2) to help place ready-pan meals in the right case spot so counts line up.
 
 - Sell-By / Markdown (v0.18.0): new Products-tab "Sell-By / Markdown" screen (markdown.js) over the tested dates.js engine — type the Sell By date off the label and it flashes RED "PULL — SHRINK" (past), YELLOW "MARK DOWN" (today), or green OK, and builds a per-day pull list sorted by urgency. New shared haptics helper (haptics.js): Android vibrate patterns per verdict; iOS best-effort via the 17.4+ switch trick (Vibration API is Android-only — the likely reason earlier haptics didn't fire on iPhone). Scanner feedback now routes through the same helper. Both new modules are self-contained and do not touch scan/count/session.
 

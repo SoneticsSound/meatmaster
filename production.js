@@ -440,15 +440,86 @@
     return d;
   }
 
+  /* ===============================================================
+     REFERENCE — ONE PAN MEALS (placement / count aid)
+     ---------------------------------------------------------------
+     Every One Pan Meal with its photo and PLU, grouped by protein to
+     mirror the case sections. This is the digital version of the
+     corporate "One Pan Meals" label sheet (reference.js DECK 2), but
+     with the color hero photos and the 4-digit PLUs the case tags and
+     the scanner actually use. Tapping a meal opens its recipe detail.
+
+     Kyle: placing the ready-pan meals in the right spot is what keeps
+     the counts honest — same reason the case layout exists.
+     =============================================================== */
+  function onePanRefView() {
+    return {
+      title: 'One Pan Meals',
+      build: function (root) {
+        root.appendChild(el('p', 'prod-note',
+          'Every One Pan Meal with its PLU and photo — for placing pans in the ' +
+          'right case spot so the counts line up. Tap a meal for its recipe.'));
+
+        var groups = [
+          { label: 'Beef',    test: function (r) { return /sirloin|steak|beef|meatball/i.test(r.name); } },
+          { label: 'Chicken', test: function (r) { return /chicken/i.test(r.name); } },
+          { label: 'Seafood', test: function (r) { return /salmon|shrimp|scampi/i.test(r.name); } }
+        ];
+        var all = recipes(), placed = {};
+
+        function card(r) {
+          var li = el('li', 'prod-recipe');
+          li.setAttribute('role', 'button');
+          li.tabIndex = 0;
+          if (r.image) {
+            var img = el('img', 'prod-thumb');
+            img.src = r.image; img.alt = ''; img.loading = 'lazy';
+            li.appendChild(img);
+          }
+          var txt = el('div', 'prod-recipe-txt');
+          txt.appendChild(el('div', 'prod-recipe-name', r.name));
+          txt.appendChild(el('div', 'prod-recipe-meta', 'PLU ' + (r.plu || '—')));
+          li.appendChild(txt);
+          if (r.plu) li.appendChild(el('div', 'prod-qty-chip', r.plu));
+
+          function openDetail() { push(recipeDetailView(r, 1)); }
+          li.addEventListener('click', openDetail);
+          li.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDetail(); }
+          });
+          return li;
+        }
+
+        function section(label, members) {
+          if (!members.length) return;
+          root.appendChild(el('h3', 'prod-h', label));
+          var ul = el('ul', 'prod-recipe-list');
+          members.forEach(function (r) { ul.appendChild(card(r)); });
+          root.appendChild(ul);
+        }
+
+        groups.forEach(function (g) {
+          var members = all.filter(function (r) { return !placed[r.id] && g.test(r); });
+          members.forEach(function (r) { placed[r.id] = true; });
+          section(g.label, members);
+        });
+        // Anything the grouping missed still shows — never silently dropped.
+        section('Other', all.filter(function (r) { return !placed[r.id]; }));
+      }
+    };
+  }
+
   /* ---------------------------------------------------------------
      Public entry points (wired to the Products-tab buttons)
      --------------------------------------------------------------- */
   function openProductionList() { stack = []; push(productionListView()); }
   function openRecipeList()     { stack = []; push(recipeListView(loadToday())); }
+  function openOnePanRef()      { stack = []; push(onePanRefView()); }
 
   window.MMProduction = {
     openProductionList: openProductionList,
     openRecipeList: openRecipeList,
+    openOnePanRef: openOnePanRef,
     close: closeAll,
     todayCounts: loadToday
   };
@@ -456,7 +527,9 @@
   document.addEventListener('DOMContentLoaded', function () {
     var a = document.getElementById('btn-production-list');
     var b = document.getElementById('btn-recipes-production');
+    var c = document.getElementById('btn-onepan-ref');
     if (a) a.addEventListener('click', openProductionList);
     if (b) b.addEventListener('click', openRecipeList);
+    if (c) c.addEventListener('click', openOnePanRef);
   });
 })();
