@@ -234,7 +234,8 @@
       o.connect(g); g.connect(ac.destination);
       o.start(); o.stop(ac.currentTime + 0.08);
     } catch (e) {}
-    if (navigator.vibrate) { try { navigator.vibrate([35, 35, 35]); } catch (e) {} }
+    if (window.MMHaptic) { MMHaptic.buzz('tick'); }
+    else if (navigator.vibrate) { try { navigator.vibrate([35, 35, 35]); } catch (e) {} }
   }
 
   function friendlyError(err) {

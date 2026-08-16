@@ -1,6 +1,8 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.17.1**
+Current app version: **v0.18.0**
+
+- Sell-By / Markdown (v0.18.0): new Products-tab "Sell-By / Markdown" screen (markdown.js) over the tested dates.js engine — type the Sell By date off the label and it flashes RED "PULL — SHRINK" (past), YELLOW "MARK DOWN" (today), or green OK, and builds a per-day pull list sorted by urgency. New shared haptics helper (haptics.js): Android vibrate patterns per verdict; iOS best-effort via the 17.4+ switch trick (Vibration API is Android-only — the likely reason earlier haptics didn't fire on iPhone). Scanner feedback now routes through the same helper. Both new modules are self-contained and do not touch scan/count/session.
 
 Last synced: 2026-08-15
 

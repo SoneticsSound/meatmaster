@@ -823,6 +823,61 @@ body {
   color: var(--accent); border: 1px solid var(--accent); border-radius: 4px; padding: 0 4px;
 }
 
+/* Sell-By / Markdown screen (markdown.js). Uses the prod-overlay chrome. */
+.md-today { text-align: center; font-size: 13px; color: var(--ink-dim); margin: 2px 0 12px; }
+.md-input-wrap { margin: 0 0 12px; }
+.md-input {
+  width: 100%; box-sizing: border-box; text-align: center;
+  font-size: 30px; font-weight: 800; letter-spacing: .04em;
+  padding: 14px; border-radius: 14px; border: 2px solid var(--line);
+  background: var(--surface); color: var(--ink);
+}
+.md-input:focus { outline: none; border-color: var(--accent); }
+.md-input::placeholder { color: var(--ink-dim); opacity: .5; font-weight: 600; }
+
+.md-verdict {
+  border-radius: 14px; padding: 16px; text-align: center; margin: 0 0 12px;
+  background: var(--vc, var(--surface)); color: #fff;
+}
+.md-verdict.is-empty { display: none; }
+.md-verdict.is-unknown { background: #4a90d9; }
+.md-verdict-label { font-size: 23px; font-weight: 900; letter-spacing: .03em; }
+.md-verdict-days { font-size: 15px; font-weight: 700; margin-top: 4px; opacity: .96; }
+.md-verdict-why { font-size: 12px; margin-top: 6px; opacity: .9; line-height: 1.35; }
+.md-verdict.is-flashing { animation: md-flash .45s ease-in-out 3; }
+@keyframes md-flash { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.55); } }
+@media (prefers-reduced-motion: reduce) { .md-verdict.is-flashing { animation: none; } }
+
+.md-name {
+  width: 100%; box-sizing: border-box; padding: 11px 12px; border-radius: 12px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  font-size: 14px; margin: 0 0 10px;
+}
+.md-name:focus { outline: none; border-color: var(--accent); }
+.md-add { margin: 0 0 18px; }
+
+.md-list-head {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--ink-dim); border-top: 1px solid var(--line); padding-top: 12px; margin-top: 4px;
+}
+.md-clear { background: none; border: 0; color: var(--accent); font-weight: 700; font-size: 12px; cursor: pointer; }
+.md-empty { color: var(--ink-dim); font-size: 13px; text-align: center; padding: 16px 0; }
+.md-list { list-style: none; margin: 10px 0 0; padding: 0; }
+.md-row {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin-bottom: 8px;
+  border-radius: 12px; border-left: 5px solid var(--vc, var(--line)); background: var(--surface);
+}
+.md-row-main { flex: 1 1 auto; min-width: 0; }
+.md-row-date { font-size: 15px; font-weight: 800; color: var(--ink); }
+.md-row-name { font-size: 12px; color: var(--ink-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.md-row-tag { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--vc, var(--ink-dim)); white-space: nowrap; }
+.md-row-x { flex: none; background: none; border: 0; color: var(--ink-dim); font-size: 22px; line-height: 1; cursor: pointer; padding: 0 2px; }
+
+/* Products-tab button: a hint of the markdown yellow so it reads as the
+   pull/markdown action, distinct from the reference lookups. */
+.btn-markdown { border-color: #f2c200; }
+
 .case-nav {
   display: flex; align-items: center; justify-content: space-between;
   gap: 12px; padding: 12px 16px; border-top: 1px solid var(--line); background: var(--surface);
