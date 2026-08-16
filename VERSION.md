@@ -1,6 +1,8 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.18.1**
+Current app version: **v0.19.0**
+
+- Case Production + Test Haptics (v0.19.0): new Products-tab "Case Production" button (caseproduction.js) — a Production-List-style refill worksheet whose line items come straight from the case layout (caselayout.js), grouped by section, +/- steppers, per-day localStorage, "Copy refill list" as text. New "Test Haptics" button (hapticstest.js) — per-pattern buzz buttons + Vibration-API support indicator, for on-device QA. Both self-contained; do not touch scan/count/session.
 
 - One Pan Meals reference (v0.18.1): new Products-tab "One Pan Meals" button opens a photo + PLU reference of every one-pan meal (grouped Beef/Chicken/Seafood, tap-through to the recipe), rendered from recipes_data via production.js. Digital version of the corporate label sheet (reference.js DECK 2) to help place ready-pan meals in the right case spot so counts line up.
 

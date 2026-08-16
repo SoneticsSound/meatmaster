@@ -878,6 +878,19 @@ body {
    pull/markdown action, distinct from the reference lookups. */
 .btn-markdown { border-color: #f2c200; }
 
+/* Quiet button — for the Test Haptics QA tool, deliberately low-key. */
+.btn-quiet { opacity: .7; font-size: 13px; }
+
+/* Haptics Test panel (hapticstest.js). */
+.ht-status {
+  text-align: center; font-size: 13px; font-weight: 700;
+  padding: 10px 12px; border-radius: 10px; margin: 0 0 14px;
+}
+.ht-status.is-ok { color: #2f9e44; background: rgba(47, 158, 68, .10); }
+.ht-status.is-no { color: var(--accent); background: rgba(193, 39, 45, .08); }
+.ht-grid { display: flex; flex-direction: column; gap: 10px; margin: 6px 0 14px; }
+.ht-btn.is-pulsed { animation: md-flash .4s ease-in-out 1; }
+
 .case-nav {
   display: flex; align-items: center; justify-content: space-between;
   gap: 12px; padding: 12px 16px; border-top: 1px solid var(--line); background: var(--surface);
