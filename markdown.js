@@ -98,7 +98,9 @@
       'Mark down anything with tomorrow’s Sell By date.', D.STATUS.MARKDOWN.color));
 
     bodyEl.appendChild(el('p', 'prod-note',
-      'Dates update automatically each day.'));
+      'Dates update automatically each day. The app can’t read the stickers ' +
+      'yet — that comes with the label scanner (OCR). For now, match these two ' +
+      'dates by eye as you walk the case.'));
   }
 
   window.MMMarkdown = { open: open, close: close };

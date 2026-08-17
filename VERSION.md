@@ -1,6 +1,8 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.19.1**
+Current app version: **v0.19.2**
+
+- Recipe kit grouping + markdown wording (v0.19.2): recipe detail now groups kit contents under the kit line like the recipe book — the "Kit" ingredient reads as a header (accent bar + KIT tag) and its "•"-prefixed contents render as indented children beneath it, still listed (Kyle sometimes grabs them loose from produce/grocery). Display-only change in production.js; scaler/data untouched. Also clarified the Sell-By/Markdown screen wording: it's a passive daily reference (no OCR yet), so it can't auto-alert — match the two dates by eye.
 
 - Sell-By/Markdown reworked + haptics removed (v0.19.1): the Sell-By/Markdown screen is now a zero-entry daily reference — PULL = today's date, MARK DOWN = tomorrow's date (Kyle's rule: pull on the Sell By day, mark down the day before). Manual date entry removed. NOTE: dates.js classify() still encodes the OLD boundary (past=pull/today=markdown) and must be updated to this rule when OCR auto-flagging is built. Web haptics confirmed non-working on Kyle's iPhone (iOS has no Vibration API; the 17.4+ switch trick didn't fire), so the Test Haptics button + hapticstest.js were removed and the iOS hack dropped from haptics.js (now a guarded Android-only no-op).
 

@@ -388,23 +388,40 @@
           root.appendChild(pl);
         }
 
-        // Ingredients, scaled.
+        // Ingredients, scaled. The manual delivers some recipes as a KIT
+        // plus loose extras: the kit is one line, and its contents are
+        // printed underneath, each name prefixed with "•". Kyle: show the
+        // kit AS a kit and group its contents beneath it (like the book) —
+        // but keep listing them, because sometimes a kit ingredient is
+        // grabbed loose from produce/grocery. So: kit line = header, its
+        // "•" contents = indented children right under it.
         root.appendChild(el('h3', 'prod-h', 'Ingredients'));
         var ul = el('ul', 'prod-ing-list');
         (s ? s.ingredients : []).forEach(function (i, idx) {
           var src = r.ingredients[idx] || {};
+          var rawName = i.name || '';
+          var isChild = /^\s*•/.test(rawName) || !!src.child;
+          var name = rawName.replace(/^\s*•\s*/, '');
+          var isKit = !isChild && /\bkit\b/i.test(name);
+
           var li = el('li', 'prod-ing');
-          if (src.child) li.classList.add('is-child');
+          if (isChild) li.classList.add('is-child');
+          if (isKit)   li.classList.add('is-kit');
 
           // "1" next to an ingredient whose NAME starts with a digit
           // ("3 Onion Concentrate") reads as a typo — "1 3 Onion
           // Concentrate". Append the unit in that case only, so the
           // common rows ("4 Lime") stay clean.
           var amtText = i.text;
-          if (/^\d+$/.test(amtText) && /^\d/.test(i.name)) amtText += ' ea';
+          if (/^\d+$/.test(amtText) && /^\d/.test(name)) amtText += ' ea';
           li.appendChild(el('span', 'prod-ing-amt', amtText));
 
-          var nm = el('span', 'prod-ing-name', i.name);
+          var nm = el('span', 'prod-ing-name', name);
+          if (isKit) {
+            var tag = el('span', 'prod-ing-kittag', 'KIT');
+            nm.appendChild(document.createTextNode(' '));
+            nm.appendChild(tag);
+          }
           li.appendChild(nm);
 
           if (i.scaleText) li.appendChild(el('span', 'prod-ing-echo', i.scaleText));

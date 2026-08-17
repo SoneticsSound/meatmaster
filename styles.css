@@ -1058,7 +1058,15 @@ body.prod-open { overflow: hidden; }
   padding: 9px 10px; background: var(--surface);
   border-radius: 10px; margin-bottom: 6px;
 }
+.prod-ing.is-kit { border-left: 3px solid var(--accent); }
+.prod-ing.is-kit .prod-ing-name { font-weight: 700; }
 .prod-ing.is-child { margin-left: 18px; background: var(--surface-2); }
+.prod-ing.is-child .prod-ing-name { color: var(--ink-dim); }
+.prod-ing-kittag {
+  display: inline-block; font-size: .6rem; font-weight: 800; letter-spacing: .06em;
+  color: #fff; background: var(--accent); border-radius: 4px; padding: 1px 5px;
+  vertical-align: middle; text-transform: uppercase;
+}
 .prod-ing-amt {
   font-weight: 800; font-size: 1.02rem; min-width: 74px;
   font-variant-numeric: tabular-nums;   /* amounts line up down the column */
