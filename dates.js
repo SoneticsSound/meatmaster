@@ -1,14 +1,12 @@
 /* MeatMaster — Sell-By Dates, Markdown & Pull Rules
    ==================================================================
-   Kyle's rule, confirmed 2026-08-13:
-
-     "Markdowns happen the day before. If it were today (8/13) we would
-      pull sell-bys from 8/12 and mark down 8/13."
+   Kyle's rule, UPDATED 2026-08-15 (supersedes the 2026-08-13 version):
+   pull ON the sell-by day, mark down the day before.
 
    So, against TODAY:
-     sell-by  <  today   ->  PULL / SHRINK   flash RED
-     sell-by  == today   ->  MARKDOWN        flash YELLOW
-     sell-by  >  today   ->  OK              no flag
+     sell-by  <= today   ->  PULL / SHRINK   flash RED   (today or overdue)
+     sell-by  == tomorrow->  MARKDOWN        flash YELLOW
+     sell-by  >  tomorrow->  OK              no flag
 
    The colors are not arbitrary — YELLOW matches the physical markdown
    sticker. The app should look like the thing in your hand.
@@ -176,7 +174,7 @@
       color: '#e5241b',       // red
       flash: true,
       priority: 3,
-      why: 'Sell-by has passed. This comes off the case and goes to shrink.'
+      why: 'Sell-by is today (or has passed). Pull it from the case.'
     },
     MARKDOWN: {
       key: 'markdown',
@@ -184,7 +182,7 @@
       color: '#f2c200',       // yellow — matches the physical sticker
       flash: true,
       priority: 2,
-      why: 'Sell-by is today. Mark it down now; tomorrow it becomes a pull.'
+      why: 'Sell-by is tomorrow. Mark it down now; tomorrow it becomes a pull.'
     },
     OK: {
       key: 'ok',
@@ -215,8 +213,12 @@
     var ref = opts.today || today();
     var delta = daysBetween(ref, sellBy);   // negative = in the past
 
-    if (delta < 0)  return STATUS.PULL;      // 8/12 seen on 8/13
-    if (delta === 0) return STATUS.MARKDOWN; // 8/13 seen on 8/13
+    // Kyle's rule, confirmed 2026-08-15: PULL on the sell-by day, MARK DOWN
+    // the day before. So sell-by today (or already passed) = PULL; sell-by
+    // tomorrow = MARK DOWN. (This replaces the earlier today=markdown rule;
+    // test_dates.js still encodes the old boundary and needs updating.)
+    if (delta <= 0)  return STATUS.PULL;      // sell-by today or overdue
+    if (delta === 1) return STATUS.MARKDOWN;  // sell-by tomorrow
     return STATUS.OK;
   }
 

@@ -1,6 +1,8 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.20.0**
+Current app version: **v0.20.1**
+
+- dates.js rule fix (v0.20.1): `classify()` updated to Kyle's confirmed rule — sell-by today or overdue = PULL, tomorrow = MARK DOWN, later = OK (was today=markdown). The Sell-By Scanner's verdicts use this, so it now matches the Sell-By/Markdown reference screen. test_dates.js still encodes the OLD boundary and needs updating (can't run node locally to re-verify).
 
 - Sell-By Scanner BETA + offline OCR engine (v0.20.0): new Products-tab "Sell-By Scanner (beta)" (sellbyscanner.js) — camera locks the barcode (product ID, works today), then Tesseract.js reads the Sell By date as a best-effort; you confirm or type it; dates.js gives PULL/MARK DOWN/OK and adds to a per-day list. Tesseract vendored fully offline in vendor/tesseract (LSTM simd core + eng fast model, ~8.7MB), LAZY-LOADED on first open + runtime-cached (open once on Wi-Fi → works offline after). OCR read is UNVERIFIED on hardware — needs on-device tuning against real scan frames; barcode ID + manual confirm are the solid parts. Also: bourbon salmon marked absent in seafood_schematic.js (on planogram, not physically in case — physical is canon).
 
