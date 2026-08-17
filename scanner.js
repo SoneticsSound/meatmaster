@@ -33,6 +33,7 @@
   var recentList= el('recent-list');
   var recentNum = el('recent-count');
   var scanSub   = el('scan-sub');
+  var sellbyEl  = el('sellby-readout');
 
   var running = false;   // camera on + decode loop active
   var paused = false;    // a result is showing; ignore new reads
@@ -417,6 +418,34 @@
       .catch(function () {});
   }
 
+  /* ---------- sell-by OCR on the scanned frame (best-effort) ----------
+     Reads the label's Sell By off the SAME frame the barcode came from and
+     shows it inline, so Kyle can keep an eye on dates while counting. It is
+     fully isolated from the count: guarded, throttled (one read at a time),
+     and it never blocks or affects the scan/count if it fails or is slow. */
+  var sbOcrBusy = false;
+  function attemptSellByOcr() {
+    try {
+      if (sbOcrBusy || !window.MMOcr || !cropCanvas || !cropCanvas.width) return;
+      sbOcrBusy = true;
+      var id = cropCtx.getImageData(0, 0, cropCanvas.width, cropCanvas.height);
+      window.MMOcr.readSellBy(id).then(function (day) {
+        sbOcrBusy = false;
+        if (day) showSellBy(day);        // keep the last read on a miss
+      }).catch(function () { sbOcrBusy = false; });
+    } catch (e) { sbOcrBusy = false; }
+  }
+  function showSellBy(day) {
+    try {
+      if (!sellbyEl || !window.MMDates) return;
+      var st = window.MMDates.classify(day);
+      sellbyEl.hidden = false;
+      sellbyEl.style.setProperty('--vc', st.color);
+      sellbyEl.className = 'sellby-readout is-' + st.key;
+      sellbyEl.textContent = 'Sell By ' + window.MMDates.fmt(day) + ' · ' + st.label;
+    } catch (e) {}
+  }
+
   function onDecode(result) {
     var code = result.text;
     var now = Date.now();
@@ -462,6 +491,7 @@
 
     paused = false;
     feedback();
+    attemptSellByOcr();      // best-effort, isolated — reads the date off this frame
     resFmt.textContent = prettyType(result.type);
     setCode(code);
 
