@@ -103,20 +103,25 @@
       ]
     },
     {
+      // Marinated salmon PLUs, names, and front/back rows CONFIRMED against
+      // Kyle's close-up case photos, 2026-08-16. 9587 was previously an
+      // uncertain guess ("Lemon Pepper Steelhead") — the tag reads "Lemon
+      // Citrus Salmon Portion". 9173 was newly sighted and added.
       title: 'Seafood — Shrimp, Poke & Marinated',
       front: [
         { plu: '9367', name: 'Raw Wild Shrimp' },
         { plu: '9504', name: 'Poke Ahi Tuna Marinated' },
-        { plu: '9165', name: 'Red Chimichurri Salmon' },
-        { plu: '9105', name: 'Lemon Pepper Garlic Salmon' },
+        { plu: '9165', name: 'Red Chimichurri Wild Salmon' },
+        { plu: '9105', name: 'Lemon Pepper Roasted Garlic Wild Alaskan Salmon' },
         { plu: '9532', name: 'Black Garlic Salmon Portion' }
       ],
       back: [
         { plu: '9310', name: 'Raw Shrimp 16/20' },
         { plu: '9040', name: 'Black Garlic Ahi Tuna' },
-        { plu: '9038', name: 'Black Garlic Wild Salmon' },
-        { plu: '9128', name: 'Hot Honey Chipotle Salmon' },
-        { plu: '9587', name: 'Lemon Pepper Steelhead' }
+        { plu: '9038', name: 'Black Garlic Wild Alaskan Salmon' },
+        { plu: '9128', name: 'Hot Honey Chipotle Atlantic Salmon' },
+        { plu: '9587', name: 'Lemon Citrus Salmon Portion' },
+        { plu: '9173', name: 'Garlic Lemon Pepper Atlantic Salmon' }
       ]
     },
     {

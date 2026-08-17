@@ -1,6 +1,8 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.19.2**
+Current app version: **v0.19.3**
+
+- Marinated salmon case data confirmed (v0.19.3): the Seafood marinated section in caselayout.js was confirmed + corrected from Kyle's 2026-08-16 close-up case photos. Name refinements (9038 Wild Alaskan, 9128 Atlantic, 9105 Lemon Pepper Roasted Garlic Wild Alaskan, 9165 Red Chimichurri Wild); 9587 resolved from the uncertain "Lemon Pepper Steelhead" guess to the tag's actual "Lemon Citrus Salmon Portion"; new PLU 9173 Garlic Lemon Pepper Atlantic Salmon added. Front/back rows confirmed correct. Photos also confirmed the full marinated-chicken layout and reinforced the Sell By label position (top-right, MM.DD.YY) for future OCR.
 
 - Recipe kit grouping + markdown wording (v0.19.2): recipe detail now groups kit contents under the kit line like the recipe book — the "Kit" ingredient reads as a header (accent bar + KIT tag) and its "•"-prefixed contents render as indented children beneath it, still listed (Kyle sometimes grabs them loose from produce/grocery). Display-only change in production.js; scaler/data untouched. Also clarified the Sell-By/Markdown screen wording: it's a passive daily reference (no OCR yet), so it can't auto-alert — match the two dates by eye.
 
