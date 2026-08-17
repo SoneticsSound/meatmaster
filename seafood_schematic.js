@@ -65,7 +65,8 @@
   ];
 
   var ROW_B = [
-    { code: '20963300000', name: 'SALMON-BOURBON-6 OZ-PORTION',           friendly: 'Bourbon Salmon Portion' },
+    { code: '20963300000', name: 'SALMON-BOURBON-6 OZ-PORTION',           friendly: 'Bourbon Salmon Portion',
+      absent: true, note: 'On the official planogram but NOT physically in Kyle\'s case (confirmed 2026-08-16). Physical case is canon.' },
     { code: '20953200000', name: 'SALMON-ATLANTIC-BLACK GARLIC-FRESH',    friendly: 'Black Garlic Salmon Portion' },
     { code: '20916500000', name: 'SALMON-ALASKAN-PRTN-WILD-PF-CHIMICH',   friendly: 'Red Chimichurri Salmon' },
     { code: '20910500000', name: 'SLMON-WLD-ALSKN-RSTD GRLC LMN PPR-PF',  friendly: 'Lemon Pepper Garlic Salmon' },

@@ -878,6 +878,19 @@ body {
    pull/markdown action, distinct from the reference lookups. */
 .btn-markdown { border-color: #f2c200; }
 
+/* Sell-By Scanner (sellbyscanner.js). */
+.sb-stage { position: relative; width: 100%; background: #000; border-radius: 14px; overflow: hidden; aspect-ratio: 3 / 4; margin: 0 0 10px; }
+.sb-video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sb-status { text-align: center; font-size: 13px; color: var(--ink-dim); margin: 0 0 10px; }
+.sb-lock { border-radius: 12px; padding: 10px 12px; margin: 0 0 10px; background: #4a90d9; color: #fff; }
+.sb-lock-name { font-size: 15px; font-weight: 800; }
+.sb-lock-meta { font-size: 12px; opacity: .92; }
+.sb-date { border-radius: 14px; padding: 14px; margin: 0 0 12px; background: var(--vc, var(--surface)); color: #fff; text-align: center; }
+.sb-date-read { font-size: 22px; font-weight: 900; }
+.sb-date-verdict { font-size: 14px; font-weight: 800; margin: 2px 0 10px; letter-spacing: .04em; }
+.sb-manual { margin: 0 0 14px; }
+.sb-manual .md-name { margin: 0 0 8px; }
+
 /* Sell-By / Markdown daily reference cards (markdown.js). */
 .md-card {
   border-radius: 16px; padding: 20px 16px; margin: 0 0 14px; text-align: center;

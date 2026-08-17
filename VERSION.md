@@ -1,6 +1,8 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.19.3**
+Current app version: **v0.20.0**
+
+- Sell-By Scanner BETA + offline OCR engine (v0.20.0): new Products-tab "Sell-By Scanner (beta)" (sellbyscanner.js) — camera locks the barcode (product ID, works today), then Tesseract.js reads the Sell By date as a best-effort; you confirm or type it; dates.js gives PULL/MARK DOWN/OK and adds to a per-day list. Tesseract vendored fully offline in vendor/tesseract (LSTM simd core + eng fast model, ~8.7MB), LAZY-LOADED on first open + runtime-cached (open once on Wi-Fi → works offline after). OCR read is UNVERIFIED on hardware — needs on-device tuning against real scan frames; barcode ID + manual confirm are the solid parts. Also: bourbon salmon marked absent in seafood_schematic.js (on planogram, not physically in case — physical is canon).
 
 - Marinated salmon case data confirmed (v0.19.3): the Seafood marinated section in caselayout.js was confirmed + corrected from Kyle's 2026-08-16 close-up case photos. Name refinements (9038 Wild Alaskan, 9128 Atlantic, 9105 Lemon Pepper Roasted Garlic Wild Alaskan, 9165 Red Chimichurri Wild); 9587 resolved from the uncertain "Lemon Pepper Steelhead" guess to the tag's actual "Lemon Citrus Salmon Portion"; new PLU 9173 Garlic Lemon Pepper Atlantic Salmon added. Front/back rows confirmed correct. Photos also confirmed the full marinated-chicken layout and reinforced the Sell By label position (top-right, MM.DD.YY) for future OCR.
 
