@@ -1,6 +1,8 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.21.0**
+Current app version: **v0.21.1**
+
+- Scan fixes (v0.21.1): (1) HELD-BARCODE DUPE FLOOD fixed — the debounce window now slides on every sighting, so a continuously-held barcode stays suppressed until it leaves the frame ~1.5s (was re-firing a duplicate row every ~1s, silently). (2) Sell-By readout is no longer silent: it always shows a status (reading… / the date / "couldn't read (saw: …)") so you can see what OCR is doing; the "saw:" raw text is the tuning signal. (3) OCR now crops a band around the barcode (using its decoded corner points) and upscales it before reading, instead of the whole frame — a better shot at the small date. Read still needs on-device tuning; count path untouched.
 
 - OCR folded into the MAIN scanner (v0.21.0): removed the separate "Sell-By Scanner" screen (sellbyscanner.js deleted). The date read now happens on the main count scanner — after each scan it reads the label's Sell By off the same frame (new shared ocr.js, no DOM, guarded/throttled, never touches the count) and shows it inline below the camera as a coloured PULL/MARK DOWN/OK readout. Satisfies Kyle's "one scanner" + "show expiry on the scan confirm inline." OCR still needs on-device tuning; barcode/count path unchanged.
 

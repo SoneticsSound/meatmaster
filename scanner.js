@@ -120,7 +120,7 @@
       var s = pickBest(syms);
       if (s) {
         var text = (typeof s.decode === 'function') ? s.decode() : String(s.data || '');
-        return { text: text, type: s.typeName };
+        return { text: text, type: s.typeName, points: s.points || null };
       }
       return null;
     }).catch(function (e) {
@@ -424,17 +424,59 @@
      fully isolated from the count: guarded, throttled (one read at a time),
      and it never blocks or affects the scan/count if it fails or is slow. */
   var sbOcrBusy = false;
-  function attemptSellByOcr() {
+  function attemptSellByOcr(points) {
     try {
-      if (sbOcrBusy || !window.MMOcr || !cropCanvas || !cropCanvas.width) return;
+      if (!sellbyEl || !window.MMOcr || !cropCanvas || !cropCanvas.width) return;
+      if (sbOcrBusy) return;
       sbOcrBusy = true;
+      setSellByStatus('Sell By: reading…', null);
       var id = cropCtx.getImageData(0, 0, cropCanvas.width, cropCanvas.height);
-      window.MMOcr.readSellBy(id).then(function (day) {
+      var crop = buildOcrCrop(id, points, cropCanvas.width, cropCanvas.height);
+      window.MMOcr.readSellBy(crop).then(function (res) {
         sbOcrBusy = false;
-        if (day) showSellBy(day);        // keep the last read on a miss
-      }).catch(function () { sbOcrBusy = false; });
+        if (res && res.day) showSellBy(res.day);
+        else setSellByStatus('Sell By: couldn’t read', res && res.raw);   // never silent
+      }).catch(function () { sbOcrBusy = false; setSellByStatus('Sell By: couldn’t read', null); });
     } catch (e) { sbOcrBusy = false; }
   }
+
+  // Build an upscaled crop for OCR. If we know where the barcode is, crop a
+  // generous band around it (the Sell By sits just above/beside the barcode on
+  // the scale label) and scale it up so the small date has more pixels to read.
+  function buildOcrCrop(imageData, points, w, h) {
+    var out = document.createElement('canvas');
+    var src = document.createElement('canvas'); src.width = w; src.height = h;
+    src.getContext('2d').putImageData(imageData, 0, 0);
+    var x0 = 0, y0 = 0, cw = w, ch = h;
+    if (points && points.length) {
+      var xs = points.map(function (p) { return p.x; }), ys = points.map(function (p) { return p.y; });
+      var bx = Math.min.apply(null, xs), by = Math.min.apply(null, ys);
+      var bw = Math.max.apply(null, xs) - bx, bh = Math.max.apply(null, ys) - by;
+      var padX = bw * 0.6, padUp = Math.max(bh * 3, bw * 0.5), padDn = bh * 1.2;
+      x0 = Math.max(0, bx - padX);
+      y0 = Math.max(0, by - padUp);
+      cw = Math.min(w, bx + bw + padX) - x0;
+      ch = Math.min(h, by + bh + padDn) - y0;
+    }
+    var up = Math.min(2.5, 1400 / Math.max(cw, ch)); if (up < 1) up = 1;
+    out.width = Math.max(1, Math.round(cw * up)); out.height = Math.max(1, Math.round(ch * up));
+    var octx = out.getContext('2d');
+    octx.imageSmoothingEnabled = true;
+    octx.drawImage(src, x0, y0, cw, ch, 0, 0, out.width, out.height);
+    return out;
+  }
+
+  function setSellByStatus(text, raw) {
+    try {
+      if (!sellbyEl) return;
+      sellbyEl.hidden = false;
+      sellbyEl.className = 'sellby-readout is-status';
+      sellbyEl.style.removeProperty('--vc');
+      var seen = raw ? String(raw).replace(/\s+/g, ' ').trim().slice(0, 24) : '';
+      sellbyEl.textContent = seen ? (text + ' (saw: ' + seen + ')') : text;
+    } catch (e) {}
+  }
+
   function showSellBy(day) {
     try {
       if (!sellbyEl || !window.MMDates) return;
@@ -449,7 +491,7 @@
   function onDecode(result) {
     var code = result.text;
     var now = Date.now();
-    if (code === lastCode && (now - lastTime) < 1000) return; // suppress same-frame repeats
+    if (code === lastCode && (now - lastTime) < 1500) { lastTime = now; return; } // held barcode: keep suppressing until it leaves the frame
     lastCode = code; lastTime = now;
     var token = ++scanToken;
 
@@ -485,13 +527,16 @@
   function onDecodeAuto(result) {
     var code = result.text;
     var now = Date.now();
-    if (code === lastCode && (now - lastTime) < 1000) return; // debounce repeats
+    // A HELD barcode keeps decoding the same code every frame. Slide the window
+    // on every sighting so it stays suppressed until the barcode actually leaves
+    // the frame for ~1.5s — otherwise the log fills with silent duplicate rows.
+    if (code === lastCode && (now - lastTime) < 1500) { lastTime = now; return; }
     lastCode = code; lastTime = now;
     var token = ++scanToken;
 
     paused = false;
     feedback();
-    attemptSellByOcr();      // best-effort, isolated — reads the date off this frame
+    attemptSellByOcr(result.points);   // best-effort, isolated — reads the date off this frame
     resFmt.textContent = prettyType(result.type);
     setCode(code);
 

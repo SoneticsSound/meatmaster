@@ -56,10 +56,12 @@
     return null;
   }
 
+  // Resolves { day: {y,m,d}|null, raw: '<ocr text>' } — the raw text lets the
+  // UI show what it actually saw on a miss, which is the tuning signal.
   function readSellBy(source) {
     return new Promise(function (resolve) {
       try {
-        if (busy) { resolve(null); return; }          // one read at a time — sample, don't queue
+        if (busy) { resolve({ day: null, raw: '' }); return; }   // one read at a time — sample, don't queue
         busy = true;
         loadEngine().then(function (w) {
           var cv = source;
@@ -70,10 +72,11 @@
           }
           return w.recognize(cv).then(function (r) {
             busy = false;
-            resolve(findDate((r && r.data && r.data.text) || ''));
+            var raw = (r && r.data && r.data.text) || '';
+            resolve({ day: findDate(raw), raw: raw });
           });
-        }).catch(function () { busy = false; resolve(null); });
-      } catch (e) { busy = false; resolve(null); }
+        }).catch(function () { busy = false; resolve({ day: null, raw: '' }); });
+      } catch (e) { busy = false; resolve({ day: null, raw: '' }); }
     });
   }
 

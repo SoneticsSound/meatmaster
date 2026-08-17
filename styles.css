@@ -886,6 +886,7 @@ body {
   background: var(--vc, var(--surface)); color: #fff;
 }
 .sellby-readout.is-ok { color: #fff; }
+.sellby-readout.is-status { background: var(--surface-2); color: var(--ink-dim); font-weight: 600; font-size: 13px; }
 
 /* Sell-By / Markdown daily reference cards (markdown.js). */
 .md-card {
