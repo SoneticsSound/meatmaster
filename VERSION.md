@@ -1,6 +1,8 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.21.1**
+Current app version: **v0.21.2**
+
+- Expiry per-row + count-once-per-presentation (v0.21.2): (1) the Sell By now prints on each Scan-tab log row — "Expiry scanning…" placeholder the moment you scan, then the dated PULL/MARK DOWN/OK (coloured) or "No date read". A latest-only OCR queue keeps rows from hanging (superseded rows show nothing). Still flashes in the readout bar too. (2) A barcode now counts ONCE PER PRESENTATION: after it counts, it's suppressed until it's been out of view ~250ms (loop-released), instead of silently ticking "possible dupes" while you linger. Replaces the time-based debounce. Count path otherwise untouched.
 
 - Scan fixes (v0.21.1): (1) HELD-BARCODE DUPE FLOOD fixed — the debounce window now slides on every sighting, so a continuously-held barcode stays suppressed until it leaves the frame ~1.5s (was re-firing a duplicate row every ~1s, silently). (2) Sell-By readout is no longer silent: it always shows a status (reading… / the date / "couldn't read (saw: …)") so you can see what OCR is doing; the "saw:" raw text is the tuning signal. (3) OCR now crops a band around the barcode (using its decoded corner points) and upscales it before reading, instead of the whole frame — a better shot at the small date. Read still needs on-device tuning; count path untouched.
 

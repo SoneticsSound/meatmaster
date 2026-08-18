@@ -327,6 +327,10 @@
         if (nowT - fpsMark >= 1000) { diag.fps = fpsCount; fpsCount = 0; fpsMark = nowT; }
         if (res && res.text) { diag.hits++; diag.last = res.text + ' (' + prettyType(res.type) + ')'; }
         renderDiag();
+        // Release the held barcode once it's been out of view for the pad, so a
+        // genuine re-scan (or the next package) can count again.
+        if (res && res.text === heldCode) heldLastSeen = Date.now();
+        else if (heldCode && (Date.now() - heldLastSeen) > HOLD_RELEASE_MS) heldCode = null;
         if (res && res.text && running && !paused) {
           // require two consecutive identical, plausible reads before counting —
           // a single misdecode of a blurry/curved barcode won't survive this
@@ -351,6 +355,11 @@
   var scanToken = 0;
   var currentScan = null;
   var confirmCode = null, confirmHits = 0;   // require 2 consecutive identical reads
+  // A barcode counts once PER PRESENTATION: after it counts it becomes the
+  // "held" code and is suppressed until it's been out of view ~250ms (released
+  // in the loop). Stops silent duplicate ticking when you linger on a barcode.
+  var heldCode = null, heldLastSeen = 0;
+  var HOLD_RELEASE_MS = 250;
 
   // Reject implausible reads: formats prone to short misreads (I25/Code39) and
   // codes that aren't a valid retail length. Stops garbage (e.g. "561127") or a
@@ -423,21 +432,43 @@
      shows it inline, so Kyle can keep an eye on dates while counting. It is
      fully isolated from the count: guarded, throttled (one read at a time),
      and it never blocks or affects the scan/count if it fails or is slow. */
-  var sbOcrBusy = false;
-  function attemptSellByOcr(points) {
+  var sbBusy = false, sbPending = null;
+  function attemptSellByOcr(points, entry) {
     try {
-      if (!sellbyEl || !window.MMOcr || !cropCanvas || !cropCanvas.width) return;
-      if (sbOcrBusy) return;
-      sbOcrBusy = true;
-      setSellByStatus('Sell By: reading…', null);
+      if (!window.MMOcr || !cropCanvas || !cropCanvas.width) return;
       var id = cropCtx.getImageData(0, 0, cropCanvas.width, cropCanvas.height);
-      var crop = buildOcrCrop(id, points, cropCanvas.width, cropCanvas.height);
-      window.MMOcr.readSellBy(crop).then(function (res) {
-        sbOcrBusy = false;
-        if (res && res.day) showSellBy(res.day);
-        else setSellByStatus('Sell By: couldn’t read', res && res.raw);   // never silent
-      }).catch(function () { sbOcrBusy = false; setSellByStatus('Sell By: couldn’t read', null); });
-    } catch (e) { sbOcrBusy = false; }
+      var job = { crop: buildOcrCrop(id, points, cropCanvas.width, cropCanvas.height), entry: entry || null };
+      if (sbBusy) {
+        // One read at a time; keep only the latest waiting job. A superseded
+        // row resolves to a neutral dash rather than hanging on "scanning".
+        if (sbPending && sbPending.entry && sbPending.entry !== entry) sbPending.entry.sellByStatus = 'skip';
+        sbPending = job;
+        renderRecent();
+        return;
+      }
+      runSbJob(job);
+    } catch (e) { sbBusy = false; }
+  }
+  function runSbJob(job) {
+    sbBusy = true;
+    setSellByStatus('Sell By: reading…', null);
+    window.MMOcr.readSellBy(job.crop).then(function (res) {
+      sbBusy = false;
+      if (res && res.day) {
+        showSellBy(res.day);
+        if (job.entry) { job.entry.sellBy = res.day; job.entry.sellByStatus = 'read'; }
+      } else {
+        setSellByStatus('Sell By: couldn’t read', res && res.raw);
+        if (job.entry) job.entry.sellByStatus = 'miss';
+      }
+      renderRecent();
+      var next = sbPending; sbPending = null; if (next) runSbJob(next);
+    }).catch(function () {
+      sbBusy = false;
+      if (job.entry) job.entry.sellByStatus = 'miss';
+      renderRecent();
+      var next = sbPending; sbPending = null; if (next) runSbJob(next);
+    });
   }
 
   // Build an upscaled crop for OCR. If we know where the barcode is, crop a
@@ -527,16 +558,16 @@
   function onDecodeAuto(result) {
     var code = result.text;
     var now = Date.now();
-    // A HELD barcode keeps decoding the same code every frame. Slide the window
-    // on every sighting so it stays suppressed until the barcode actually leaves
-    // the frame for ~1.5s — otherwise the log fills with silent duplicate rows.
-    if (code === lastCode && (now - lastTime) < 1500) { lastTime = now; return; }
+    // Count once per presentation: while this is still the held code, suppress
+    // (the loop releases the hold once the barcode is out of view ~250ms). This
+    // is what stops the silent "possible dupe" ticking when you linger.
+    if (code === heldCode) { heldLastSeen = now; return; }
+    heldCode = code; heldLastSeen = now;
     lastCode = code; lastTime = now;
     var token = ++scanToken;
 
     paused = false;
     feedback();
-    attemptSellByOcr(result.points);   // best-effort, isolated — reads the date off this frame
     resFmt.textContent = prettyType(result.type);
     setCode(code);
 
@@ -558,9 +589,11 @@
         at: scanAt,
         name: product.name,
         sheetName: product.sheetName || '',
-        duplicate: scan && scan.duplicate
+        duplicate: scan && scan.duplicate,
+        sellByStatus: 'scanning'
       });
       renderRecent();
+      attemptSellByOcr(result.points, recent[0]);   // reads the date off this frame → updates this row
       var scanTime = scanAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       var scanMeta = code + ' · ' + scanTime + ' · ' + (scan && scan.duplicate ? 'Duplicate scan' : 'Counted +1');
       toast(scan && scan.duplicate ? 'dupe' : 'ok', product.name, product.sheetName || '', scanMeta, scan && scan.id);
@@ -595,9 +628,11 @@
       at: new Date(),
       name: 'Unknown product',
       sheetName: '',
-      duplicate: unknownScan && unknownScan.duplicate
+      duplicate: unknownScan && unknownScan.duplicate,
+      sellByStatus: 'scanning'
     });
     renderRecent();
+    attemptSellByOcr(result.points, recent[0]);   // reads the date off this frame → updates this row
     paused = true;
     resName.textContent = 'Unknown product';
     var bits = [];
@@ -702,6 +737,26 @@
     });
   }
 
+  // Per-row expiry chip: placeholder while OCR reads, then the dated verdict.
+  function applyExpiryChip(elc, r) {
+    var D = window.MMDates;
+    elc.hidden = false;
+    if (r.sellBy && D) {
+      var st = D.classify(r.sellBy);
+      elc.className = 'ri-expiry is-' + st.key;
+      elc.style.setProperty('--vc', st.color);
+      elc.textContent = 'Sell By ' + D.fmt(r.sellBy) + ' · ' + st.label;
+    } else if (r.sellByStatus === 'scanning') {
+      elc.className = 'ri-expiry is-scanning';
+      elc.textContent = 'Expiry scanning…';
+    } else if (r.sellByStatus === 'miss') {
+      elc.className = 'ri-expiry is-miss';
+      elc.textContent = 'No date read';
+    } else {
+      elc.hidden = true;   // skipped / not attempted
+    }
+  }
+
   function renderRecent() {
     recentNum.textContent = recent.length;
     show(recentBox, recent.length > 0);
@@ -761,9 +816,12 @@
       var meta = document.createElement('span');
       meta.className = 'ri-meta';
       meta.textContent = r.code + ' · ' + t;
+      var expiry = document.createElement('span');
+      applyExpiryChip(expiry, r);
       row.appendChild(code);
       row.appendChild(sheet);
       row.appendChild(meta);
+      if (!expiry.hidden) row.appendChild(expiry);
       li.appendChild(actions);
       li.appendChild(row);
       wireRecentSwipe(li, row);

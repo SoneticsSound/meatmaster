@@ -270,6 +270,14 @@ body {
   word-break: break-word;
 }
 .ri-meta { font-size: 12px; color: var(--ink-dim); }
+/* per-row expiry chip: OCR reads the Sell By off the scanned frame */
+.ri-expiry {
+  margin-top: 2px; font-size: 12px; font-weight: 800; padding: 2px 8px;
+  border-radius: 6px; color: #fff; background: var(--vc, var(--surface-2));
+}
+.ri-expiry.is-scanning, .ri-expiry.is-miss {
+  background: var(--surface-2); color: var(--ink-dim); font-weight: 600;
+}
 
 .product-list-wrap { margin-top: 24px; }
 .product-tools {
