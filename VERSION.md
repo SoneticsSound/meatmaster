@@ -1,6 +1,8 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.21.3**
+Current app version: **v0.21.4**
+
+- Dupe-while-card-up fix + OCR diagnostics + Sell-By/Markdown button removed (v0.21.4): (1) REAL dupe bug fixed — the "possible duplicate" card is a non-pausing toast, so a wobbling label flickered past the 250ms hold-release and silently re-counted. Now while that card is up the held barcode is STUCK (`heldStuck`) — only a different item or a tap (Done/Rescan/Count-as-unit) clears it. (2) OCR readout now reports the failure mode so we can debug on-device: "OCR engine not ready" (didn't load) vs "nothing in crop" (blank/no text) vs "couldn't read (saw: …)" (text but no date). (3) Removed the standalone Sell-By/Markdown reference button + markdown.js — expiry is auto now via the scan readout (pull today / markdown tomorrow logic lives in dates.js). (4) Also v0.21.3: OCR crop = top band + Otsu binarize.
 
 - OCR crop overhaul (v0.21.3): the earlier crop was anchored too tight to the barcode and missed the Sell By (which sits in the label's TOP band), so OCR came back empty ("couldn't read", no raw). Now crops the whole top band — from the top of the frame down past the barcode, barcode-left to the right edge — upscales, and Otsu-binarizes it (clean black-on-white) before reading. Should actually find the date now; still to be confirmed on-device.
 

@@ -73,10 +73,14 @@
           return w.recognize(cv).then(function (r) {
             busy = false;
             var raw = (r && r.data && r.data.text) || '';
-            resolve({ day: findDate(raw), raw: raw });
+            resolve({ day: findDate(raw), raw: raw, err: null });
           });
-        }).catch(function () { busy = false; resolve({ day: null, raw: '' }); });
-      } catch (e) { busy = false; resolve({ day: null, raw: '' }); }
+        }).catch(function (e) {
+          busy = false;
+          // distinguish "engine never loaded" from "ran but found nothing"
+          resolve({ day: null, raw: '', err: 'engine' });
+        });
+      } catch (e) { busy = false; resolve({ day: null, raw: '', err: 'engine' }); }
     });
   }
 

@@ -54,6 +54,7 @@
   function toast(kind, title, sheetName, note, scanId) {
     if (toastTimer) { clearTimeout(toastTimer); toastTimer = null; }
     toastScanId = kind === 'dupe' ? scanId : null;
+    if (kind === 'dupe') heldStuck = true;   // lock this barcode until a different item or a tap
     resFmt.textContent = kind === 'dupe' ? 'POSSIBLE DUPLICATE' : 'RECORDED';
     resName.textContent = title;
     resCode.textContent = sheetName || '';
@@ -64,17 +65,17 @@
     show(saveBtn, false);
     show(unitBtn, kind === 'dupe' && !!scanId);
     show(card, true);
-    // A "RECORDED" confirmation auto-dismisses. A "POSSIBLE DUPLICATE" stays put
-    // until the next scan or a tap, so there is always time to hit "Count Unit"
-    // (e.g. a real second package that happens to share the exact PLU + weight).
-    if (kind !== 'dupe') {
-      toastTimer = setTimeout(function () {
-        show(card, false);
-        card.classList.remove('is-ok', 'is-dupe', 'is-toast');
-        show(unitBtn, false);
-        toastScanId = null;
-      }, 1000);
-    }
+    // Both cards auto-dismiss: a RECORDED confirmation after 1s, a POSSIBLE
+    // DUPLICATE hangs a bit longer (2.5s) so there's time to hit "Count Unit",
+    // then clears itself — dupes can still be removed from the log later. The
+    // dupe barcode stays "stuck" (heldStuck) after the card goes, so it never
+    // silently re-counts; only a different item or a tap re-enables it.
+    toastTimer = setTimeout(function () {
+      show(card, false);
+      card.classList.remove('is-ok', 'is-dupe', 'is-toast');
+      show(unitBtn, false);
+      toastScanId = null;
+    }, kind === 'dupe' ? 2500 : 1000);
   }
 
   /* ---------- decode engine (zbar) ---------- */
@@ -330,7 +331,7 @@
         // Release the held barcode once it's been out of view for the pad, so a
         // genuine re-scan (or the next package) can count again.
         if (res && res.text === heldCode) heldLastSeen = Date.now();
-        else if (heldCode && (Date.now() - heldLastSeen) > HOLD_RELEASE_MS) heldCode = null;
+        else if (heldCode && !heldStuck && (Date.now() - heldLastSeen) > HOLD_RELEASE_MS) heldCode = null;
         if (res && res.text && running && !paused) {
           // require two consecutive identical, plausible reads before counting —
           // a single misdecode of a blurry/curved barcode won't survive this
@@ -360,6 +361,10 @@
   // in the loop). Stops silent duplicate ticking when you linger on a barcode.
   var heldCode = null, heldLastSeen = 0;
   var HOLD_RELEASE_MS = 250;
+  // While a "possible duplicate" card is up, the held code is STUCK — it won't
+  // release on a brief flicker, so a wobbling label can't silently re-count.
+  // Only a different barcode or a tap (Done/Rescan) clears it.
+  var heldStuck = false;
 
   // Reject implausible reads: formats prone to short misreads (I25/Code39) and
   // codes that aren't a valid retail length. Stops garbage (e.g. "561127") or a
@@ -458,7 +463,11 @@
         showSellBy(res.day);
         if (job.entry) { job.entry.sellBy = res.day; job.entry.sellByStatus = 'read'; }
       } else {
-        setSellByStatus('Sell By: couldn’t read', res && res.raw);
+        var raw = res && res.raw, msg;
+        if (res && res.err === 'engine') { msg = 'OCR engine not ready — open on Wi-Fi'; raw = null; }
+        else if (!raw) { msg = 'Sell By: nothing in crop'; }        // crop landed blank / found no text
+        else { msg = 'Sell By: couldn’t read'; }                     // saw text but no date → shows "(saw: …)"
+        setSellByStatus(msg, raw);
         if (job.entry) job.entry.sellByStatus = 'miss';
       }
       renderRecent();
@@ -587,7 +596,7 @@
     // (the loop releases the hold once the barcode is out of view ~250ms). This
     // is what stops the silent "possible dupe" ticking when you linger.
     if (code === heldCode) { heldLastSeen = now; return; }
-    heldCode = code; heldLastSeen = now;
+    heldCode = code; heldLastSeen = now; heldStuck = false;   // new code — not stuck (yet)
     lastCode = code; lastTime = now;
     var token = ++scanToken;
 
@@ -675,6 +684,7 @@
     card.classList.remove('is-toast');
     show(unitBtn, false);
     toastScanId = null;
+    heldStuck = false; heldCode = null;   // tapped away — re-presenting counts again
     paused = false;
     if (running && !scanTimer) loop();
   }
@@ -729,6 +739,7 @@
     card.classList.remove('is-toast');
     show(unitBtn, false);
     toastScanId = null;
+    heldStuck = false; heldCode = null;   // explicit rescan — allow the same barcode again
     paused = false;
     lastCode = null;
     lastTime = 0;
@@ -883,6 +894,7 @@
     show(unitBtn, false);
     show(card, false);
     card.classList.remove('is-ok', 'is-dupe', 'is-toast');
+    heldStuck = false; heldCode = null;   // counted as a unit — clear the lock
     paused = false;
     lastCode = null;
     lastTime = 0;
