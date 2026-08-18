@@ -471,9 +471,12 @@
     });
   }
 
-  // Build an upscaled crop for OCR. If we know where the barcode is, crop a
-  // generous band around it (the Sell By sits just above/beside the barcode on
-  // the scale label) and scale it up so the small date has more pixels to read.
+  // Build an upscaled, binarized crop for OCR. On the Sprouts scale label the
+  // Sell By sits in the TOP band (above the barcode, toward the right), so we
+  // crop the whole band from the top of the frame down past the barcode and
+  // from a little left of it to the right edge — generous on purpose, since the
+  // date regex will find the date among the extra text. Then upscale and Otsu-
+  // binarize, which helps a lot on wet/faded labels.
   function buildOcrCrop(imageData, points, w, h) {
     var out = document.createElement('canvas');
     var src = document.createElement('canvas'); src.width = w; src.height = h;
@@ -482,19 +485,41 @@
     if (points && points.length) {
       var xs = points.map(function (p) { return p.x; }), ys = points.map(function (p) { return p.y; });
       var bx = Math.min.apply(null, xs), by = Math.min.apply(null, ys);
-      var bw = Math.max.apply(null, xs) - bx, bh = Math.max.apply(null, ys) - by;
-      var padX = bw * 0.6, padUp = Math.max(bh * 3, bw * 0.5), padDn = bh * 1.2;
-      x0 = Math.max(0, bx - padX);
-      y0 = Math.max(0, by - padUp);
-      cw = Math.min(w, bx + bw + padX) - x0;
-      ch = Math.min(h, by + bh + padDn) - y0;
+      var bh = Math.max.apply(null, ys) - by, bw = Math.max.apply(null, xs) - bx;
+      x0 = Math.max(0, bx - bw * 0.3);
+      y0 = 0;                              // top of the frame
+      cw = w - x0;                         // out to the right edge (date is top-right)
+      ch = Math.min(h, by + bh);           // down to just past the barcode
     }
-    var up = Math.min(2.5, 1400 / Math.max(cw, ch)); if (up < 1) up = 1;
+    var up = Math.min(3, 1800 / Math.max(cw, ch)); if (up < 1) up = 1;
     out.width = Math.max(1, Math.round(cw * up)); out.height = Math.max(1, Math.round(ch * up));
     var octx = out.getContext('2d');
     octx.imageSmoothingEnabled = true;
     octx.drawImage(src, x0, y0, cw, ch, 0, 0, out.width, out.height);
+    otsuBinarizeCanvas(out);
     return out;
+  }
+
+  // In-place Otsu threshold: turns the crop into clean black-on-white, which is
+  // what OCR wants. Same method as the barcode decoder's glare rescue.
+  function otsuBinarizeCanvas(cv) {
+    try {
+      var ctx = cv.getContext('2d');
+      var img = ctx.getImageData(0, 0, cv.width, cv.height), d = img.data;
+      var n = cv.width * cv.height, gray = new Uint8Array(n), hist = new Uint32Array(256);
+      for (var i = 0, p = 0; p < n; i += 4, p++) {
+        var v = (d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114) | 0; gray[p] = v; hist[v]++;
+      }
+      var sum = 0, k; for (k = 0; k < 256; k++) sum += k * hist[k];
+      var sumB = 0, wB = 0, max = 0, thr = 127;
+      for (k = 0; k < 256; k++) {
+        wB += hist[k]; if (!wB) continue; var wF = n - wB; if (!wF) break;
+        sumB += k * hist[k]; var mB = sumB / wB, mF = (sum - sumB) / wF;
+        var bt = wB * wF * (mB - mF) * (mB - mF); if (bt > max) { max = bt; thr = k; }
+      }
+      for (var q = 0, j = 0; q < n; q++, j += 4) { var b = gray[q] > thr ? 255 : 0; d[j] = d[j + 1] = d[j + 2] = b; }
+      ctx.putImageData(img, 0, 0);
+    } catch (e) {}
   }
 
   function setSellByStatus(text, raw) {

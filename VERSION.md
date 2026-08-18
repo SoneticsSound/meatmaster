@@ -1,6 +1,8 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.21.2**
+Current app version: **v0.21.3**
+
+- OCR crop overhaul (v0.21.3): the earlier crop was anchored too tight to the barcode and missed the Sell By (which sits in the label's TOP band), so OCR came back empty ("couldn't read", no raw). Now crops the whole top band — from the top of the frame down past the barcode, barcode-left to the right edge — upscales, and Otsu-binarizes it (clean black-on-white) before reading. Should actually find the date now; still to be confirmed on-device.
 
 - Expiry per-row + count-once-per-presentation (v0.21.2): (1) the Sell By now prints on each Scan-tab log row — "Expiry scanning…" placeholder the moment you scan, then the dated PULL/MARK DOWN/OK (coloured) or "No date read". A latest-only OCR queue keeps rows from hanging (superseded rows show nothing). Still flashes in the readout bar too. (2) A barcode now counts ONCE PER PRESENTATION: after it counts, it's suppressed until it's been out of view ~250ms (loop-released), instead of silently ticking "possible dupes" while you linger. Replaces the time-based debounce. Count path otherwise untouched.
 
