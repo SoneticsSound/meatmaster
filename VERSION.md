@@ -1,6 +1,8 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.21.4**
+Current app version: **v0.21.5**
+
+- OCR engine load diagnosis (v0.21.5): Kyle's device reports "OCR engine not ready" even on Wi-Fi — Tesseract is failing to LOAD on iOS (not a crop/read problem). Now captures the real createWorker error and shows it: the Sell-By readout says "OCR engine didn't load — details below" and a new beta OCR-debug panel on the Scan tab prints the actual error (ENGINE FAILED: <reason>) plus, once it loads, the crop image it read + raw text. Screenshot it to see the real iOS failure reason. ocr.js now exposes lastError() and returns errMsg.
 
 - Dupe-while-card-up fix + OCR diagnostics + Sell-By/Markdown button removed (v0.21.4): (1) REAL dupe bug fixed — the "possible duplicate" card is a non-pausing toast, so a wobbling label flickered past the 250ms hold-release and silently re-counted. Now while that card is up the held barcode is STUCK (`heldStuck`) — only a different item or a tap (Done/Rescan/Count-as-unit) clears it. (2) OCR readout now reports the failure mode so we can debug on-device: "OCR engine not ready" (didn't load) vs "nothing in crop" (blank/no text) vs "couldn't read (saw: …)" (text but no date). (3) Removed the standalone Sell-By/Markdown reference button + markdown.js — expiry is auto now via the scan readout (pull today / markdown tomorrow logic lives in dates.js). (4) Also v0.21.3: OCR crop = top band + Otsu binarize.
 

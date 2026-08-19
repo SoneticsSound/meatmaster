@@ -462,12 +462,14 @@
       if (res && res.day) {
         showSellBy(res.day);
         if (job.entry) { job.entry.sellBy = res.day; job.entry.sellByStatus = 'read'; }
+        showOcrDebug(job.crop, res.raw, 'read ' + window.MMDates.fmt(res.day));
       } else {
-        var raw = res && res.raw, msg;
-        if (res && res.err === 'engine') { msg = 'OCR engine not ready — open on Wi-Fi'; raw = null; }
-        else if (!raw) { msg = 'Sell By: nothing in crop'; }        // crop landed blank / found no text
-        else { msg = 'Sell By: couldn’t read'; }                     // saw text but no date → shows "(saw: …)"
+        var raw = res && res.raw, msg, dbg;
+        if (res && res.err === 'engine') { msg = 'OCR engine didn’t load — details below'; raw = null; dbg = 'ENGINE FAILED: ' + (res.errMsg || 'unknown'); }
+        else if (!raw) { msg = 'Sell By: nothing in crop'; dbg = 'blank crop / no text'; }   // crop landed blank
+        else { msg = 'Sell By: couldn’t read'; dbg = 'saw text, no date'; }                    // shows "(saw: …)"
         setSellByStatus(msg, raw);
+        showOcrDebug(job.crop, raw, dbg);
         if (job.entry) job.entry.sellByStatus = 'miss';
       }
       renderRecent();
@@ -539,6 +541,28 @@
       sellbyEl.style.removeProperty('--vc');
       var seen = raw ? String(raw).replace(/\s+/g, ' ').trim().slice(0, 24) : '';
       sellbyEl.textContent = seen ? (text + ' (saw: ' + seen + ')') : text;
+    } catch (e) {}
+  }
+
+  // Beta OCR debug: shows the exact crop the reader saw + its status/raw text,
+  // so a screenshot tells us whether the engine loaded, the crop is right, and
+  // what characters came out. Removed once OCR is dialed in.
+  function showOcrDebug(crop, raw, status) {
+    try {
+      var dbg = document.getElementById('ocr-debug');
+      if (!dbg) return;
+      dbg.hidden = false;
+      dbg.innerHTML = '';
+      var lbl = document.createElement('div');
+      lbl.className = 'ocr-debug-lbl';
+      lbl.textContent = 'OCR debug · ' + status + (raw ? (' · saw: ' + String(raw).replace(/\s+/g, ' ').trim().slice(0, 60)) : '');
+      dbg.appendChild(lbl);
+      if (crop && crop.toDataURL) {
+        var img = document.createElement('img');
+        img.className = 'ocr-debug-img';
+        try { img.src = crop.toDataURL('image/jpeg', 0.6); } catch (e) {}
+        dbg.appendChild(img);
+      }
     } catch (e) {}
   }
 

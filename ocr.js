@@ -17,7 +17,7 @@
 (function (root) {
   'use strict';
 
-  var worker = null, loading = null, busy = false;
+  var worker = null, loading = null, busy = false, lastErr = '';
 
   function loadEngine() {
     if (worker) return Promise.resolve(worker);
@@ -25,25 +25,30 @@
     loading = new Promise(function (resolve, reject) {
       var base = (root.location ? root.location.origin : '') + '/vendor/tesseract/';
       function mk() {
-        if (!root.Tesseract) { reject(new Error('engine missing')); return; }
-        root.Tesseract.createWorker('eng', 1, {
-          workerPath: base + 'worker.min.js', corePath: base, langPath: base, gzip: false
-        }).then(function (w) {
-          // sparse text (11) so a small date anywhere in the frame is found;
-          // digits + date separators only.
-          return w.setParameters({ tessedit_char_whitelist: '0123456789/.- ', tessedit_pageseg_mode: '11' })
-            .then(function () { worker = w; resolve(w); });
-        }).catch(reject);
+        if (!root.Tesseract) { reject(new Error('Tesseract global missing after script load')); return; }
+        try {
+          root.Tesseract.createWorker('eng', 1, {
+            workerPath: base + 'worker.min.js', corePath: base, langPath: base, gzip: false
+          }).then(function (w) {
+            return w.setParameters({ tessedit_char_whitelist: '0123456789/.- ', tessedit_pageseg_mode: '11' })
+              .then(function () { worker = w; resolve(w); });
+          }).catch(reject);
+        } catch (e) { reject(e); }
       }
       if (root.Tesseract) { mk(); return; }
       var s = document.createElement('script');
       s.src = '/vendor/tesseract/tesseract.min.js';
       s.onload = mk;
-      s.onerror = function () { reject(new Error('OCR engine unavailable offline')); };
+      s.onerror = function () { reject(new Error('tesseract.min.js script failed to load')); };
       document.head.appendChild(s);
+    }).catch(function (e) {
+      loading = null;                                   // allow a later retry
+      lastErr = String((e && (e.message || e.name || e)) || 'unknown').slice(0, 120);
+      throw e;
     });
     return loading;
   }
+  function lastError() { return lastErr; }
 
   // Pull the first plausible sell-by date out of OCR text via dates.js.
   function findDate(text) {
@@ -77,15 +82,15 @@
           });
         }).catch(function (e) {
           busy = false;
-          // distinguish "engine never loaded" from "ran but found nothing"
-          resolve({ day: null, raw: '', err: 'engine' });
+          // engine failed to load — surface the real reason for on-device debug
+          resolve({ day: null, raw: '', err: 'engine', errMsg: lastErr || String((e && (e.message || e)) || '').slice(0, 120) });
         });
-      } catch (e) { busy = false; resolve({ day: null, raw: '', err: 'engine' }); }
+      } catch (e) { busy = false; resolve({ day: null, raw: '', err: 'engine', errMsg: String((e && (e.message || e)) || '').slice(0, 120) }); }
     });
   }
 
   function preload() { loadEngine().catch(function () {}); }
   function ready() { return !!worker; }
 
-  root.MMOcr = { readSellBy: readSellBy, preload: preload, ready: ready };
+  root.MMOcr = { readSellBy: readSellBy, preload: preload, ready: ready, lastError: lastError };
 })(typeof self !== 'undefined' ? self : this);
