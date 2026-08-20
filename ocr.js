@@ -34,9 +34,9 @@
           root.Tesseract.createWorker('eng', 1, {
             workerPath: base + 'worker.min.js', corePath: base, langPath: base, gzip: false
           }).then(function (w) {
-            // digits + separators for the date, PLUS the letters of "Sell By" so
-          // we can find that label and anchor the date to it.
-          return w.setParameters({ tessedit_char_whitelist: 'SsEeLlBbYy0123456789/.- ', tessedit_pageseg_mode: '11' })
+            // DIGITS ONLY — letters corrupt the date (8 reads as B) and add noise.
+          // We anchor the date by POSITION instead (rightmost = the Sell By).
+          return w.setParameters({ tessedit_char_whitelist: '0123456789/.- ', tessedit_pageseg_mode: '11' })
               .then(function () { worker = w; resolve(w); });
           }).catch(reject);
         } catch (e) { reject(e); }
@@ -56,89 +56,71 @@
   }
   function lastError() { return lastErr; }
 
-  var DATE_RE = /\d{1,2}\s*[\/.\-]\s*\d{1,2}\s*[\/.\-]\s*\d{2,4}/;
-
-  function ctr(b) { b = b || {}; return { x: ((b.x0 || 0) + (b.x1 != null ? b.x1 : b.x0 || 0)) / 2, y: ((b.y0 || 0) + (b.y1 != null ? b.y1 : b.y0 || 0)) / 2 }; }
-
   // Pull the sell-by out of Tesseract's result. The top band also holds NET
-  // WEIGHT (1.325) and unit price (8.99/lb) — that's what confuses a naive read.
-  // Strategy, best → fallback:
-  //   1) ANCHOR ON "Sell By": find the By/Sell label word and take the plausible
-  //      date token nearest it (the date sits right under "Sell By").
-  //   2) RIGHTMOST plausible date (Sell By is top-right; weight left, price centre).
-  //   3) plausible date CLOSEST TO TODAY from the raw text.
-  // `data` is Tesseract's r.data (has .words / .text).
+  // WEIGHT (1.325) and unit price (8.99/lb). Digits only (no letters), and we
+  // anchor by POSITION: the Sell By is top-RIGHT of the band, so among plausible
+  // date tokens we take the RIGHTMOST (weight is left, price centre), tie-broken
+  // by closest-to-today. `data` is Tesseract's r.data (.words / .text).
+  //   parseSellBy already rejects weight/price (they aren't full dates) and
+  //   accepts MM/DD/YY, MM.DD.YY, MM-DD-YY and the run-together MMDDYY.
   function findDate(data) {
     var D = root.MMDates; if (!D) return null;
     var ref = D.today();
     var words = (data && data.words) || [];
 
-    // gather plausible date tokens with positions
+    // 1) positioned date tokens — rightmost wins, then nearest today
     var dates = [];
     for (var i = 0; i < words.length; i++) {
-      var m = String(words[i].text || '').match(DATE_RE);
-      if (!m) continue;
-      var p = D.parseSellBy(m[0]);
+      var p = D.parseSellBy(String(words[i].text || ''));
       if (p && D.isPlausibleSellBy(p)) {
-        var c = ctr(words[i].bbox);
-        dates.push({ p: p, cx: c.x, cy: c.y, x1: (words[i].bbox && words[i].bbox.x1) || c.x, dist: Math.abs(D.daysBetween(ref, p)) });
+        var b = words[i].bbox || {};
+        dates.push({ p: p, x1: (b.x1 != null ? b.x1 : (b.x0 || 0)), dist: Math.abs(D.daysBetween(ref, p)) });
       }
     }
-
     if (dates.length) {
-      // 1) anchor on the "Sell By" label if it was legible
-      var anchor = null;
-      for (var j = 0; j < words.length; j++) {
-        var t = String(words[j].text || '').toLowerCase().replace(/[^a-z]/g, '');
-        if (!t) continue;
-        if (t === 'by' || t === 'sell' || t === 'sellby' || (t.length >= 3 && t.indexOf('ell') >= 0)) {
-          anchor = ctr(words[j].bbox);
-          if (t.indexOf('by') >= 0) break;   // "By" is closest to the date
-        }
-      }
-      if (anchor) {
-        dates.sort(function (a, b) {
-          return Math.hypot(a.cx - anchor.x, a.cy - anchor.y) - Math.hypot(b.cx - anchor.x, b.cy - anchor.y);
-        });
-        return dates[0].p;
-      }
-      // 2) no readable anchor — rightmost, then nearest today
       dates.sort(function (a, b) { return (b.x1 - a.x1) || (a.dist - b.dist); });
       return dates[0].p;
     }
 
-    // 3) fallback: whole text, plausible date closest to today
-    var cands = String((data && data.text) || data || '').match(new RegExp(DATE_RE.source, 'g')) || [];
+    // 2) fallback: whole text, SPACE-TOLERANT (blur can drop the . separators),
+    //    normalise separators, keep the plausible date closest to today.
+    var loose = String((data && data.text) || data || '').match(/\d{1,2}[\s.\/-]{1,3}\d{1,2}[\s.\/-]{1,3}\d{2,4}/g) || [];
     var best = null, bd = Infinity;
-    for (var k = 0; k < cands.length; k++) {
-      var q = D.parseSellBy(cands[k]);
+    for (var k = 0; k < loose.length; k++) {
+      var q = D.parseSellBy(loose[k].replace(/[\s.\-]+/g, '/'));
       if (q && D.isPlausibleSellBy(q)) { var d = Math.abs(D.daysBetween(ref, q)); if (d < bd) { bd = d; best = q; } }
     }
     return best;
   }
 
-  // Resolves { day: {y,m,d}|null, raw: '<ocr text>' } — the raw text lets the
-  // UI show what it actually saw on a miss, which is the tuning signal.
+  function toCanvas(source) {
+    if (typeof ImageData !== 'undefined' && source instanceof ImageData) {
+      var cv = document.createElement('canvas');
+      cv.width = source.width; cv.height = source.height;
+      cv.getContext('2d').putImageData(source, 0, 0);
+      return cv;
+    }
+    return source;
+  }
+
+  // Resolves { day, raw, err }. ONE clean digit-only pass (engine whitelist is
+  // digits+separators, so no 8→B), then findDate() anchors the date by POSITION —
+  // the Sell By is top-right, so the rightmost plausible date wins over the
+  // weight (left) and price (centre). Tried an explicit two-pass "find Sell By
+  // text → re-crop → re-read"; re-OCRing a sub-region of the already-binarized
+  // crop read WORSE than one clean pass, so position-anchoring it is.
   function readSellBy(source) {
     return new Promise(function (resolve) {
       try {
-        if (busy) { resolve({ day: null, raw: '' }); return; }   // one read at a time — sample, don't queue
+        if (busy) { resolve({ day: null, raw: '', err: null }); return; }   // sample, don't queue
         busy = true;
         loadEngine().then(function (w) {
-          var cv = source;
-          if (typeof ImageData !== 'undefined' && source instanceof ImageData) {
-            cv = document.createElement('canvas');
-            cv.width = source.width; cv.height = source.height;
-            cv.getContext('2d').putImageData(source, 0, 0);
-          }
-          return w.recognize(cv).then(function (r) {
+          return w.recognize(toCanvas(source)).then(function (r) {
             busy = false;
-            var raw = (r && r.data && r.data.text) || '';
-            resolve({ day: findDate(r && r.data), raw: raw, err: null });
+            resolve({ day: findDate(r && r.data), raw: (r && r.data && r.data.text) || '', err: null });
           });
         }).catch(function (e) {
           busy = false;
-          // engine failed to load — surface the real reason for on-device debug
           resolve({ day: null, raw: '', err: 'engine', errMsg: lastErr || String((e && (e.message || e)) || '').slice(0, 120) });
         });
       } catch (e) { busy = false; resolve({ day: null, raw: '', err: 'engine', errMsg: String((e && (e.message || e)) || '').slice(0, 120) }); }

@@ -1,6 +1,8 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.21.8**
+Current app version: **v0.21.9**
+
+- OCR read = digit-only + position anchor (v0.21.9): the v0.21.8 letter-whitelist approach BACKFIRED on-device — letters corrupted the date (Kyle's read: "0B 20 26" = 8→B) and added "See el leesbeey" noise. Reverted to a DIGITS-ONLY read (accurate, no 8→B) and anchor the date by POSITION: the Sell By is top-right, so findDate takes the RIGHTMOST plausible date (weight is left, price centre), tie-broken by closest-to-today, with a space-tolerant text fallback. Also tried Kyle's explicit two-pass (find "Sell By" text → re-crop → re-read digits) but re-OCRing a sub-region of the already-binarized crop read WORSE than one clean pass, so position-anchoring won. Verified: synthetic weight+price+date labels → returns the date, ignores weight/price. NOTE: motion blur still defeats it — hold steady. The tighter crop from v0.21.8 stays.
 
 - OCR "Sell By" anchor + tighter crop (v0.21.8): Kyle's working-engine screenshot showed the crop was HUGE (whole package top: nutrition panel, cooking text) so OCR fragmented and never got a clean look at the date; and it confused weight (1.325)/price (8.99) with the date. Fixes: (1) crop is now a TIGHT band around the barcode (padUp=max(4·bh, 0.5·bw) above it, right-biased) instead of the whole frame above it; (2) the reader now also sees the letters S/E/L/B/Y (whitelist) so it can find the "Sell By" label and ANCHOR the date to it — takes the plausible date token nearest "Sell By", with rightmost-date and closest-to-today as fallbacks. Verified end-to-end: synthetic label with weight+price+SellBy → correctly returns the date, not the weight/price. This is Kyle's anchor idea.
 
