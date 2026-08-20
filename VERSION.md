@@ -1,6 +1,8 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.21.9**
+Current app version: **v0.21.10**
+
+- OCR reads the date! multi-token assembly + retry-on-sharp-frames (v0.21.10): Kyle's v0.21.9 debug proved OCR DID read the date — "saw: 3 2 08 20 26 1.325 8.39/" — but blur turned the dots into SPACES, so "08.20.26" came out as three tokens "08" "20" "26" and the extractor (single-token only) missed it; the "3 2" noise also fooled the fallback regex. Fix: findDate now considers 1-, 2- AND 3-token runs joined with "/" (so "08"+"20"+"26" → "08/20/26"), still rightmost + plausibility-filtered (noise "3/2/08"→2008 rejected; weight/price rejected). Verified on Kyle's EXACT tokens → 8/20/2026. ALSO (Kyle's idea): OCR now RETRIES across frames while the item is in view and ONLY on SHARP frames (st.sharp ≥ 7, reusing the barcode sharpness metric) up to 12 tries, stopping the instant a date reads — the frame captured at decode is often the blurry one as you move, but a sharp one comes along. Row stays "Expiry scanning…" through retries, only "No date read" on give-up.
 
 - OCR read = digit-only + position anchor (v0.21.9): the v0.21.8 letter-whitelist approach BACKFIRED on-device — letters corrupted the date (Kyle's read: "0B 20 26" = 8→B) and added "See el leesbeey" noise. Reverted to a DIGITS-ONLY read (accurate, no 8→B) and anchor the date by POSITION: the Sell By is top-right, so findDate takes the RIGHTMOST plausible date (weight is left, price centre), tie-broken by closest-to-today, with a space-tolerant text fallback. Also tried Kyle's explicit two-pass (find "Sell By" text → re-crop → re-read digits) but re-OCRing a sub-region of the already-binarized crop read WORSE than one clean pass, so position-anchoring won. Verified: synthetic weight+price+date labels → returns the date, ignores weight/price. NOTE: motion blur still defeats it — hold steady. The tighter crop from v0.21.8 stays.
 

@@ -68,22 +68,33 @@
     var ref = D.today();
     var words = (data && data.words) || [];
 
-    // 1) positioned date tokens — rightmost wins, then nearest today
-    var dates = [];
+    // Build the digit-bearing tokens in reading order, with their right-edge x.
+    // Blur often turns "08.20.26" into three tokens "08" "20" "26" (dots read as
+    // spaces), so we consider 1-, 2- AND 3-token runs joined with "/".
+    var toks = [];
     for (var i = 0; i < words.length; i++) {
-      var p = D.parseSellBy(String(words[i].text || ''));
-      if (p && D.isPlausibleSellBy(p)) {
-        var b = words[i].bbox || {};
-        dates.push({ p: p, x1: (b.x1 != null ? b.x1 : (b.x0 || 0)), dist: Math.abs(D.daysBetween(ref, p)) });
-      }
+      var tx = String(words[i].text || '').trim();
+      if (/\d/.test(tx)) { var b = words[i].bbox || {}; toks.push({ t: tx, x: (b.x1 != null ? b.x1 : (b.x0 || 0)) }); }
+    }
+
+    var dates = [];
+    function consider(str, x) {
+      var p = D.parseSellBy(str);
+      if (p && D.isPlausibleSellBy(p)) dates.push({ p: p, x: x, dist: Math.abs(D.daysBetween(ref, p)) });
+    }
+    for (var j = 0; j < toks.length; j++) {
+      consider(toks[j].t, toks[j].x);                                                        // "08.20.26" / "082026"
+      if (j + 1 < toks.length) consider(toks[j].t + '/' + toks[j + 1].t, toks[j + 1].x);      // "08" "20.26"
+      if (j + 2 < toks.length) consider(toks[j].t + '/' + toks[j + 1].t + '/' + toks[j + 2].t, toks[j + 2].x); // "08" "20" "26"
     }
     if (dates.length) {
-      dates.sort(function (a, b) { return (b.x1 - a.x1) || (a.dist - b.dist); });
+      // The Sell By is top-right, so the RIGHTMOST plausible date wins (weight is
+      // left, price centre); tie-break by closest to today.
+      dates.sort(function (a, b) { return (b.x - a.x) || (a.dist - b.dist); });
       return dates[0].p;
     }
 
-    // 2) fallback: whole text, SPACE-TOLERANT (blur can drop the . separators),
-    //    normalise separators, keep the plausible date closest to today.
+    // last-ditch: whole text, space-tolerant, closest to today
     var loose = String((data && data.text) || data || '').match(/\d{1,2}[\s.\/-]{1,3}\d{1,2}[\s.\/-]{1,3}\d{2,4}/g) || [];
     var best = null, bd = Infinity;
     for (var k = 0; k < loose.length; k++) {

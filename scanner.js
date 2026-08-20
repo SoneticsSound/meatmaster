@@ -332,6 +332,24 @@
         // genuine re-scan (or the next package) can count again.
         if (res && res.text === heldCode) heldLastSeen = Date.now();
         else if (heldCode && !heldStuck && (Date.now() - heldLastSeen) > HOLD_RELEASE_MS) heldCode = null;
+
+        // Sell-by OCR: keep trying on SHARP frames while the item is still in
+        // view; stop the instant a date reads (attemptSellByOcr clears pending),
+        // or give up if the label leaves the frame or after OCR_MAX_TRIES.
+        if (pendingSellBy) {
+          if (res && res.text === pendingSellBy.code) {
+            if (st.sharp >= OCR_MIN_SHARP && !sbBusy && pendingSellBy.tries < OCR_MAX_TRIES) {
+              pendingSellBy.tries++;
+              attemptSellByOcr(res.points, pendingSellBy.entry);
+            } else if (pendingSellBy.tries >= OCR_MAX_TRIES) {
+              if (pendingSellBy.entry && pendingSellBy.entry.sellByStatus === 'scanning') { pendingSellBy.entry.sellByStatus = 'miss'; renderRecent(); }
+              pendingSellBy = null;
+            }
+          } else if (!heldCode) {
+            if (pendingSellBy.entry && pendingSellBy.entry.sellByStatus === 'scanning') { pendingSellBy.entry.sellByStatus = 'miss'; renderRecent(); }
+            pendingSellBy = null;
+          }
+        }
         if (res && res.text && running && !paused) {
           // require two consecutive identical, plausible reads before counting —
           // a single misdecode of a blurry/curved barcode won't survive this
@@ -361,6 +379,12 @@
   // in the loop). Stops silent duplicate ticking when you linger on a barcode.
   var heldCode = null, heldLastSeen = 0;
   var HOLD_RELEASE_MS = 250;
+  // Sell-by OCR keeps retrying across frames while the item is still in view,
+  // and only on SHARP frames — the one frame captured at decode is often the
+  // blurry one as you move, but a sharp frame comes along a moment later.
+  var pendingSellBy = null;           // { entry, code, tries }
+  var OCR_MIN_SHARP = 7;              // barcodes read ~11+; skip clearly-blurry frames
+  var OCR_MAX_TRIES = 12;             // give up after this many sharp attempts
   // While a "possible duplicate" card is up, the held code is STUCK — it won't
   // release on a brief flicker, so a wobbling label can't silently re-count.
   // Only a different barcode or a tap (Done/Rescan) clears it.
@@ -462,15 +486,25 @@
       if (res && res.day) {
         showSellBy(res.day);
         if (job.entry) { job.entry.sellBy = res.day; job.entry.sellByStatus = 'read'; }
+        if (pendingSellBy && pendingSellBy.entry === job.entry) pendingSellBy = null;   // got it — stop retrying
         showOcrDebug(job.crop, res.raw, 'read ' + window.MMDates.fmt(res.day));
       } else {
-        var raw = res && res.raw, msg, dbg;
-        if (res && res.err === 'engine') { msg = 'OCR engine didn’t load — details below'; raw = null; dbg = 'ENGINE FAILED: ' + (res.errMsg || 'unknown'); }
+        var raw = res && res.raw, msg, dbg, engineDown = !!(res && res.err === 'engine');
+        if (engineDown) { msg = 'OCR engine didn’t load — details below'; raw = null; dbg = 'ENGINE FAILED: ' + (res.errMsg || 'unknown'); }
         else if (!raw) { msg = 'Sell By: nothing in crop'; dbg = 'blank crop / no text'; }   // crop landed blank
         else { msg = 'Sell By: couldn’t read'; dbg = 'saw text, no date'; }                    // shows "(saw: …)"
         setSellByStatus(msg, raw);
         showOcrDebug(job.crop, raw, dbg);
-        if (job.entry) job.entry.sellByStatus = 'miss';
+        if (job.entry) {
+          // keep "Expiry scanning…" while we're still retrying on sharper frames;
+          // only mark "No date read" when we give up (not the pending item, or the
+          // engine itself is down so retrying is pointless).
+          var retrying = pendingSellBy && pendingSellBy.entry === job.entry && !engineDown;
+          if (!retrying) {
+            job.entry.sellByStatus = 'miss';
+            if (engineDown && pendingSellBy && pendingSellBy.entry === job.entry) pendingSellBy = null;
+          }
+        }
       }
       renderRecent();
       var next = sbPending; sbPending = null; if (next) runSbJob(next);
@@ -656,7 +690,7 @@
         sellByStatus: 'scanning'
       });
       renderRecent();
-      attemptSellByOcr(result.points, recent[0]);   // reads the date off this frame → updates this row
+      pendingSellBy = { entry: recent[0], code: code, tries: 0 };   // OCR retries across sharp frames (in the loop)
       var scanTime = scanAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       var scanMeta = code + ' · ' + scanTime + ' · ' + (scan && scan.duplicate ? 'Duplicate scan' : 'Counted +1');
       toast(scan && scan.duplicate ? 'dupe' : 'ok', product.name, product.sheetName || '', scanMeta, scan && scan.id);
