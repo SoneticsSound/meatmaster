@@ -497,10 +497,15 @@
       var xs = points.map(function (p) { return p.x; }), ys = points.map(function (p) { return p.y; });
       var bx = Math.min.apply(null, xs), by = Math.min.apply(null, ys);
       var bh = Math.max.apply(null, ys) - by, bw = Math.max.apply(null, xs) - bx;
-      x0 = Math.max(0, bx - bw * 0.3);
-      y0 = 0;                              // top of the frame
-      cw = w - x0;                         // out to the right edge (date is top-right)
-      ch = Math.min(h, by + bh);           // down to just past the barcode
+      // The Sell By sits just ABOVE the barcode (same scale label), toward the
+      // right. Crop a TIGHT band around the barcode — NOT the whole frame above
+      // it (that dragged in the nutrition panel / cooking text and fragmented
+      // the read). Right-biased since the date is top-right.
+      var padUp = Math.max(bh * 4, bw * 0.5);
+      x0 = Math.max(0, bx - bw * 0.15);
+      y0 = Math.max(0, by - padUp);
+      cw = w - x0;                              // out to the right edge (date is top-right)
+      ch = Math.min(h, by + bh * 1.2) - y0;     // down to just past the barcode
     }
     var up = Math.min(3, 1800 / Math.max(cw, ch)); if (up < 1) up = 1;
     out.width = Math.max(1, Math.round(cw * up)); out.height = Math.max(1, Math.round(ch * up));

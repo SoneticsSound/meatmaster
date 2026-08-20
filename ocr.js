@@ -34,7 +34,9 @@
           root.Tesseract.createWorker('eng', 1, {
             workerPath: base + 'worker.min.js', corePath: base, langPath: base, gzip: false
           }).then(function (w) {
-            return w.setParameters({ tessedit_char_whitelist: '0123456789/.- ', tessedit_pageseg_mode: '11' })
+            // digits + separators for the date, PLUS the letters of "Sell By" so
+          // we can find that label and anchor the date to it.
+          return w.setParameters({ tessedit_char_whitelist: 'SsEeLlBbYy0123456789/.- ', tessedit_pageseg_mode: '11' })
               .then(function () { worker = w; resolve(w); });
           }).catch(reject);
         } catch (e) { reject(e); }
@@ -54,15 +56,65 @@
   }
   function lastError() { return lastErr; }
 
-  // Pull the first plausible sell-by date out of OCR text via dates.js.
-  function findDate(text) {
+  var DATE_RE = /\d{1,2}\s*[\/.\-]\s*\d{1,2}\s*[\/.\-]\s*\d{2,4}/;
+
+  function ctr(b) { b = b || {}; return { x: ((b.x0 || 0) + (b.x1 != null ? b.x1 : b.x0 || 0)) / 2, y: ((b.y0 || 0) + (b.y1 != null ? b.y1 : b.y0 || 0)) / 2 }; }
+
+  // Pull the sell-by out of Tesseract's result. The top band also holds NET
+  // WEIGHT (1.325) and unit price (8.99/lb) — that's what confuses a naive read.
+  // Strategy, best → fallback:
+  //   1) ANCHOR ON "Sell By": find the By/Sell label word and take the plausible
+  //      date token nearest it (the date sits right under "Sell By").
+  //   2) RIGHTMOST plausible date (Sell By is top-right; weight left, price centre).
+  //   3) plausible date CLOSEST TO TODAY from the raw text.
+  // `data` is Tesseract's r.data (has .words / .text).
+  function findDate(data) {
     var D = root.MMDates; if (!D) return null;
-    var cands = String(text).match(/\d{1,2}\s*[\/.\-]\s*\d{1,2}\s*[\/.\-]\s*\d{2,4}/g) || [];
-    for (var i = 0; i < cands.length; i++) {
-      var p = D.parseSellBy(cands[i]);
-      if (p && D.isPlausibleSellBy(p)) return p;
+    var ref = D.today();
+    var words = (data && data.words) || [];
+
+    // gather plausible date tokens with positions
+    var dates = [];
+    for (var i = 0; i < words.length; i++) {
+      var m = String(words[i].text || '').match(DATE_RE);
+      if (!m) continue;
+      var p = D.parseSellBy(m[0]);
+      if (p && D.isPlausibleSellBy(p)) {
+        var c = ctr(words[i].bbox);
+        dates.push({ p: p, cx: c.x, cy: c.y, x1: (words[i].bbox && words[i].bbox.x1) || c.x, dist: Math.abs(D.daysBetween(ref, p)) });
+      }
     }
-    return null;
+
+    if (dates.length) {
+      // 1) anchor on the "Sell By" label if it was legible
+      var anchor = null;
+      for (var j = 0; j < words.length; j++) {
+        var t = String(words[j].text || '').toLowerCase().replace(/[^a-z]/g, '');
+        if (!t) continue;
+        if (t === 'by' || t === 'sell' || t === 'sellby' || (t.length >= 3 && t.indexOf('ell') >= 0)) {
+          anchor = ctr(words[j].bbox);
+          if (t.indexOf('by') >= 0) break;   // "By" is closest to the date
+        }
+      }
+      if (anchor) {
+        dates.sort(function (a, b) {
+          return Math.hypot(a.cx - anchor.x, a.cy - anchor.y) - Math.hypot(b.cx - anchor.x, b.cy - anchor.y);
+        });
+        return dates[0].p;
+      }
+      // 2) no readable anchor — rightmost, then nearest today
+      dates.sort(function (a, b) { return (b.x1 - a.x1) || (a.dist - b.dist); });
+      return dates[0].p;
+    }
+
+    // 3) fallback: whole text, plausible date closest to today
+    var cands = String((data && data.text) || data || '').match(new RegExp(DATE_RE.source, 'g')) || [];
+    var best = null, bd = Infinity;
+    for (var k = 0; k < cands.length; k++) {
+      var q = D.parseSellBy(cands[k]);
+      if (q && D.isPlausibleSellBy(q)) { var d = Math.abs(D.daysBetween(ref, q)); if (d < bd) { bd = d; best = q; } }
+    }
+    return best;
   }
 
   // Resolves { day: {y,m,d}|null, raw: '<ocr text>' } — the raw text lets the
@@ -82,7 +134,7 @@
           return w.recognize(cv).then(function (r) {
             busy = false;
             var raw = (r && r.data && r.data.text) || '';
-            resolve({ day: findDate(raw), raw: raw, err: null });
+            resolve({ day: findDate(r && r.data), raw: raw, err: null });
           });
         }).catch(function (e) {
           busy = false;

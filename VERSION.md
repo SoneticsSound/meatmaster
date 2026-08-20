@@ -1,6 +1,8 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.21.7**
+Current app version: **v0.21.8**
+
+- OCR "Sell By" anchor + tighter crop (v0.21.8): Kyle's working-engine screenshot showed the crop was HUGE (whole package top: nutrition panel, cooking text) so OCR fragmented and never got a clean look at the date; and it confused weight (1.325)/price (8.99) with the date. Fixes: (1) crop is now a TIGHT band around the barcode (padUp=max(4·bh, 0.5·bw) above it, right-biased) instead of the whole frame above it; (2) the reader now also sees the letters S/E/L/B/Y (whitelist) so it can find the "Sell By" label and ANCHOR the date to it — takes the plausible date token nearest "Sell By", with rightmost-date and closest-to-today as fallbacks. Verified end-to-end: synthetic label with weight+price+SellBy → correctly returns the date, not the weight/price. This is Kyle's anchor idea.
 
 - Recipe button restructure — labels (v0.21.7): renamed toward Kyle's 3-pair structure — "Production List" → "One-Pan Meals Production List", "Recipes For Production" → "Recipes for One-Pan Meals", "Case Production" → "Service Case Production List" (buttons + screen titles). Still to add (need the manual ingests already extracted to backoffice/extracted/): "Recipes for Service Case", "Meat Cutting Production List", "Recipes for Cutting" — gated on Kyle confirming OCR works.
 
