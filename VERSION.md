@@ -1,6 +1,6 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.21.10**
+Current app version: **v0.21.11**
 
 - OCR reads the date! multi-token assembly + retry-on-sharp-frames (v0.21.10): Kyle's v0.21.9 debug proved OCR DID read the date — "saw: 3 2 08 20 26 1.325 8.39/" — but blur turned the dots into SPACES, so "08.20.26" came out as three tokens "08" "20" "26" and the extractor (single-token only) missed it; the "3 2" noise also fooled the fallback regex. Fix: findDate now considers 1-, 2- AND 3-token runs joined with "/" (so "08"+"20"+"26" → "08/20/26"), still rightmost + plausibility-filtered (noise "3/2/08"→2008 rejected; weight/price rejected). Verified on Kyle's EXACT tokens → 8/20/2026. ALSO (Kyle's idea): OCR now RETRIES across frames while the item is in view and ONLY on SHARP frames (st.sharp ≥ 7, reusing the barcode sharpness metric) up to 12 tries, stopping the instant a date reads — the frame captured at decode is often the blurry one as you move, but a sharp one comes along. Row stays "Expiry scanning…" through retries, only "No date read" on give-up.
 
