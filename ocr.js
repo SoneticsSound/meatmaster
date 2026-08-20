@@ -23,7 +23,11 @@
     if (worker) return Promise.resolve(worker);
     if (loading) return loading;
     loading = new Promise(function (resolve, reject) {
-      var base = (root.location ? root.location.origin : '') + '/vendor/tesseract/';
+      // Resolve against the DOCUMENT BASE, not the origin root. On GitHub Pages
+      // the app lives under /meatmaster/, so an origin-root path ("/vendor/…")
+      // 404s — which is exactly why the engine never loaded on the live site.
+      // These must be absolute URLs (blob workers can't resolve relative paths).
+      var base = new URL('vendor/tesseract/', document.baseURI).href;
       function mk() {
         if (!root.Tesseract) { reject(new Error('Tesseract global missing after script load')); return; }
         try {
@@ -37,9 +41,9 @@
       }
       if (root.Tesseract) { mk(); return; }
       var s = document.createElement('script');
-      s.src = '/vendor/tesseract/tesseract.min.js';
+      s.src = new URL('vendor/tesseract/tesseract.min.js', document.baseURI).href;
       s.onload = mk;
-      s.onerror = function () { reject(new Error('tesseract.min.js script failed to load')); };
+      s.onerror = function () { reject(new Error('tesseract.min.js script failed to load (' + s.src + ')')); };
       document.head.appendChild(s);
     }).catch(function (e) {
       loading = null;                                   // allow a later retry

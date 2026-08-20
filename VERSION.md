@@ -1,6 +1,8 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.21.5**
+Current app version: **v0.21.6**
+
+- OCR engine path fix — THE bug (v0.21.6): the Tesseract loader used origin-ROOT paths (`/vendor/tesseract/…`), which 404 on GitHub Pages (app lives under `/meatmaster/`), so `tesseract.min.js script failed to load` — the engine had NEVER loaded on the live site (worked on localhost served at root). Now resolves against `document.baseURI` via `new URL('vendor/tesseract/…', document.baseURI)` for the script src AND the worker/core/lang paths. Kyle's OCR-debug screenshot confirmed the crop + Otsu binarize is perfect ("Sell By 08.20.26" crystal clear), so OCR should now actually read once the engine loads.
 
 - OCR engine load diagnosis (v0.21.5): Kyle's device reports "OCR engine not ready" even on Wi-Fi — Tesseract is failing to LOAD on iOS (not a crop/read problem). Now captures the real createWorker error and shows it: the Sell-By readout says "OCR engine didn't load — details below" and a new beta OCR-debug panel on the Scan tab prints the actual error (ENGINE FAILED: <reason>) plus, once it loads, the crop image it read + raw text. Screenshot it to see the real iOS failure reason. ocr.js now exposes lastError() and returns errMsg.
 
