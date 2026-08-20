@@ -1,6 +1,8 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.21.6**
+Current app version: **v0.21.7**
+
+- Recipe button restructure — labels (v0.21.7): renamed toward Kyle's 3-pair structure — "Production List" → "One-Pan Meals Production List", "Recipes For Production" → "Recipes for One-Pan Meals", "Case Production" → "Service Case Production List" (buttons + screen titles). Still to add (need the manual ingests already extracted to backoffice/extracted/): "Recipes for Service Case", "Meat Cutting Production List", "Recipes for Cutting" — gated on Kyle confirming OCR works.
 
 - OCR engine path fix — THE bug (v0.21.6): the Tesseract loader used origin-ROOT paths (`/vendor/tesseract/…`), which 404 on GitHub Pages (app lives under `/meatmaster/`), so `tesseract.min.js script failed to load` — the engine had NEVER loaded on the live site (worked on localhost served at root). Now resolves against `document.baseURI` via `new URL('vendor/tesseract/…', document.baseURI)` for the script src AND the worker/core/lang paths. Kyle's OCR-debug screenshot confirmed the crop + Otsu binarize is perfect ("Sell By 08.20.26" crystal clear), so OCR should now actually read once the engine loads.
 

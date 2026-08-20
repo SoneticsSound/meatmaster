@@ -159,7 +159,7 @@
      =============================================================== */
   function productionListView() {
     return {
-      title: 'Production List',
+      title: 'One-Pan Meals Production List',
       build: function (root) {
         var counts = loadToday();
 
@@ -281,7 +281,7 @@
      =============================================================== */
   function recipeListView(counts) {
     return {
-      title: 'Recipes For Production',
+      title: 'Recipes for One-Pan Meals',
       build: function (root) {
         var wanted = recipes().filter(function (r) { return (counts[r.id] || 0) > 0; });
 

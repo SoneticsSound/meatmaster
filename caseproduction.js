@@ -79,7 +79,7 @@
     var back = el('button', 'prod-back', '‹');
     back.setAttribute('aria-label', 'Close');
     back.addEventListener('click', close);
-    titleEl = el('span', 'prod-title', 'Case Production');
+    titleEl = el('span', 'prod-title', 'Service Case Production List');
     var closeB = el('button', 'prod-close', '×');
     closeB.setAttribute('aria-label', 'Close');
     closeB.addEventListener('click', close);
