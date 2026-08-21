@@ -1,6 +1,8 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.21.13**
+Current app version: **v0.21.14**
+
+- Fabrication primals-to-pull estimate (v0.21.14): answers Kyle's "estimate yield per package from weight". Each cut has an estimated cuts-per-primal = floor(primalLb·16·0.85 / cutOz) with per-cut typical primal/cut weights (ribeye ~10lb/14oz→9, NY ~11lb/13oz, etc.; roasts/brisket/short-rib special-cased). Meat Fabrication Production List now shows "≈ N primals to pull (~M/primal)" per cut when you enter a count (primals = ceil(count / cuts-per-primal)); the guide detail has an EDITABLE "cuts per primal" (stored mm.fab.cpp.v1) so Kyle tunes it to his store's actual primals. Verified: 20 ribeyes → 3 primals @ ~9/primal; edit persists. Still open: match the cut list to the Periscope checklist exactly.
 
 - Meat Fabrication pair (v0.21.13): 3rd recipe pair done. 16 beef cutting guides parsed from the Beef Fabrication manual (backoffice/parse_fabrication.py → fabrication_guides.js): cut name, source primal, PRODUCTION (cutting) steps, CHILL/DISPLAY, TIPS. New fabrication.js: "Meat Fabrication Production List" (enter counts per cut, per-day) + "Recipes for Fabrication" (browsable cutting guides with count badges, tap → primal + cutting steps + chill/display + tips). Wired both buttons + precache. OPEN DESIGN ITEMS (Kyle): (1) the cut list should match the Periscope inventory checklist exactly (currently uses the 16 manual cuts); (2) primals-to-pull — "make N steaks → pull X primals" — the manual gives cutting THICKNESS not a fixed steaks-per-primal count (yield varies by primal size), so it needs an editable cuts-per-primal estimate or an average-primal-weight source. Proposed: per-cut editable "cuts per primal" so the app computes primals to pull.
 

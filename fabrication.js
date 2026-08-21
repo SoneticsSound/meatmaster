@@ -35,6 +35,36 @@
   function el(tag, cls, text) { var d = document.createElement(tag); if (cls) d.className = cls; if (text != null) d.textContent = text; return d; }
   function guides() { var D = window.MMFabricationGuides; return (D && D.GUIDES) ? D.GUIDES.slice() : []; }
 
+  /* --- yield estimate: "make N cuts" -> "pull X primals" ------------
+     The manual gives cutting THICKNESS, not a fixed count, so we estimate
+     cuts-per-primal from a typical primal weight and target cut weight
+     (~85% usable after trim). These are ESTIMATES — editable per cut in
+     the guide detail and stored, so Kyle tunes them to his store. */
+  var CPP_KEY = 'mm.fab.cpp.v1';
+  function loadCpp() { try { return JSON.parse(localStorage.getItem(CPP_KEY) || '{}'); } catch (e) { return {}; } }
+  function saveCpp(m) { try { localStorage.setItem(CPP_KEY, JSON.stringify(m)); } catch (e) {} }
+  function fromWeight(primalLb, cutOz) { return Math.max(1, Math.floor(primalLb * 16 * 0.85 / cutOz)); }
+  function estCpp(name) {
+    var n = (name || '').toLowerCase();
+    if (/rib\s*roast|holiday roast/.test(n)) return 2;      // roasts, not steaks
+    if (/ribeye/.test(n)) return fromWeight(10, 14);
+    if (/striploin|new york|ny\b/.test(n)) return fromWeight(11, 13);
+    if (/tenderloin/.test(n)) return fromWeight(5, 7);
+    if (/coulotte/.test(n)) return fromWeight(4, 8);
+    if (/top sirloin/.test(n)) return fromWeight(9, 9);
+    if (/petite sirloin/.test(n)) return fromWeight(5, 8);
+    if (/chuck/.test(n)) return fromWeight(15, 40);         // roasts ~2.5 lb
+    if (/brisket/.test(n)) return 3;                        // cut into 3 pieces
+    if (/bottom round/.test(n)) return fromWeight(18, 24);
+    if (/inside round/.test(n)) return fromWeight(18, 20);
+    if (/tri-?tip/.test(n)) return 2;
+    if (/short rib/.test(n)) return 3;                      // 3 portions per rack
+    if (/flap/.test(n)) return 1;                           // whole
+    return fromWeight(10, 12);                              // generic steak
+  }
+  function cutsPerPrimal(g) { var m = loadCpp(); return m[g.id] || estCpp(g.name); }
+  function primalsToPull(count, g) { return Math.max(1, Math.ceil(count / cutsPerPrimal(g))); }
+
   /* --- overlay + view stack (shared chrome with production.js) --- */
   var overlay, titleEl, bodyEl, backBtn, stack = [];
   function ensure() {
@@ -95,17 +125,29 @@
     var li = el('li', 'prod-entry');
     var main = el('div', 'prod-entry-main');
     main.appendChild(el('div', 'prod-entry-name', g.name));
-    if (g.primal) main.appendChild(el('div', 'prod-entry-meta', 'from ' + g.primal));
+    var meta = el('div', 'prod-entry-meta');
+    main.appendChild(meta);
     li.appendChild(main);
     var stepper = el('div', 'prod-stepper');
     var minus = el('button', 'prod-step-btn', '−');
     var input = el('input', 'prod-step-input'); input.type = 'number'; input.inputMode = 'numeric'; input.min = '0';
     input.value = counts[g.id] ? String(counts[g.id]) : ''; input.placeholder = '0';
     var plus = el('button', 'prod-step-btn', '+');
+    function updateMeta() {
+      var n = counts[g.id] || 0;
+      if (n > 0) {
+        var p = primalsToPull(n, g);
+        meta.textContent = '≈ ' + p + ' primal' + (p > 1 ? 's' : '') + ' to pull  (~' + cutsPerPrimal(g) + '/primal)';
+        meta.classList.add('is-primals');
+      } else {
+        meta.textContent = g.primal ? ('from ' + g.primal) : '';
+        meta.classList.remove('is-primals');
+      }
+    }
     function set(v) {
       v = Math.max(0, v | 0);
       if (v === 0) { delete counts[g.id]; input.value = ''; } else { counts[g.id] = v; input.value = String(v); }
-      li.classList.toggle('has-count', v > 0); saveToday(counts); onChange();
+      li.classList.toggle('has-count', v > 0); saveToday(counts); updateMeta(); onChange();
     }
     minus.addEventListener('click', function () { set((parseInt(input.value, 10) || 0) - 1); });
     plus.addEventListener('click', function () { set((parseInt(input.value, 10) || 0) + 1); });
@@ -113,6 +155,7 @@
     stepper.appendChild(minus); stepper.appendChild(input); stepper.appendChild(plus);
     li.appendChild(stepper);
     li.classList.toggle('has-count', (counts[g.id] || 0) > 0);
+    updateMeta();
     return li;
   }
 
@@ -148,11 +191,30 @@
     return {
       title: g.name,
       build: function (root) {
-        if (g.primal) {
-          var facts = el('div', 'prod-facts');
-          facts.appendChild(fact(g.primal, 'Primal'));
-          root.appendChild(facts);
-        }
+        var facts = el('div', 'prod-facts');
+        if (g.primal) facts.appendChild(fact(g.primal, 'Primal'));
+        facts.appendChild(fact('~' + cutsPerPrimal(g), 'Cuts / primal'));
+        root.appendChild(facts);
+
+        // editable yield estimate — drives the "primals to pull" math
+        root.appendChild(el('h3', 'prod-h', 'Yield estimate'));
+        root.appendChild(el('p', 'prod-note',
+          'Roughly how many cuts you get from one whole primal — estimated from typical ' +
+          'weights. Adjust it to your store; the Production List uses it to tell you how ' +
+          'many primals to pull.'));
+        var yrow = el('div', 'fab-yield');
+        yrow.appendChild(el('span', 'fab-yield-label', 'Cuts per primal'));
+        var inp = el('input', 'fab-yield-input');
+        inp.type = 'number'; inp.inputMode = 'numeric'; inp.min = '1';
+        inp.value = String(cutsPerPrimal(g));
+        inp.addEventListener('change', function () {
+          var v = parseInt(inp.value, 10), m = loadCpp();
+          if (v > 0) m[g.id] = v; else delete m[g.id];
+          saveCpp(m); inp.value = String(cutsPerPrimal(g));
+        });
+        yrow.appendChild(inp);
+        root.appendChild(yrow);
+
         stepsBlock(root, 'Cutting steps', g.production, true);
         stepsBlock(root, 'Chill / Display', g.chillDisplay, false);
         stepsBlock(root, 'Tips', g.tips, false);

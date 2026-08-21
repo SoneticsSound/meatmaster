@@ -896,6 +896,16 @@ body {
 .sellby-readout.is-ok { color: #fff; }
 .sellby-readout.is-status { background: var(--surface-2); color: var(--ink-dim); font-weight: 600; font-size: 13px; }
 
+/* Meat Fabrication: primals-to-pull estimate + editable cuts/primal */
+.prod-entry-meta.is-primals { color: var(--accent); font-weight: 700; }
+.fab-yield { display: flex; align-items: center; gap: 12px; margin: 4px 0 14px; }
+.fab-yield-label { font-size: 14px; font-weight: 700; }
+.fab-yield-input {
+  width: 90px; box-sizing: border-box; text-align: center; font-size: 18px; font-weight: 800;
+  padding: 10px; border-radius: 10px; border: 2px solid var(--line); background: var(--surface); color: var(--ink);
+}
+.fab-yield-input:focus { outline: none; border-color: var(--accent); }
+
 /* Sell-By / Markdown daily reference cards (markdown.js). */
 .md-card {
   border-radius: 16px; padding: 20px 16px; margin: 0 0 14px; text-align: center;
