@@ -374,22 +374,38 @@
   function periscopeRow(name, sheetName, plu, category, count) {
     var row = document.createElement('li');
     row.className = 'periscope-item' + (count === 0 ? ' is-zero' : '');
+
+    // PLU is the key Kyle matches against the paper list, so it leads the row
+    // as a big, bold, red badge — the eye lands on the number first.
+    var pluEl = document.createElement('div');
+    pluEl.className = 'periscope-plu';
+    pluEl.textContent = plu || '—';
+
     var info = document.createElement('div');
+    info.className = 'periscope-info';
     var nm = document.createElement('div');
     nm.className = 'periscope-name';
-    nm.textContent = name;
+    // Highlight the distinctive cut word (London Broil, Rump, NY Strip…) like
+    // the paper highlighter, so the matching row is quick to find.
+    if (window.MMCutWords) nm.innerHTML = window.MMCutWords.markup(name);
+    else nm.textContent = name;
     var code = document.createElement('div');
     code.className = 'periscope-code';
     code.textContent = sheetName || 'No checklist name saved yet';
-    var meta = document.createElement('div');
-    meta.className = 'periscope-meta';
-    meta.textContent = [plu ? ('PLU ' + plu) : '', category || ''].filter(Boolean).join(' - ');
     info.appendChild(nm);
     info.appendChild(code);
-    info.appendChild(meta);
+    if (category) {
+      var meta = document.createElement('div');
+      meta.className = 'periscope-meta';
+      meta.textContent = category;
+      info.appendChild(meta);
+    }
+
     var cnt = document.createElement('div');
     cnt.className = 'periscope-count';
     cnt.textContent = count;
+
+    row.appendChild(pluEl);
     row.appendChild(info);
     row.appendChild(cnt);
     return row;

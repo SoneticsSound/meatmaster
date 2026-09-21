@@ -205,6 +205,13 @@ body {
   color: #4ade80; margin: 4px 0 2px; font-variant-numeric: tabular-nums;
 }
 .result-card.is-dupe .result-price { color: #ffd166; }
+/* Sell-by, inline on the card — color follows the pull/markdown verdict. */
+.result-sellby {
+  font-size: 15px; font-weight: 800; letter-spacing: .2px;
+  margin: 4px 0 2px; padding: 4px 8px; border-radius: 8px;
+  color: var(--vc, var(--ink)); border: 1.5px solid var(--vc, var(--line));
+  background: color-mix(in srgb, var(--vc, transparent) 14%, transparent);
+}
 .result-code {
   font-size: 27px; font-weight: 800; letter-spacing: 1px;
   margin: 4px 0 2px; font-variant-numeric: tabular-nums;
@@ -431,7 +438,7 @@ body {
 .periscope-warning[hidden] { display: none; }
 .periscope-item {
   display: grid;
-  grid-template-columns: 1fr 70px;
+  grid-template-columns: auto 1fr 64px;
   gap: 12px;
   align-items: center;
   background: var(--surface);
@@ -440,7 +447,35 @@ body {
   padding: 14px;
   margin-bottom: 8px;
 }
+/* PLU badge — the match key, loud on the left so it's the first thing read. */
+.periscope-plu {
+  color: #ff3b30;
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: .5px;
+  font-variant-numeric: tabular-nums;
+  min-width: 62px;
+  text-align: center;
+  padding: 8px 8px;
+  border: 2px solid rgba(255,59,48,.55);
+  border-radius: 10px;
+  background: rgba(255,59,48,.08);
+}
+.periscope-item.is-zero .periscope-plu {
+  color: #ff7a73;
+  border-color: rgba(255,122,115,.35);
+  background: rgba(255,122,115,.05);
+}
 .periscope-name { font-weight: 800; font-size: 15px; }
+/* Cut-name highlighter — mimics the paper highlighter Kyle marks the cut with. */
+.cut-kw {
+  background: rgba(255,214,0,.30);
+  color: #ffe14d;
+  border-radius: 4px;
+  padding: 0 3px;
+  font-weight: 900;
+}
 .periscope-code {
   color: var(--ink-dim);
   font-size: 11px;

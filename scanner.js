@@ -27,6 +27,7 @@
   var resName   = el('result-name');
   var resCode   = el('result-code');
   var resPrice  = el('result-price');
+  var resSellby = el('result-sellby');
   var resNote   = el('result-note');
   var saveBtn   = el('btn-save-product');
   var unitBtn   = el('btn-unit-scan');
@@ -62,7 +63,7 @@
     // Cleared when the card dismisses (below), on a different item, or on a tap.
     heldStuck = true;
     resFmt.textContent = kind === 'dupe' ? 'POSSIBLE DUPLICATE' : 'RECORDED';
-    resName.textContent = title;
+    setResName(title);
     resCode.textContent = sheetName || '';
     resNote.textContent = note || '';
     card.classList.add('is-toast');
@@ -663,13 +664,29 @@
 
   function showSellBy(day) {
     try {
-      if (!sellbyEl || !window.MMDates) return;
+      if (!window.MMDates) return;
       var st = window.MMDates.classify(day);
-      sellbyEl.hidden = false;
-      sellbyEl.style.setProperty('--vc', st.color);
-      sellbyEl.className = 'sellby-readout is-' + st.key;
-      sellbyEl.textContent = 'Sell By ' + window.MMDates.fmt(day) + ' · ' + st.label;
+      var txt = 'Sell By ' + window.MMDates.fmt(day) + ' · ' + st.label;
+      if (sellbyEl) {
+        sellbyEl.hidden = false;
+        sellbyEl.style.setProperty('--vc', st.color);
+        sellbyEl.className = 'sellby-readout is-' + st.key;
+        sellbyEl.textContent = txt;
+      }
+      // Mirror onto the result card too — Kyle wanted the date inline, and the
+      // card now stays up until the read resolves, so it lands before dismiss.
+      if (resSellby) {
+        resSellby.hidden = false;
+        resSellby.style.setProperty('--vc', st.color);
+        resSellby.className = 'result-sellby is-' + st.key;
+        resSellby.textContent = txt;
+      }
     } catch (e) {}
+  }
+  // Big red product name with the cut word highlighted (London Broil, Rump…).
+  function setResName(name) {
+    if (window.MMCutWords) resName.innerHTML = window.MMCutWords.markup(name);
+    else resName.textContent = name;
   }
 
   // Big red PLU on the result card — easy to eyeball against the paper checklist.
@@ -708,7 +725,7 @@
       currentScan = { code: code, product: product, price: price };
       showPlu(product.plu);
       showPrice(price);
-      resName.textContent = product.name;
+      setResName(product.name);
       resNote.textContent = 'PLU ' + product.plu + (price ? (' · ~$' + price) : '');
       show(saveBtn, false);
     } else {
@@ -736,6 +753,7 @@
     // is what stops the silent "possible dupe" ticking when you linger.
     if (code === heldCode) { heldLastSeen = now; return; }
     heldCode = code; heldLastSeen = now; heldStuck = false;   // new code — not stuck (yet)
+    if (resSellby) resSellby.hidden = true;   // clear the previous item's date off the card
     lastCode = code; lastTime = now;
     var token = ++scanToken;
 
