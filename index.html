@@ -98,7 +98,7 @@
         <div class="ph-icon">🗂️</div>
         <h2>Product database loaded</h2>
         <p>Seed products plus anything saved from unknown scans live on this phone.</p>
-        <span class="chip">v0.21.18</span>
+        <span class="chip">v0.21.19</span>
       </div>
       <section class="product-list-wrap">
         <div class="product-tools">
@@ -114,6 +114,7 @@
           <button class="btn btn-primary btn-block" id="btn-view-case-layout">View Case Layout</button>
           <button class="btn btn-block" id="btn-onepan-ref">One Pan Meals</button>
           <button class="btn btn-block" id="btn-view-garnish">Garnish Walk</button>
+          <button class="btn btn-block" id="btn-single-garnish">Single Garnish Mode</button>
         </div>
         <input class="product-search" id="product-search" type="search" placeholder="Search products, PLU, category" autocomplete="off" />
         <h2 class="recent-title">Seed products <span class="recent-count" id="product-count">0</span></h2>
@@ -213,7 +214,17 @@
     </div>
   </div>
 
-  <div class="build-stamp" id="build-stamp">v0.21.18</div>
+  <!-- Single Garnish Mode overlay -->
+  <div class="sg-overlay" id="sg-overlay" hidden>
+    <div class="case-bar">
+      <span class="case-title">Single Garnish Mode</span>
+      <button class="case-close" id="sg-close" aria-label="Close single garnish">&times;</button>
+    </div>
+    <div class="sg-pick" id="sg-pick"></div>
+    <div class="sg-body" id="sg-body"></div>
+  </div>
+
+  <div class="build-stamp" id="build-stamp">v0.21.19</div>
 
   <script src="vendor/zbar/index.js"></script>
   <script src="haptics.js"></script>
@@ -227,6 +238,7 @@
   <script src="recipes.js"></script>
   <script src="dates.js"></script>
   <script src="reference.js"></script>
+  <script src="singlegarnish.js"></script>
   <script src="recipes_data.js"></script>
   <script src="production.js"></script>
   <script src="caseproduction.js"></script>

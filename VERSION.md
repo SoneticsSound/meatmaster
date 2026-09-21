@@ -1,6 +1,8 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.21.18**
+Current app version: **v0.21.19**
+
+- Single Garnish Mode (v0.21.19): new Products-tab button → pick ONE of the six garnishes Kyle preps (Red Bell Pepper, Red Onion, Green Onion, Parsley, Sesame Seed, Thyme) and get (a) the ordered checklist of every item that needs it, in case-walk order (far→near→right), with PLU + section/pos/row, and (b) a compact case map — every section as far/near rows of small PLU cells with the matching spots lit in the garnish's color. Grab one garnish, hit every spot in one pass. New self-contained module singlegarnish.js (own overlay, reads MMCaseLayout.pages + MMReference.buildGarnishWalk; touches no scan/count state). Garnish→base matching is keyword-based on the derived garnish strings, plus Kyle's rule: anything RGLP / Roasted Garlic Lemon Pepper also gets parsley. Verified in-browser: Green Onion → 7 ordered items + 8 highlighted case cells, picker/list/map all render. Also confirmed the garnish WALK is already strictly left-to-right (buildGarnishWalk steps far→near→right across sections ordered Meat→Chicken→Seafood). NOTE: coverage = the curated reference.js GARNISH set; the full case-wide garnish dataset can be expanded from the Service Case Production manual (Kyle provided it) in a follow-up.
 
 - Grassfed cuts green in Periscope Report (v0.21.18): Kyle tracks grassfed separately, so any Periscope row whose product name matches /grass[\s-]?fed/i (GRASSFED / Grass Fed / grass-fed) renders green + bold (periscope-name.is-grassfed), with the yellow cut-word highlight neutralized inside so the row reads as one clean green label. Verified regex + CSS in-browser.
 
