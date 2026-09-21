@@ -110,6 +110,7 @@
       title: 'Seafood — Shrimp, Poke & Marinated',
       front: [
         { plu: '9367', name: 'Raw Wild Shrimp' },
+        { plu: '9022', name: 'Cooked Shrimp 16/20' },
         { plu: '9504', name: 'Poke Ahi Tuna Marinated' },
         { plu: '9165', name: 'Red Chimichurri Wild Salmon' },
         { plu: '9105', name: 'Lemon Pepper Roasted Garlic Wild Alaskan Salmon' },

@@ -23,8 +23,10 @@
   var errMsg    = el('cam-error-msg');
   var card      = el('result-card');
   var resFmt    = el('result-fmt');
+  var resPlu    = el('result-plu');
   var resName   = el('result-name');
   var resCode   = el('result-code');
+  var resPrice  = el('result-price');
   var resNote   = el('result-note');
   var saveBtn   = el('btn-save-product');
   var unitBtn   = el('btn-unit-scan');
@@ -382,13 +384,18 @@
   // "held" code and is suppressed until it's been out of view ~250ms (released
   // in the loop). Stops silent duplicate ticking when you linger on a barcode.
   var heldCode = null, heldLastSeen = 0;
-  var HOLD_RELEASE_MS = 250;
+  // The same barcode can't re-count until it has genuinely LEFT the frame for
+  // this long. 250ms was short enough that a single dropped-decode frame (label
+  // still physically there) looked like it left, so it re-counted the instant
+  // the card auto-dismissed. ~0.9s means the label has to actually move out of
+  // view before it counts again — you can't linger your way into a phantom dupe.
+  var HOLD_RELEASE_MS = 900;
   // Sell-by OCR keeps retrying across frames while the item is still in view,
   // and only on SHARP frames — the one frame captured at decode is often the
   // blurry one as you move, but a sharp frame comes along a moment later.
   var pendingSellBy = null;           // { entry, code, tries }
-  var OCR_MIN_SHARP = 7;              // barcodes read ~11+; skip clearly-blurry frames
-  var OCR_MAX_TRIES = 12;             // give up after this many sharp attempts
+  var OCR_MIN_SHARP = 5;              // skip only clearly-blurry frames (lower = reads sooner)
+  var OCR_MAX_TRIES = 16;             // give up after this many sharp attempts (headroom for weighted voting to reach a confident, corroborated read)
   // While a "possible duplicate" card is up, the held code is STUCK — it won't
   // release on a brief flicker, so a wobbling label can't silently re-count.
   // Only a different barcode or a tap (Done/Rescan) clears it.
@@ -488,9 +495,28 @@
     window.MMOcr.readSellBy(job.crop).then(function (res) {
       sbBusy = false;
       if (res && res.day) {
-        showSellBy(res.day);
-        if (job.entry) { job.entry.sellBy = res.day; job.entry.sellByStatus = 'read'; }
-        if (pendingSellBy && pendingSellBy.entry === job.entry) pendingSellBy = null;   // got it — stop retrying
+        // Confidence-weighted voting across frames. An intermittent misread
+        // (e.g. 8<->9) usually comes in LOW-confidence, so it barely moves the
+        // tally; a crisp read lands high-confidence and is worth more. We confirm
+        // only when the leader has real weight AND a clear margin over any rival,
+        // which is what stops a single confident-looking misread from sticking.
+        var day = res.day;
+        var conf = (typeof res.conf === 'number') ? res.conf : 0;
+        var weight = conf >= 70 ? 2 : (conf >= 45 ? 1 : 0.4);
+        if (pendingSellBy && pendingSellBy.entry === job.entry) {
+          var key = day.y + '-' + day.m + '-' + day.d;
+          var v = pendingSellBy.votes; v[key] = (v[key] || 0) + weight;
+          var leadKey = key, lead = 0, runnerUp = 0;
+          for (var kk in v) {
+            if (v[kk] > lead) { runnerUp = lead; lead = v[kk]; leadKey = kk; }
+            else if (v[kk] > runnerUp) { runnerUp = v[kk]; }
+          }
+          var pp = leadKey.split('-'); day = { y: +pp[0], m: +pp[1], d: +pp[2] };
+          // Confirmed: leader carries weight AND clearly beats the runner-up.
+          if (lead >= 3 && (lead - runnerUp) >= 1.5) pendingSellBy = null;
+        }
+        showSellBy(day);
+        if (job.entry) { job.entry.sellBy = day; job.entry.sellByStatus = 'read'; }
       } else {
         var raw = res && res.raw, msg, engineDown = !!(res && res.err === 'engine');
         if (engineDown) { msg = 'OCR engine didn’t load'; raw = null; }
@@ -596,6 +622,22 @@
     } catch (e) {}
   }
 
+  // Big red PLU on the result card — easy to eyeball against the paper checklist.
+  function showPlu(plu) {
+    if (!resPlu) return;
+    if (plu) { resPlu.textContent = 'PLU ' + plu; resPlu.hidden = false; }
+    else { resPlu.hidden = true; resPlu.textContent = ''; }
+  }
+
+  // The barcode's embedded price on the card. Two packages with different
+  // prices are different packages — seeing the price makes a "possible
+  // duplicate" prompt trustworthy (same price) or obviously wrong (different).
+  function showPrice(price) {
+    if (!resPrice) return;
+    if (price) { resPrice.textContent = '$' + price; resPrice.hidden = false; }
+    else { resPrice.hidden = true; resPrice.textContent = ''; }
+  }
+
   function onDecode(result) {
     var code = result.text;
     var now = Date.now();
@@ -614,10 +656,14 @@
     var product = window.MMProducts && window.MMProducts.findByCode(code);
     if (product) {
       currentScan = { code: code, product: product, price: price };
+      showPlu(product.plu);
+      showPrice(price);
       resName.textContent = product.name;
       resNote.textContent = 'PLU ' + product.plu + (price ? (' · ~$' + price) : '');
       show(saveBtn, false);
     } else {
+      showPlu(null);
+      showPrice(price);
       currentScan = { code: code, product: null, price: price };
       resName.textContent = isUrl(code) ? 'Scanned link' : 'Unknown product';
       var bits = [];
@@ -652,6 +698,8 @@
     var product = window.MMProducts && window.MMProducts.findByCode(code);
     if (product) {
       currentScan = { code: code, product: product, price: price };
+      showPlu(product.plu);
+      showPrice(price);
       var scan = window.MMSession && window.MMSession.addScan({
         code: code,
         format: prettyType(result.type),
@@ -670,7 +718,8 @@
         sellByStatus: 'scanning'
       });
       renderRecent();
-      pendingSellBy = { entry: recent[0], code: code, tries: 0 };   // OCR retries across sharp frames (in the loop)
+      pendingSellBy = { entry: recent[0], code: code, tries: 0, votes: {} };
+      attemptSellByOcr(result.points, recent[0]);   // fire an immediate first read on THIS frame (loop retries on sharper frames)
       var scanTime = scanAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       var scanMeta = code + ' · ' + scanTime + ' · ' + (scan && scan.duplicate ? 'Duplicate scan' : 'Counted +1');
       toast(scan && scan.duplicate ? 'dupe' : 'ok', product.name, product.sheetName || '', scanMeta, scan && scan.id);
@@ -679,6 +728,8 @@
 
     if (isUrl(code)) {
       currentScan = { code: code, product: null, price: price };
+      showPlu(null);
+      showPrice(price);
       paused = true;
       resName.textContent = 'Scanned link';
       var linkBits = [];
@@ -691,6 +742,8 @@
     }
 
     currentScan = { code: code, product: null, price: price };
+    showPlu(null);
+    showPrice(price);
     var unknownScan = window.MMSession && window.MMSession.addScan({
       code: code,
       format: prettyType(result.type),

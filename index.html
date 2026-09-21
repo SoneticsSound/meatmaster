@@ -58,8 +58,10 @@
         <!-- result card (appears on a successful read) -->
         <div class="result-card" id="result-card" hidden>
           <div class="result-fmt" id="result-fmt">UPC-A</div>
+          <div class="result-plu" id="result-plu" hidden></div>
           <div class="result-name" id="result-name">Unknown product</div>
           <div class="result-code" id="result-code">000000000000</div>
+          <div class="result-price" id="result-price" hidden></div>
           <div class="result-note" id="result-note">Not in the product list yet.</div>
           <div class="result-actions">
             <button class="btn" id="btn-rescan">Rescan</button>
@@ -95,7 +97,7 @@
         <div class="ph-icon">🗂️</div>
         <h2>Product database loaded</h2>
         <p>Seed products plus anything saved from unknown scans live on this phone.</p>
-        <span class="chip">v0.21.14</span>
+        <span class="chip">v0.21.15</span>
       </div>
       <section class="product-list-wrap">
         <div class="product-tools">
@@ -210,7 +212,7 @@
     </div>
   </div>
 
-  <div class="build-stamp" id="build-stamp">v0.21.14</div>
+  <div class="build-stamp" id="build-stamp">v0.21.15</div>
 
   <script src="vendor/zbar/index.js"></script>
   <script src="haptics.js"></script>

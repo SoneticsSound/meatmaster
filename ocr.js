@@ -74,34 +74,39 @@
     var toks = [];
     for (var i = 0; i < words.length; i++) {
       var tx = String(words[i].text || '').trim();
-      if (/\d/.test(tx)) { var b = words[i].bbox || {}; toks.push({ t: tx, x: (b.x1 != null ? b.x1 : (b.x0 || 0)) }); }
+      if (/\d/.test(tx)) {
+        var b = words[i].bbox || {};
+        var c = (typeof words[i].confidence === 'number') ? words[i].confidence : 0;
+        toks.push({ t: tx, x: (b.x1 != null ? b.x1 : (b.x0 || 0)), c: c });
+      }
     }
 
     var dates = [];
-    function consider(str, x) {
+    function consider(str, x, conf) {
       var p = D.parseSellBy(str);
-      if (p && D.isPlausibleSellBy(p)) dates.push({ p: p, x: x, dist: Math.abs(D.daysBetween(ref, p)) });
+      if (p && D.isPlausibleSellBy(p)) dates.push({ p: p, x: x, conf: conf, dist: Math.abs(D.daysBetween(ref, p)) });
     }
     for (var j = 0; j < toks.length; j++) {
-      consider(toks[j].t, toks[j].x);                                                        // "08.20.26" / "082026"
-      if (j + 1 < toks.length) consider(toks[j].t + '/' + toks[j + 1].t, toks[j + 1].x);      // "08" "20.26"
-      if (j + 2 < toks.length) consider(toks[j].t + '/' + toks[j + 1].t + '/' + toks[j + 2].t, toks[j + 2].x); // "08" "20" "26"
+      consider(toks[j].t, toks[j].x, toks[j].c);                                              // "08.20.26" / "082026"
+      if (j + 1 < toks.length) consider(toks[j].t + '/' + toks[j + 1].t, toks[j + 1].x, Math.min(toks[j].c, toks[j + 1].c)); // "08" "20.26"
+      if (j + 2 < toks.length) consider(toks[j].t + '/' + toks[j + 1].t + '/' + toks[j + 2].t, toks[j + 2].x, Math.min(toks[j].c, toks[j + 1].c, toks[j + 2].c)); // "08" "20" "26"
     }
     if (dates.length) {
       // The Sell By is top-right, so the RIGHTMOST plausible date wins (weight is
       // left, price centre); tie-break by closest to today.
       dates.sort(function (a, b) { return (b.x - a.x) || (a.dist - b.dist); });
-      return dates[0].p;
+      return { day: dates[0].p, conf: dates[0].conf };
     }
 
-    // last-ditch: whole text, space-tolerant, closest to today
+    // last-ditch: whole text, space-tolerant, closest to today. No per-word
+    // confidence here, so mark it low — the caller trusts these less.
     var loose = String((data && data.text) || data || '').match(/\d{1,2}[\s.\/-]{1,3}\d{1,2}[\s.\/-]{1,3}\d{2,4}/g) || [];
     var best = null, bd = Infinity;
     for (var k = 0; k < loose.length; k++) {
       var q = D.parseSellBy(loose[k].replace(/[\s.\-]+/g, '/'));
       if (q && D.isPlausibleSellBy(q)) { var d = Math.abs(D.daysBetween(ref, q)); if (d < bd) { bd = d; best = q; } }
     }
-    return best;
+    return best ? { day: best, conf: 40 } : null;
   }
 
   function toCanvas(source) {
@@ -123,18 +128,19 @@
   function readSellBy(source) {
     return new Promise(function (resolve) {
       try {
-        if (busy) { resolve({ day: null, raw: '', err: null }); return; }   // sample, don't queue
+        if (busy) { resolve({ day: null, conf: 0, raw: '', err: null }); return; }   // sample, don't queue
         busy = true;
         loadEngine().then(function (w) {
           return w.recognize(toCanvas(source)).then(function (r) {
             busy = false;
-            resolve({ day: findDate(r && r.data), raw: (r && r.data && r.data.text) || '', err: null });
+            var hit = findDate(r && r.data);   // { day, conf } | null
+            resolve({ day: hit ? hit.day : null, conf: hit ? hit.conf : 0, raw: (r && r.data && r.data.text) || '', err: null });
           });
         }).catch(function (e) {
           busy = false;
-          resolve({ day: null, raw: '', err: 'engine', errMsg: lastErr || String((e && (e.message || e)) || '').slice(0, 120) });
+          resolve({ day: null, conf: 0, raw: '', err: 'engine', errMsg: lastErr || String((e && (e.message || e)) || '').slice(0, 120) });
         });
-      } catch (e) { busy = false; resolve({ day: null, raw: '', err: 'engine', errMsg: String((e && (e.message || e)) || '').slice(0, 120) }); }
+      } catch (e) { busy = false; resolve({ day: null, conf: 0, raw: '', err: 'engine', errMsg: String((e && (e.message || e)) || '').slice(0, 120) }); }
     });
   }
 
