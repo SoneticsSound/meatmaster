@@ -50,6 +50,7 @@
   // reusable work canvases (avoid per-frame allocation)
   var cropCanvas = null, cropCtx = null;   // the framed box, at full res
   var otsuCanvas = null, otsuCtx = null;    // thresholded copy for hard reads
+  var rotCanvas = null, rotCtx = null;      // 90°-rotated copy for angled labels
 
   function show(node, on) { if (node) node.hidden = !on; }
 
@@ -75,13 +76,26 @@
     // then clears itself — dupes can still be removed from the log later. The
     // dupe barcode stays "stuck" (heldStuck) after the card goes, so it never
     // silently re-counts; only a different item or a tap re-enables it.
-    toastTimer = setTimeout(function () {
+    // Hold the card until the sell-by OCR for this scan has LOCKED a date or
+    // GIVEN UP (pendingSellBy cleared), so the reader can finish while the same
+    // barcode stays locked — the OCR window can no longer produce a phantom
+    // re-count. Minimum on-screen time is `base`; a hard cap stops a stuck
+    // reader from pinning the card forever.
+    var base = kind === 'dupe' ? 2500 : 1000;
+    var cap = 6000, start = Date.now();
+    function maybeDismiss() {
+      var elapsed = Date.now() - start;
+      if (elapsed < cap && (elapsed < base || pendingSellBy)) {
+        toastTimer = setTimeout(maybeDismiss, 150);
+        return;
+      }
       show(card, false);
       card.classList.remove('is-ok', 'is-dupe', 'is-toast');
       show(unitBtn, false);
       toastScanId = null;
       heldStuck = false;   // card gone → back to presence-based release (re-count only after it leaves view)
-    }, kind === 'dupe' ? 2500 : 1000);
+    }
+    toastTimer = setTimeout(maybeDismiss, base);
   }
 
   /* ---------- decode engine (zbar) ---------- */
@@ -170,11 +184,47 @@
   }
 
   // Decode one framed-box canvas: raw first, Otsu on a miss.
+  // Rotate src 90° clockwise into dst. zbar reads bars along horizontal scan
+  // lines, so a label held "sideways" can fail on the upright frame but read
+  // cleanly once rotated — this is what lets a barcode decode at any angle
+  // instead of only when it happens to line up.
+  function rotate90(src, dst) {
+    dst.width = src.height; dst.height = src.width;
+    var c = dst.getContext('2d', { willReadFrequently: true });
+    c.save();
+    c.translate(dst.width, 0);       // dst.width === src.height
+    c.rotate(Math.PI / 2);
+    c.drawImage(src, 0, 0);
+    c.restore();
+  }
+  // A hit found on the rotated canvas has rotated corner points; map them back
+  // to the original frame so the sell-by OCR still anchors correctly.
+  // Forward map was (ox,oy) -> (srcH - oy, ox); inverse: ox = ry, oy = srcH - rx.
+  function unrotatePoints(points, srcH) {
+    if (!points) return points;
+    return points.map(function (p) { return { x: p.y, y: srcH - p.x }; });
+  }
+
   function decodeFrame(cnv) {
     return zbarScan(cnv).then(function (r) {
       if (r) return r;
       otsuInto(cnv, otsuCanvas);
       return zbarScan(otsuCanvas);
+    }).then(function (r) {
+      if (r) return r;
+      // Still nothing — the label may be at an angle. Try a 90°-rotated frame
+      // (raw, then thresholded) and un-rotate any hit's points back to source.
+      if (!rotCanvas) { rotCanvas = document.createElement('canvas'); rotCtx = rotCanvas.getContext('2d', { willReadFrequently: true }); }
+      var srcH = cnv.height;
+      rotate90(cnv, rotCanvas);
+      return zbarScan(rotCanvas).then(function (r2) {
+        if (r2) { r2.points = unrotatePoints(r2.points, srcH); return r2; }
+        otsuInto(rotCanvas, otsuCanvas);
+        return zbarScan(otsuCanvas).then(function (r3) {
+          if (r3) r3.points = unrotatePoints(r3.points, srcH);
+          return r3;
+        });
+      });
     });
   }
 
