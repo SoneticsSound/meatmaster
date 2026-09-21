@@ -389,6 +389,8 @@
     // the paper highlighter, so the matching row is quick to find.
     if (window.MMCutWords) nm.innerHTML = window.MMCutWords.markup(name);
     else nm.textContent = name;
+    // Grassfed cuts get called out green + bold (Kyle tracks these separately).
+    if (/grass[\s-]?fed/i.test(name)) nm.classList.add('is-grassfed');
     var code = document.createElement('div');
     code.className = 'periscope-code';
     code.textContent = sheetName || 'No checklist name saved yet';

@@ -1,6 +1,8 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.21.17**
+Current app version: **v0.21.18**
+
+- Grassfed cuts green in Periscope Report (v0.21.18): Kyle tracks grassfed separately, so any Periscope row whose product name matches /grass[\s-]?fed/i (GRASSFED / Grass Fed / grass-fed) renders green + bold (periscope-name.is-grassfed), with the yellow cut-word highlight neutralized inside so the row reads as one clean green label. Verified regex + CSS in-browser.
 
 - Periscope Report speed-up + inline sell-by on card (v0.21.17): Kyle's input bottleneck is matching the paper checklist PLU to the "Show Periscope" list. Now each Periscope row LEADS with the PLU as a big bold red boxed badge (periscope-plu, left column of a 3-col grid), and the cut name has its distinctive cut word highlighted like his paper highlighter (London Broil, Rump, NY Strip, Ribeye…). New shared module cutwords.js (MMCutWords.markup) wraps the first/longest matching cut keyword in <span class="cut-kw"> (yellow highlight); HTML-escaped, XSS-safe; wired into index.html + SW precache. The scan-card product name uses the same highlighter (setResName), and the OCR sell-by now also shows INLINE on the result card (result-sellby, colored by pull/markdown verdict) in addition to the readout below — the card holds until the read resolves (v0.21.16) so the date lands before dismiss. Verified in-browser: highlighter matches multi-word cuts + escapes HTML, PLU badge red, keyword highlight yellow, periscope rows render correctly. NOTE: 8356 Pasture-Raised Wings NAE placement + the seafood/FS service-case schematics Kyle just sent (3 pages) are queued for a dedicated ingest pass — they resolve the 3 open PLU conflicts (7540=Org Grassfed Burger, 7290 Hickory / 7292 Applewood bacon both real, NY Strip=9801) and confirm 9022 cooked shrimp.
 
