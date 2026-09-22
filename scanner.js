@@ -33,6 +33,7 @@
   var unitBtn   = el('btn-unit-scan');
   var removeBtn = el('btn-remove-scan');
   var rescanBtn = el('btn-rescan');
+  var confirmBtn = el('btn-confirm');
   var controls  = el('scan-controls');
   var recentBox = el('recent');
   var recentList= el('recent-list');
@@ -80,6 +81,9 @@
     show(rescanBtn, false);
     show(unitBtn, isDupe);
     show(removeBtn, isDupe);
+    // On a dupe the primary button doesn't finish anything — it defers (leaves
+    // it flagged for the Session bulk sweep), so call it "Dismiss", not "Done".
+    if (confirmBtn) confirmBtn.textContent = isDupe ? 'Dismiss' : 'Done';
     show(card, true);
     // Both cards auto-dismiss: a RECORDED confirmation after 1s, a POSSIBLE
     // DUPLICATE hangs a bit longer (2.5s) so there's time to hit "Count Unit",
@@ -528,6 +532,9 @@
   }
 
   function setCode(code) {
+    // Default the primary button to "Done"; toast() flips it to "Dismiss" for a
+    // dupe. setCode runs on every card render, before that, so it's the reset.
+    if (confirmBtn) confirmBtn.textContent = 'Done';
     if (isUrl(code)) {
       resCode.textContent = '';
       var a = document.createElement('a');

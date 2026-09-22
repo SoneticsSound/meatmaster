@@ -1,6 +1,8 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.21.21**
+Current app version: **v0.21.22**
+
+- Dupe card primary button "Done" → "Dismiss" (v0.21.22): on a POSSIBLE DUPLICATE the primary button doesn't finish anything — it defers (leaves the dupe flagged for the Session bulk sweep), so it now reads "Dismiss". Other cards keep "Done". toast() sets it to Dismiss for a dupe; setCode() (runs on every card render, before toast) resets it to Done otherwise. Verified syntax + presence in-browser.
 
 - 45°/135° decode passes + Remove-on-dupe-card + longer dupe hold (v0.21.21): (1) Diagonal/curvy labels. decodeFrame now adds two more fallback passes after 0° and 90° miss — rotateInto() spins the crop 45° then 135° and scans raw, covering the two diagonals a barcode can sit at (a diagonal barcode lines up with neither horizontal nor vertical scan lines). Only runs when everything above misses, so normal scans aren't slowed. Diagonal hits count but skip the sell-by anchor on that frame (arbitrary-angle corner points don't map back cleanly; an upright frame provides the anchor). (2) Dupe card is now validate-in-place: on a POSSIBLE DUPLICATE, the never-used Rescan button is replaced by [Count as unit] [Remove] side by side + [Done] full-width, all 54px tall for gloves; new removeToast() pulls the scan via removeRecent (same as swiping the log row) without scrolling. Rescan stays on the unknown-product card where re-reading a bad scan is its job. (3) Dupe card hold 2.5s→5s (cap 8s while OCR resolves) — Kyle kept missing the button with a glove on in 2.5s. Verified in-browser: buttons parse + syntax-check, dupe card lays out [unit][remove]/[done] at 54px, Rescan hidden.
 
