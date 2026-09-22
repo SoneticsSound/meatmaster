@@ -106,9 +106,26 @@
       edit.type = 'button';
       edit.textContent = 'Edit';
       edit.addEventListener('click', function () { editProduct(p); });
+      var actions = document.createElement('div');
+      actions.className = 'product-actions';
+      actions.appendChild(edit);
+      // Saved (scanned) products can be deleted; seed products cannot.
+      if (p.isCustom && window.MMProducts.remove) {
+        var del = document.createElement('button');
+        del.className = 'btn btn-danger product-delete';
+        del.type = 'button';
+        del.textContent = 'Delete';
+        del.addEventListener('click', function () {
+          if (!window.confirm('Delete saved product "' + (p.name || p.plu) + '"? This removes it from this phone.')) return;
+          window.MMProducts.remove(p);
+          renderProducts();
+          if (window.MMSession && window.MMSession.render) window.MMSession.render();
+        });
+        actions.appendChild(del);
+      }
       li.appendChild(plu);
       li.appendChild(body);
-      li.appendChild(edit);
+      li.appendChild(actions);
       productList.appendChild(li);
     });
   }

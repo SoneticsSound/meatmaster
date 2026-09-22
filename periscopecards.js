@@ -48,7 +48,7 @@
     plu.textContent = r.plu ? ('PLU ' + r.plu) : '—';
     var name = document.createElement('div');
     name.className = 'pc-name';
-    if (window.MMCutWords) name.innerHTML = window.MMCutWords.markup(r.name || '');
+    if (window.MMCutWords) name.innerHTML = window.MMCutWords.markup(r.name || '', r.category);
     else name.textContent = r.name || '';
     head.appendChild(plu); head.appendChild(name);
 

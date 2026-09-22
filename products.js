@@ -155,6 +155,26 @@
     return findByCode(p.upc) || (p.plu ? findByPlu(p.plu) : p);
   }
 
+  // Delete a SAVED (user-added) product. Accepts a product object, a PLU, or a
+  // code. Seed products aren't in `custom`, so they can't be removed this way.
+  function removeCustom(idOrProduct) {
+    var keys = [];
+    if (idOrProduct && typeof idOrProduct === 'object') {
+      keys.push(productKey(idOrProduct));
+    } else {
+      var s = String(idOrProduct || '');
+      keys.push('plu:' + s.replace(/^0+/, ''));
+      keys.push('upc:' + normalizeCode(s));
+    }
+    var before = custom.length;
+    custom = custom.filter(function (e) { return keys.indexOf(productKey(e)) === -1; });
+    if (custom.length === before) return false;
+    saveCustom();
+    rebuild();
+    window.MMProducts.all = allProducts;
+    return true;
+  }
+
   function findByPlu(plu) {
     return byPlu[String(plu).replace(/^0+/, '')] || null;
   }
@@ -181,6 +201,7 @@
     },
     extractPlu: extractPlu,
     findByPlu: findByPlu,
-    findByCode: findByCode
+    findByCode: findByCode,
+    remove: removeCustom
   };
 })();

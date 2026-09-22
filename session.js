@@ -409,8 +409,9 @@
     nm.className = 'periscope-name';
     // Highlight the distinctive cut word (London Broil, Rump, NY Strip…) like
     // the paper highlighter, so the matching row is quick to find.
-    // markup() highlights the cut word (yellow) and any "grassfed" token (green).
-    if (window.MMCutWords) nm.innerHTML = window.MMCutWords.markup(name);
+    // markup() highlights the cut word (yellow) + grassfed (green) — beef cuts
+    // only; one-pan meals / ready-made stay plain.
+    if (window.MMCutWords) nm.innerHTML = window.MMCutWords.markup(name, category);
     else nm.textContent = name;
     var code = document.createElement('div');
     code.className = 'periscope-code';

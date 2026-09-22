@@ -365,7 +365,9 @@ body {
   font-variant-numeric: tabular-nums;
   margin-top: 2px;
 }
-.product-edit {
+.product-actions { display: flex; flex-direction: column; gap: 6px; }
+.product-edit,
+.product-delete {
   min-height: 36px;
   padding: 7px 10px;
   border-radius: 9px;

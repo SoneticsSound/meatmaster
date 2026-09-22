@@ -58,7 +58,7 @@
 
   function show(node, on) { if (node) node.hidden = !on; }
 
-  function toast(kind, title, sheetName, note, scanId) {
+  function toast(kind, title, sheetName, note, scanId, category) {
     if (toastTimer) { clearTimeout(toastTimer); toastTimer = null; }
     toastScanId = kind === 'dupe' ? scanId : null;
     // Lock this barcode for as long as ANY result card is showing — the same
@@ -66,7 +66,7 @@
     // Cleared when the card dismisses (below), on a different item, or on a tap.
     heldStuck = true;
     resFmt.textContent = kind === 'dupe' ? 'POSSIBLE DUPLICATE' : 'RECORDED';
-    setResName(title);
+    setResName(title, category);
     resCode.textContent = sheetName || '';
     resNote.textContent = note || '';
     card.classList.add('is-toast');
@@ -740,9 +740,10 @@
       }
     } catch (e) {}
   }
-  // Big red product name with the cut word highlighted (London Broil, Rump…).
-  function setResName(name) {
-    if (window.MMCutWords) resName.innerHTML = window.MMCutWords.markup(name);
+  // Big red product name with the cut word highlighted (London Broil, Rump…) —
+  // beef cuts only; one-pan meals stay plain.
+  function setResName(name, category) {
+    if (window.MMCutWords) resName.innerHTML = window.MMCutWords.markup(name, category);
     else resName.textContent = name;
   }
 
@@ -782,7 +783,7 @@
       currentScan = { code: code, product: product, price: price };
       showPlu(product.plu);
       showPrice(price);
-      setResName(product.name);
+      setResName(product.name, product.category);
       resNote.textContent = 'PLU ' + product.plu + (price ? (' · ~$' + price) : '');
       show(saveBtn, false);
     } else {
@@ -847,7 +848,7 @@
       attemptSellByOcr(result.points, recent[0]);   // fire an immediate first read on THIS frame (loop retries on sharper frames)
       var scanTime = scanAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       var scanMeta = code + ' · ' + scanTime + ' · ' + (scan && scan.duplicate ? 'Duplicate scan' : 'Counted +1');
-      toast(scan && scan.duplicate ? 'dupe' : 'ok', product.name, product.sheetName || '', scanMeta, scan && scan.id);
+      toast(scan && scan.duplicate ? 'dupe' : 'ok', product.name, product.sheetName || '', scanMeta, scan && scan.id, product.category);
       return;
     }
 
@@ -1061,8 +1062,8 @@
       // known (a stored "Unknown product" must not stick forever)
       var known = product && product.name;
       var nameStr = known || (r.name && r.name !== 'Unknown product' ? r.name : null) || r.name || r.code;
-      // Highlight the cut word, same as the Periscope report + scan card.
-      if (window.MMCutWords) code.innerHTML = window.MMCutWords.markup(nameStr);
+      // Highlight the cut word (beef cuts only), same as the Periscope report.
+      if (window.MMCutWords) code.innerHTML = window.MMCutWords.markup(nameStr, product && product.category);
       else code.textContent = nameStr;
       if (r.duplicate) {
         var badge = document.createElement('span');

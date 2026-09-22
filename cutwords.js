@@ -35,8 +35,13 @@
   //  - every "grassfed" token in <span class="grassfed-kw"> (green) — Kyle
   //    tracks grassfed, and wants just the WORD called out, not the whole row.
   // Overlaps (rare — a cut word never contains "grassfed") keep the earlier one.
-  function markup(name) {
+  // `category` gates it: highlighting is a cut-identifier aid, so only the beef
+  // CUTS get it. One-pan meals / ready-made read fine by name — left plain.
+  // (Unknown/blank category still highlights, so the scan card isn't affected
+  // before a product resolves.)
+  function markup(name, category) {
     var s = String(name || '');
+    if (category && category !== 'Beef') return esc(s);
     var lower = s.toLowerCase();
     var ranges = [];
 
