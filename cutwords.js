@@ -8,11 +8,12 @@
   // Distinctive cut keywords, longest-first so a multi-word cut ("New York
   // Strip") wins over a partial ("Strip"). Order added; sorted below.
   var WORDS = [
-    'London Broil', 'New York Strip', 'NY Strip', 'Ribeye', 'Rib Eye',
-    'Top Sirloin', 'Sirloin', 'Tri-Tip', 'Tri Tip', 'Filet Mignon', 'Filet',
-    'Tenderloin', 'Flat Iron', 'Denver', 'Picanha', 'Porterhouse', 'T-Bone',
-    'Chuck', 'Brisket', 'Flank', 'Skirt', 'Round', 'Rump', 'Short Rib',
-    'Shank', 'Oxtail', 'Stew', 'Kabob', 'Kabobs', 'Kebab', 'Kebob', 'Kebobs',
+    'London Broil', 'New York Strip', 'NY Strip', 'New York', 'Ribeye', 'Rib Eye',
+    'Top Sirloin Filet', 'Top Sirloin', 'Petite Sirloin', 'Sirloin', 'Tri-Tip', 'Tri Tip',
+    'Filet Mignon', 'Filet', 'Tenderloin', 'Flat Iron', 'Denver', 'Picanha',
+    'Porterhouse', 'T-Bone', 'Chuck', 'Brisket', 'Flank', 'Skirt', 'Round',
+    'Rump', 'Short Ribs', 'Short Rib', 'Flap Meat', 'Breakfast Steak', 'Breakfast',
+    'Shank', 'Oxtail', 'Stew Meat', 'Stew', 'Kabob', 'Kabobs', 'Kebab', 'Kebob', 'Kebobs',
     'Fajita', 'Carne Picada', 'Carne Asada', 'Ground', 'Burger', 'Patties',
     'Meatball', 'Meatballs', 'Cube Steak', 'Cube', 'Stir Fry', 'Stir-Fry',
     // poultry / pork / seafood cuts that appear on the checklist

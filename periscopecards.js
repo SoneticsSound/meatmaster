@@ -51,9 +51,21 @@
     if (window.MMCutWords) name.innerHTML = window.MMCutWords.markup(r.name || '');
     else name.textContent = r.name || '';
     head.appendChild(plu); head.appendChild(name);
-    card.appendChild(head);
 
-    // white scan panel: the barcode
+    // recorded count — this is what you key into Periscope. Kept at the TOP with
+    // the item info, because when you hold the phone to the gun your hand/scanner
+    // blocks the BOTTOM of the screen; the barcode goes there instead.
+    var countWrap = document.createElement('div');
+    countWrap.className = 'pc-count';
+    var cl = document.createElement('span');
+    cl.className = 'pc-count-label';
+    cl.textContent = 'Counted';
+    var cv = document.createElement('span');
+    cv.className = 'pc-count-val';
+    cv.textContent = r.count;
+    countWrap.appendChild(cl); countWrap.appendChild(cv);
+
+    // white scan panel: the barcode — at the BOTTOM, toward the gun
     var panel = document.createElement('div');
     panel.className = 'pc-scanpanel';
     var mw = SIZES[sizeIdx];
@@ -64,19 +76,11 @@
     } else {
       panel.textContent = 'No PLU — nothing to scan';
     }
-    card.appendChild(panel);
 
-    // recorded count, big — this is what you key into Periscope
-    var countWrap = document.createElement('div');
-    countWrap.className = 'pc-count';
-    var cl = document.createElement('span');
-    cl.className = 'pc-count-label';
-    cl.textContent = 'Counted';
-    var cv = document.createElement('span');
-    cv.className = 'pc-count-val';
-    cv.textContent = r.count;
-    countWrap.appendChild(cl); countWrap.appendChild(cv);
+    // order: item info + count at top, barcode below
+    card.appendChild(head);
     card.appendChild(countWrap);
+    card.appendChild(panel);
 
     stageEl.appendChild(card);
     if (posEl) posEl.textContent = (idx + 1) + ' / ' + rows.length;

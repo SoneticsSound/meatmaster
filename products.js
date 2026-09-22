@@ -57,7 +57,7 @@
     { plu: '7462', upc: '0020746200000', name: 'Firecracker Shrimp', sheetName: 'SPROUTS MEAL-FIRECRACKER SHRIMP 1 LB', category: 'Ready-Made', casePosition: 105 },
     { plu: '7492', upc: '0020749200000', name: 'Marry Me Chicken', sheetName: 'SPROUTS MEAL-MARRY ME CHICKEN - PF 1 LB', category: 'Ready-Made', casePosition: 115 },
     { plu: '7521', upc: '0020752100000', name: 'Hot Honey Chipotle Chicken', sheetName: 'MEAL-HOT HONEY CHIPOTLE CHICKE 1 LB', category: 'Ready-Made', casePosition: 106 },
-    { plu: '7535', upc: '0020753500000', name: 'Rstd Garlic Lemon Pepper Beef', sheetName: 'SPROUTS MEAL-RSTD GRLC LMN PEPPR BEEF 1 LB', category: 'Ready-Made', casePosition: 116 },
+    { plu: '7535', upc: '0020753500000', name: 'Roasted Garlic Lemon Pepper Beef', sheetName: 'SPROUTS MEAL-RSTD GRLC LMN PEPPR BEEF 1 LB', category: 'Ready-Made', casePosition: 116 },
     { plu: '7736', upc: '0020773600000', name: 'Italian Meatballs', sheetName: 'SPROUTS MEAL-ITALIAN MEATBALLS 1 LB', category: 'Ready-Made', casePosition: 107 },
     { plu: '7856', upc: '0020785600000', name: 'Garlic Chicken Mushrooms', sheetName: 'SPROUTS MEAL-GARLIC CHICKEN MUSHROOMS 1 LB', category: 'Ready-Made', casePosition: 117 },
     { plu: '7874', upc: '0020787400000', name: 'Chicken Fajitas', sheetName: 'SPROUTS MEAL-CHICKEN FAJITAS-PF 1 LB', category: 'Ready-Made', casePosition: 108 },
