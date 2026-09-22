@@ -99,7 +99,7 @@
         <div class="ph-icon">🗂️</div>
         <h2>Product database loaded</h2>
         <p>Seed products plus anything saved from unknown scans live on this phone.</p>
-        <span class="chip">v0.21.22</span>
+        <span class="chip">v0.21.23</span>
       </div>
       <section class="product-list-wrap">
         <div class="product-tools">
@@ -136,6 +136,7 @@
       </div>
       <div class="session-top-action">
         <button class="btn btn-primary btn-block" id="btn-periscope-report">Show Periscope Report</button>
+        <button class="btn btn-block" id="btn-periscope-cards">Periscope Card Mode (scan into gun)</button>
       </div>
       <section class="session-block periscope-report" id="periscope-report" hidden>
         <h2 class="recent-title">Periscope Report</h2>
@@ -215,6 +216,27 @@
     </div>
   </div>
 
+  <!-- Periscope Card Mode overlay -->
+  <div class="pc-overlay" id="pc-overlay" hidden>
+    <div class="case-bar">
+      <span class="case-title">Periscope Card Mode</span>
+      <button class="case-close" id="pc-close" aria-label="Close card mode">&times;</button>
+    </div>
+    <div class="pc-controls">
+      <button class="btn pc-nav" id="pc-prev" aria-label="Previous item">&#8249;</button>
+      <span class="pc-pos" id="pc-pos">0 / 0</span>
+      <button class="btn pc-nav" id="pc-next" aria-label="Next item">&#8250;</button>
+      <span class="pc-size-group">
+        <span class="pc-size-label">size</span>
+        <button class="btn pc-size-btn" id="pc-size-minus" aria-label="Smaller barcode">&minus;</button>
+        <span class="pc-size" id="pc-size">3px</span>
+        <button class="btn pc-size-btn" id="pc-size-plus" aria-label="Larger barcode">+</button>
+        <button class="btn pc-size-btn pc-size-paper" id="pc-size-paper">Paper size</button>
+      </span>
+    </div>
+    <div class="pc-stage" id="pc-stage"></div>
+  </div>
+
   <!-- Single Garnish Mode overlay -->
   <div class="sg-overlay" id="sg-overlay" hidden>
     <div class="case-bar">
@@ -225,11 +247,12 @@
     <div class="sg-body" id="sg-body"></div>
   </div>
 
-  <div class="build-stamp" id="build-stamp">v0.21.22</div>
+  <div class="build-stamp" id="build-stamp">v0.21.23</div>
 
   <script src="vendor/zbar/index.js"></script>
   <script src="haptics.js"></script>
   <script src="cutwords.js"></script>
+  <script src="barcode.js"></script>
   <script src="products.js"></script>
   <script src="session.js"></script>
   <script src="caselayout.js"></script>
@@ -240,6 +263,7 @@
   <script src="dates.js"></script>
   <script src="reference.js"></script>
   <script src="singlegarnish.js"></script>
+  <script src="periscopecards.js"></script>
   <script src="recipes_data.js"></script>
   <script src="production.js"></script>
   <script src="caseproduction.js"></script>

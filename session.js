@@ -279,6 +279,28 @@
     return groupedFrom(countableScans());
   }
 
+  // The meat-dept checklist rows with their scanned counts, in the same order as
+  // the Periscope Report (case position). Used by Periscope Card Mode to draw a
+  // scannable barcode + count per item. Same data source as renderPeriscopeChecklist.
+  function periscopeRows() {
+    var groups = grouped();
+    var countByPlu = {};
+    groups.forEach(function (g) {
+      var plu = g.plu ? String(g.plu).replace(/^0+/, '') : '';
+      if (plu) countByPlu[plu] = (countByPlu[plu] || 0) + g.count;
+    });
+    var checklist = (window.MMProducts && window.MMProducts.all) ?
+      window.MMProducts.all.filter(isMeatDeptChecklistProduct) : [];
+    checklist.sort(byCategoryThenPosition);
+    return checklist.map(function (p) {
+      var plu = p.plu ? String(p.plu).replace(/^0+/, '') : '';
+      return {
+        plu: p.plu, name: p.name, sheetName: p.sheetName || '',
+        category: p.category || '', count: plu ? (countByPlu[plu] || 0) : 0
+      };
+    });
+  }
+
   function renderSummary() {
     var list = document.getElementById('session-count-list');
     var reportList = document.getElementById('periscope-report-list');
@@ -647,6 +669,7 @@
     clear: clearSession,
     saveSession: snapshotSession,
     grouped: grouped,
+    periscopeRows: periscopeRows,
     activeScans: activeScans,
     countableScans: countableScans,
     render: render,

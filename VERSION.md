@@ -1,6 +1,8 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.21.22**
+Current app version: **v0.21.23**
+
+- Periscope Card Mode — scan MeatMaster into the Periscope gun (v0.21.23): Kyle's idea — the store's cross-bar scanner (imager) may read a barcode off the phone. Decoded the real count sheet (Reference/IMG_7236.jpeg) with zbar to confirm the symbology: EAN-13, "020" + 4-digit PLU + "00000" (price zeroed) + check digit — e.g. PLU 7059 → 0207059000009, all 24 codes read back EAN-13. New self-contained EAN-13 generator (barcode.js, no dependency; MMBarcode.ean13SVG/codeForPlu) renders crisp SVG at WHOLE-pixel module widths with shape-rendering="crispEdges" (no anti-aliased/fractional edges — laser-safe, exact bar ratios). Round-tripped through zbar: every generated code decodes back to the exact EAN-13. New periscopecards.js + MMSession.periscopeRows(): a full-screen card per checklist item (case order) showing red PLU, highlighted name, the EAN-13 on a white scan panel, and the recorded count; swipe/‹›/keys to move. Size stepper (2–6px) + "Paper size" failsafe (jumps to ~nominal/paper size) so Kyle tunes the on-screen size to his gun. Button on the Session tab. Verified in-browser: 44 rows, the on-screen barcode for PLU 7059 decodes to 0207059000009 (matches the paper), UI renders. GATING TEST for Kyle: does the cross-bar gun actually beep at the phone screen? If yes, this kills the paper checklist. (Fix during build: periscopeRows was added but initially not exported from MMSession — corrected.)
 
 - Dupe card primary button "Done" → "Dismiss" (v0.21.22): on a POSSIBLE DUPLICATE the primary button doesn't finish anything — it defers (leaves the dupe flagged for the Session bulk sweep), so it now reads "Dismiss". Other cards keep "Done". toast() sets it to Dismiss for a dupe; setCode() (runs on every card render, before toast) resets it to Done otherwise. Verified syntax + presence in-browser.
 
