@@ -476,10 +476,8 @@ body {
   padding: 0 3px;
   font-weight: 900;
 }
-/* Grassfed cuts: whole name green + bold. Neutralize the yellow cut highlight
-   inside so the row reads as one clean green label. */
-.periscope-name.is-grassfed { color: #4ade80; font-weight: 900; }
-.periscope-name.is-grassfed .cut-kw { color: #4ade80; background: transparent; padding: 0; }
+/* Grassfed keyword only — green + bold, sitting alongside the yellow cut word. */
+.grassfed-kw { color: #4ade80; font-weight: 900; }
 .periscope-code {
   color: var(--ink-dim);
   font-size: 11px;

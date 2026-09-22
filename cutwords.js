@@ -28,22 +28,38 @@
     });
   }
 
-  // Return `name` as escaped HTML with the first (longest) matching cut keyword
-  // wrapped in <span class="cut-kw">. One keyword only — a single clean anchor
-  // reads faster than a name lit up all over. No match → plain escaped text.
+  // Return `name` as escaped HTML with highlights:
+  //  - the first (longest) matching cut keyword in <span class="cut-kw"> (yellow)
+  //    — one clean anchor reads faster than a name lit up all over;
+  //  - every "grassfed" token in <span class="grassfed-kw"> (green) — Kyle
+  //    tracks grassfed, and wants just the WORD called out, not the whole row.
+  // Overlaps (rare — a cut word never contains "grassfed") keep the earlier one.
   function markup(name) {
     var s = String(name || '');
     var lower = s.toLowerCase();
+    var ranges = [];
+
     for (var i = 0; i < WORDS.length; i++) {
       var w = WORDS[i];
       var idx = lower.indexOf(w.toLowerCase());
-      if (idx >= 0) {
-        return esc(s.slice(0, idx)) +
-          '<span class="cut-kw">' + esc(s.slice(idx, idx + w.length)) + '</span>' +
-          esc(s.slice(idx + w.length));
-      }
+      if (idx >= 0) { ranges.push({ start: idx, end: idx + w.length, cls: 'cut-kw' }); break; }
     }
-    return esc(s);
+    var re = /grass[\s-]?fed/gi, m;
+    while ((m = re.exec(s)) !== null) {
+      ranges.push({ start: m.index, end: m.index + m[0].length, cls: 'grassfed-kw' });
+    }
+    if (!ranges.length) return esc(s);
+
+    ranges.sort(function (a, b) { return a.start - b.start; });
+    var out = '', pos = 0, lastEnd = -1;
+    ranges.forEach(function (r) {
+      if (r.start < lastEnd) return;        // overlaps the previous highlight — skip
+      out += esc(s.slice(pos, r.start)) +
+        '<span class="' + r.cls + '">' + esc(s.slice(r.start, r.end)) + '</span>';
+      pos = r.end; lastEnd = r.end;
+    });
+    out += esc(s.slice(pos));
+    return out;
   }
 
   root.MMCutWords = { markup: markup };

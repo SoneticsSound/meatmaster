@@ -1,6 +1,8 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.21.19**
+Current app version: **v0.21.20**
+
+- Grassfed = keyword only, not the whole line (v0.21.20): Kyle refined v0.21.18 — highlight just the WORD "grassfed" green, keep the yellow cut-name highlight (chuck, short rib, tri-tip…). markup() now returns BOTH highlights: the one cut keyword in .cut-kw (yellow) and every grassfed token in .grassfed-kw (green), computed as non-overlapping ranges over the escaped name. Dropped the periscope-name.is-grassfed whole-line rule + the session.js class toggle. Applies everywhere markup is used (Periscope + scan card). Verified in-browser: "GROUND-GRASSFED" → GROUND yellow + GRASSFED green; Short Rib / Tri-Tip / Chuck still highlight.
 
 - Single Garnish Mode (v0.21.19): new Products-tab button → pick ONE of the six garnishes Kyle preps (Red Bell Pepper, Red Onion, Green Onion, Parsley, Sesame Seed, Thyme) and get (a) the ordered checklist of every item that needs it, in case-walk order (far→near→right), with PLU + section/pos/row, and (b) a compact case map — every section as far/near rows of small PLU cells with the matching spots lit in the garnish's color. Grab one garnish, hit every spot in one pass. New self-contained module singlegarnish.js (own overlay, reads MMCaseLayout.pages + MMReference.buildGarnishWalk; touches no scan/count state). Garnish→base matching is keyword-based on the derived garnish strings, plus Kyle's rule: anything RGLP / Roasted Garlic Lemon Pepper also gets parsley. Verified in-browser: Green Onion → 7 ordered items + 8 highlighted case cells, picker/list/map all render. Also confirmed the garnish WALK is already strictly left-to-right (buildGarnishWalk steps far→near→right across sections ordered Meat→Chicken→Seafood). NOTE: coverage = the curated reference.js GARNISH set; the full case-wide garnish dataset can be expanded from the Service Case Production manual (Kyle provided it) in a follow-up.
 
