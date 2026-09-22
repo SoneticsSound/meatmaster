@@ -98,8 +98,10 @@
     // Dupe cards hang longer — Kyle validates them with a glove on and kept
     // missing the button in 2.5s, then had to scroll the log to swipe. A 5s
     // hold (capped 8s if the OCR is still resolving) gives room to tap Count/Remove.
-    var base = kind === 'dupe' ? 5000 : 1000;
-    var cap = kind === 'dupe' ? 8000 : 6000, start = Date.now();
+    var base = kind === 'dupe' ? 5000 : 900;
+    // OK card clears fast (short OCR grace) so it doesn't block the reticle; the
+    // sell-by still lands in the readout below. Dupe card hangs for validation.
+    var cap = kind === 'dupe' ? 8000 : 2200, start = Date.now();
     function maybeDismiss() {
       var elapsed = Date.now() - start;
       if (elapsed < cap && (elapsed < base || pendingSellBy)) {
@@ -1058,7 +1060,10 @@
       // prefer the live product name so entries re-resolve once an item becomes
       // known (a stored "Unknown product" must not stick forever)
       var known = product && product.name;
-      code.textContent = known || (r.name && r.name !== 'Unknown product' ? r.name : null) || r.name || r.code;
+      var nameStr = known || (r.name && r.name !== 'Unknown product' ? r.name : null) || r.name || r.code;
+      // Highlight the cut word, same as the Periscope report + scan card.
+      if (window.MMCutWords) code.innerHTML = window.MMCutWords.markup(nameStr);
+      else code.textContent = nameStr;
       if (r.duplicate) {
         var badge = document.createElement('span');
         badge.className = 'dupe-badge';
@@ -1076,6 +1081,13 @@
       var meta = document.createElement('span');
       meta.className = 'ri-meta';
       meta.textContent = r.code + ' · ' + t;
+      var price = inferPrice(r.code);
+      if (price) {
+        var priceEl = document.createElement('span');
+        priceEl.className = 'ri-price';
+        priceEl.textContent = ' · $' + price;
+        meta.appendChild(priceEl);
+      }
       var expiry = document.createElement('span');
       applyExpiryChip(expiry, r);
       row.appendChild(code);

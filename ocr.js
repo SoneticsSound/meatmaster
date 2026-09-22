@@ -81,10 +81,15 @@
       }
     }
 
+    // For OCR we reject dates more than a few days in the PAST: fresh case meat
+    // is pulled on its sell-by day, so a read that lands weeks back is almost
+    // certainly a misread (e.g. an 8<->9 month flip: a September item read as
+    // August) — better to say "no date" than to falsely flag a shrink.
+    var OCR_PLAUSIBLE = { maxDaysPast: 3 };
     var dates = [];
     function consider(str, x, conf) {
       var p = D.parseSellBy(str);
-      if (p && D.isPlausibleSellBy(p)) dates.push({ p: p, x: x, conf: conf, dist: Math.abs(D.daysBetween(ref, p)) });
+      if (p && D.isPlausibleSellBy(p, OCR_PLAUSIBLE)) dates.push({ p: p, x: x, conf: conf, dist: Math.abs(D.daysBetween(ref, p)) });
     }
     for (var j = 0; j < toks.length; j++) {
       consider(toks[j].t, toks[j].x, toks[j].c);                                              // "08.20.26" / "082026"
@@ -104,7 +109,7 @@
     var best = null, bd = Infinity;
     for (var k = 0; k < loose.length; k++) {
       var q = D.parseSellBy(loose[k].replace(/[\s.\-]+/g, '/'));
-      if (q && D.isPlausibleSellBy(q)) { var d = Math.abs(D.daysBetween(ref, q)); if (d < bd) { bd = d; best = q; } }
+      if (q && D.isPlausibleSellBy(q, OCR_PLAUSIBLE)) { var d = Math.abs(D.daysBetween(ref, q)); if (d < bd) { bd = d; best = q; } }
     }
     return best ? { day: best, conf: 40 } : null;
   }

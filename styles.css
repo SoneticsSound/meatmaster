@@ -205,6 +205,19 @@ body {
   color: #4ade80; margin: 4px 0 2px; font-variant-numeric: tabular-nums;
 }
 .result-card.is-dupe .result-price { color: #ffd166; }
+/* RECORDED confirmation = a short glanceable strip at the bottom, so the scan
+   reticle stays visible and you can keep scanning underneath. Auto-dismisses,
+   so it drops the big Done button and the code/format lines. (Dupe cards keep
+   the full layout — they have Count/Remove/Dismiss you need to tap.) */
+.result-card.is-toast.is-ok { padding: 9px 14px; }
+.result-card.is-toast.is-ok .result-fmt { font-size: 10px; margin-bottom: 1px; }
+.result-card.is-toast.is-ok .result-plu { font-size: 22px; margin: 0; line-height: 1.1; }
+.result-card.is-toast.is-ok .result-name { font-size: 14px; margin: 1px 0; }
+.result-card.is-toast.is-ok .result-price { font-size: 16px; margin: 1px 0 0; }
+.result-card.is-toast.is-ok .result-sellby { font-size: 12px; margin: 4px 0 0; padding: 3px 8px; }
+.result-card.is-toast.is-ok .result-code,
+.result-card.is-toast.is-ok .result-note,
+.result-card.is-toast.is-ok .result-actions { display: none; }
 /* Sell-by, inline on the card — color follows the pull/markdown verdict. */
 .result-sellby {
   font-size: 15px; font-weight: 800; letter-spacing: .2px;
@@ -480,6 +493,8 @@ body {
 }
 /* Grassfed keyword only — green + bold, sitting alongside the yellow cut word. */
 .grassfed-kw { color: #4ade80; font-weight: 900; }
+/* Embedded price on each scan-log row — consistent with the scan card. */
+.ri-price { color: #4ade80; font-weight: 800; }
 .periscope-code {
   color: var(--ink-dim);
   font-size: 11px;

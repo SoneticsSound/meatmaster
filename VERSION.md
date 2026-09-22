@@ -1,6 +1,8 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.21.24**
+Current app version: **v0.21.25**
+
+- On-shift fixes: scan-log price/formatting, condensed RECORDED card, OCR far-past reject (v0.21.25): three live fixes while Kyle was at the case. (1) Each scan-log row now shows the embedded PRICE (green ".ri-price", from inferPrice) and highlights the cut word (MMCutWords.markup) — consistent with the Periscope report + scan card. Display-only. (2) The RECORDED (ok) card was covering the scan reticle. It's now a short strip: is-toast.is-ok hides the big Done button + code/note lines and shrinks PLU/name/price, so the square stays visible to keep scanning underneath; its hold dropped to base 900ms / cap 2200ms (was 6000) so it clears fast (sell-by still lands in the readout below). Dupe card keeps the full layout + buttons. (3) OCR was reading a September date as August (8<->9 month flip) and telling Kyle to shrink good product. findDate now validates OCR dates with maxDaysPast:3 — fresh case meat is pulled on its sell-by day, so a read weeks in the past is a misread; it's dropped ("no date") instead of a false PULL. Manual entry keeps the lenient 45-day window. Verified on live: 30-days-past rejected for OCR (past30_ocr=false) but accepted for manual (default=true), 2-days-past + today + future still valid; scanner.js/ocr.js syntax OK.
 
 - Card Mode usage hint (v0.21.24): small footer in Periscope Card Mode — "Turn screen brightness all the way up · swipe or ‹ › to move · tap Paper size if the gun won't read." Pure additive UI (pc-hint div + CSS); deliberately no scan/count-path changes the night before a shift. Live deploy of v0.21.23 verified healthy first: all modules load, no console errors, the on-screen barcode decodes to 0207059000009 on the live site, and cutwords/barcode/singlegarnish/periscopecards are all in the SW precache (offline-ready).
 
