@@ -31,6 +31,8 @@
   var resNote   = el('result-note');
   var saveBtn   = el('btn-save-product');
   var unitBtn   = el('btn-unit-scan');
+  var removeBtn = el('btn-remove-scan');
+  var rescanBtn = el('btn-rescan');
   var controls  = el('scan-controls');
   var recentBox = el('recent');
   var recentList= el('recent-list');
@@ -70,7 +72,14 @@
     card.classList.toggle('is-ok', kind !== 'dupe');
     card.classList.toggle('is-dupe', kind === 'dupe');
     show(saveBtn, false);
-    show(unitBtn, kind === 'dupe' && !!scanId);
+    // Toasts never "rescan" — hide that button here (it stays on the unknown-
+    // product card, where re-reading a bad scan is its real job). On a dupe,
+    // give both a Count-as-unit AND a Remove button so it can be validated right
+    // on the card instead of scrolling down to swipe the log row.
+    var isDupe = kind === 'dupe' && !!scanId;
+    show(rescanBtn, false);
+    show(unitBtn, isDupe);
+    show(removeBtn, isDupe);
     show(card, true);
     // Both cards auto-dismiss: a RECORDED confirmation after 1s, a POSSIBLE
     // DUPLICATE hangs a bit longer (2.5s) so there's time to hit "Count Unit",
@@ -82,8 +91,11 @@
     // barcode stays locked — the OCR window can no longer produce a phantom
     // re-count. Minimum on-screen time is `base`; a hard cap stops a stuck
     // reader from pinning the card forever.
-    var base = kind === 'dupe' ? 2500 : 1000;
-    var cap = 6000, start = Date.now();
+    // Dupe cards hang longer — Kyle validates them with a glove on and kept
+    // missing the button in 2.5s, then had to scroll the log to swipe. A 5s
+    // hold (capped 8s if the OCR is still resolving) gives room to tap Count/Remove.
+    var base = kind === 'dupe' ? 5000 : 1000;
+    var cap = kind === 'dupe' ? 8000 : 6000, start = Date.now();
     function maybeDismiss() {
       var elapsed = Date.now() - start;
       if (elapsed < cap && (elapsed < base || pendingSellBy)) {
@@ -93,6 +105,8 @@
       show(card, false);
       card.classList.remove('is-ok', 'is-dupe', 'is-toast');
       show(unitBtn, false);
+      show(removeBtn, false);
+      show(rescanBtn, true);
       toastScanId = null;
       heldStuck = false;   // card gone → back to presence-based release (re-count only after it leaves view)
     }
@@ -205,6 +219,24 @@
     if (!points) return points;
     return points.map(function (p) { return { x: p.y, y: srcH - p.x }; });
   }
+  // Rotate src by an arbitrary angle (radians) into dst, sizing dst to fit the
+  // rotated bounds. Used for the 45°/135° diagonal passes — a diagonal barcode
+  // lines up with neither horizontal nor vertical scan lines, so we spin it to
+  // meet one. (Corner points don't map back cleanly from an arbitrary angle, so
+  // a diagonal hit still counts but skips the sell-by anchor on that frame.)
+  function rotateInto(src, dst, rad) {
+    var w = src.width, h = src.height;
+    var c = Math.abs(Math.cos(rad)), s = Math.abs(Math.sin(rad));
+    var nw = Math.ceil(w * c + h * s), nh = Math.ceil(w * s + h * c);
+    dst.width = nw; dst.height = nh;
+    var ctx = dst.getContext('2d', { willReadFrequently: true });
+    ctx.save();
+    ctx.clearRect(0, 0, nw, nh);
+    ctx.translate(nw / 2, nh / 2);
+    ctx.rotate(rad);
+    ctx.drawImage(src, -w / 2, -h / 2);
+    ctx.restore();
+  }
 
   function decodeFrame(cnv) {
     return zbarScan(cnv).then(function (r) {
@@ -224,6 +256,22 @@
         return zbarScan(otsuCanvas).then(function (r3) {
           if (r3) r3.points = unrotatePoints(r3.points, srcH);
           return r3;
+        });
+      });
+    }).then(function (r) {
+      if (r) return r;
+      // Diagonal labels: spin 45°, then 135°, and scan raw. Doubles the angles
+      // we cover (0/90 plus the two diagonals) so a curvy/tilted label locks
+      // without you squaring it up. Only runs when everything above missed.
+      if (!rotCanvas) { rotCanvas = document.createElement('canvas'); rotCtx = rotCanvas.getContext('2d', { willReadFrequently: true }); }
+      var q = Math.PI / 4;
+      rotateInto(cnv, rotCanvas, q);
+      return zbarScan(rotCanvas).then(function (r4) {
+        if (r4) { r4.points = null; return r4; }
+        rotateInto(cnv, rotCanvas, 3 * q);
+        return zbarScan(rotCanvas).then(function (r5) {
+          if (r5) r5.points = null;
+          return r5;
         });
       });
     });
@@ -839,6 +887,8 @@
     bits.push('counted +1');
     resNote.textContent = bits.join(' - ');
     show(saveBtn, true);
+    show(rescanBtn, true);   // unknown card: re-reading a bad scan is Rescan's real job
+    show(removeBtn, false);
     enrichOnline(code, token, price);
     show(card, true);
   }
@@ -847,6 +897,8 @@
     show(card, false);
     card.classList.remove('is-toast');
     show(unitBtn, false);
+    show(removeBtn, false);
+    show(rescanBtn, true);
     toastScanId = null;
     heldStuck = false; heldCode = null;   // tapped away — re-presenting counts again
     paused = false;
@@ -902,6 +954,7 @@
     card.classList.remove('is-ok', 'is-dupe');
     card.classList.remove('is-toast');
     show(unitBtn, false);
+    show(removeBtn, false);
     toastScanId = null;
     heldStuck = false; heldCode = null;   // explicit rescan — allow the same barcode again
     paused = false;
@@ -1056,9 +1109,28 @@
     confirmRecent(scanId);
     toastScanId = null;
     show(unitBtn, false);
+    show(removeBtn, false);
     show(card, false);
     card.classList.remove('is-ok', 'is-dupe', 'is-toast');
     heldStuck = false; heldCode = null;   // counted as a unit — clear the lock
+    paused = false;
+    lastCode = null;
+    lastTime = 0;
+    if (running && !scanTimer) loop();
+  }
+
+  // Remove this dupe straight from the card (no scrolling down to swipe the log).
+  function removeToast() {
+    if (!toastScanId) return;
+    var scanId = toastScanId;
+    if (toastTimer) { clearTimeout(toastTimer); toastTimer = null; }
+    removeRecent(scanId);
+    toastScanId = null;
+    show(unitBtn, false);
+    show(removeBtn, false);
+    show(card, false);
+    card.classList.remove('is-ok', 'is-dupe', 'is-toast');
+    heldStuck = false; heldCode = null;
     paused = false;
     lastCode = null;
     lastTime = 0;
@@ -1191,6 +1263,7 @@
   el('btn-confirm').addEventListener('click', confirmScan);
   el('btn-rescan').addEventListener('click', rescan);
   if (unitBtn) unitBtn.addEventListener('click', countToastAsUnit);
+  if (removeBtn) removeBtn.addEventListener('click', removeToast);
   if (saveBtn) saveBtn.addEventListener('click', saveProduct);
 
   // turn the camera off when navigating away from the Scan tab

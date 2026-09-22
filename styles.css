@@ -242,6 +242,8 @@ body {
 }
 .result-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .result-actions .btn-primary:last-child { grid-column: 1 / -1; }
+/* Big touch targets — these get tapped with a work glove on. */
+.result-actions .btn { min-height: 54px; font-size: 15px; font-weight: 800; }
 
 .scan-controls { margin-top: 12px; }
 
