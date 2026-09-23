@@ -435,8 +435,12 @@
     return row;
   }
 
+  // Mis-saved labels Kyle no longer counts — hidden from the Periscope report AND
+  // Card Mode regardless of what's in the phone's saved-products storage.
+  var CHECKLIST_EXCLUDE = { '7317': 1, '7928': 1 };
   function isMeatDeptChecklistProduct(product) {
     if (!product || !product.plu) return false;
+    if (CHECKLIST_EXCLUDE[String(product.plu).replace(/^0+/, '')]) return false;
     var cat = String(product && product.category || '').toLowerCase();
     return cat === 'beef' || cat === 'ready-made';
   }

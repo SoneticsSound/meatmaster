@@ -244,15 +244,25 @@
     ctx.restore();
   }
 
+  // The upright raw + Otsu passes run EVERY frame (cheap, the common case). The
+  // rotated passes are expensive (a full-canvas rotate + extra zbar scans, and
+  // the 45°/135° ones resize the canvas), so running them on every missed frame
+  // choked the loop. A tilted label stays in view across many frames, so we only
+  // sample the angled passes periodically: 90° every 2nd frame, the diagonals
+  // every 4th. Normal scanning stays fast; an angled label still locks in ~0.1–0.25s.
+  var decodeTick = 0;
   function decodeFrame(cnv) {
+    var tick = decodeTick++;
+    var try90 = (tick % 2) === 0;
+    var tryDiag = (tick % 4) === 0;
     return zbarScan(cnv).then(function (r) {
       if (r) return r;
       otsuInto(cnv, otsuCanvas);
       return zbarScan(otsuCanvas);
     }).then(function (r) {
-      if (r) return r;
-      // Still nothing — the label may be at an angle. Try a 90°-rotated frame
-      // (raw, then thresholded) and un-rotate any hit's points back to source.
+      if (r || !try90) return r;
+      // The label may be sideways. Try a 90°-rotated frame (raw, then
+      // thresholded) and un-rotate any hit's points back to source.
       if (!rotCanvas) { rotCanvas = document.createElement('canvas'); rotCtx = rotCanvas.getContext('2d', { willReadFrequently: true }); }
       var srcH = cnv.height;
       rotate90(cnv, rotCanvas);
@@ -265,10 +275,8 @@
         });
       });
     }).then(function (r) {
-      if (r) return r;
-      // Diagonal labels: spin 45°, then 135°, and scan raw. Doubles the angles
-      // we cover (0/90 plus the two diagonals) so a curvy/tilted label locks
-      // without you squaring it up. Only runs when everything above missed.
+      if (r || !tryDiag) return r;
+      // Diagonal labels: spin 45°, then 135°, and scan raw.
       if (!rotCanvas) { rotCanvas = document.createElement('canvas'); rotCtx = rotCanvas.getContext('2d', { willReadFrequently: true }); }
       var q = Math.PI / 4;
       rotateInto(cnv, rotCanvas, q);

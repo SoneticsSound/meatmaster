@@ -1,6 +1,6 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.21.28**
+Current app version: **v0.21.29**
 
 - Session buttons spacing (v0.21.28): the new "Periscope Card Mode" button mushed against "Show Periscope Report" — .session-top-action is now a flex column with a 10px gap. CSS-only.
 
