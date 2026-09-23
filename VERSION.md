@@ -1,6 +1,8 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.21.27**
+Current app version: **v0.21.28**
+
+- Session buttons spacing (v0.21.28): the new "Periscope Card Mode" button mushed against "Show Periscope Report" — .session-top-action is now a flex column with a 10px gap. CSS-only.
 
 - Delete saved products + highlight cuts only (v0.21.27): ALSO — cut-keyword highlighting is now gated to BEEF cuts only. markup(name, category) returns plain text when category is a known non-Beef (Ready-Made / one-pan meals), so the meals read clean by name (Kyle: "unhighlight all the one pan meals... just keep it for the cuts"). Threaded category through: session.js periscopeRow, scanner.js renderRecent + setResName + toast, periscopecards.js. Blank/unknown category still highlights (scan card before a product resolves). — The delete feature: the two items Kyle wanted gone — PLU 7317 "Boneless Ribeye Roast Alt Label" and 7928 "Sprouts Carne Picada Taco Meat" — turned out to be products HE saved from unknown scans (localStorage), not in products.js, and the app had no way to remove a saved product. Added MMProducts.remove(plu|code|product) (drops it from the custom localStorage list, seed products untouched) and a red Delete button next to Edit in the Products tab, shown only for isCustom rows (confirm dialog, then re-renders products + session). Kyle deletes 7317/7928 on his phone in two taps. Also confirmed the "Short Rib s" orphan is fixed by v0.21.26's 'Short Ribs' keyword (highlights the full phrase on live). Product row grid gets a .product-actions column so Edit+Delete stack without breaking layout.
 
