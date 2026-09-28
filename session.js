@@ -105,6 +105,7 @@
       casePosition: product && product.casePosition ? product.casePosition : 9999,
       price: payload.price || '',
       duplicate: recentDuplicate(code, payload.price, product),
+      markdown: !!payload.markdown,   // pass-2 flag (by eye); NEVER affects the count
       removed: false
     };
     state.scans.unshift(scan);
@@ -127,6 +128,47 @@
     });
     save();
     render();
+  }
+
+  // Manual markdown flag (set by eye during the pass-2 walk). Orthogonal to
+  // counting: markdown NEVER removes or dedups, so it can't move the count (the
+  // count filter stays !removed && !duplicate). It only feeds Markdown Mode.
+  function setMarkdown(scanId, on) {
+    load();
+    state.scans = state.scans.map(function (s) {
+      if (s.id !== scanId) return s;
+      var copy = {};
+      Object.keys(s).forEach(function (k) { copy[k] = s[k]; });
+      copy.markdown = !!on;
+      return copy;
+    });
+    save();
+    render();
+  }
+
+  // Markdown-flagged items grouped by PLU with a count — same shape as
+  // periscopeRows so Card Mode can render either list. Case order.
+  function markdownRows() {
+    load();
+    var byPlu = {};
+    state.scans.forEach(function (s) {
+      if (s.removed || !s.markdown) return;
+      var plu = s.plu ? String(s.plu).replace(/^0+/, '') : '';
+      if (!plu) return;
+      if (!byPlu[plu]) {
+        var product = window.MMProducts && window.MMProducts.findByPlu ? window.MMProducts.findByPlu(plu) : null;
+        byPlu[plu] = {
+          plu: plu,
+          name: (product && product.name) || s.productName || plu,
+          sheetName: (product && product.sheetName) || s.sheetName || '',
+          category: (product && product.category) || s.category || '',
+          casePosition: (product && product.casePosition) || s.casePosition || 9999,
+          count: 0
+        };
+      }
+      byPlu[plu].count++;
+    });
+    return Object.keys(byPlu).map(function (k) { return byPlu[k]; }).sort(byCategoryThenPosition);
   }
 
   function removeDuplicateScans() {
@@ -547,6 +589,15 @@
       body.appendChild(sheet);
       body.appendChild(meta);
       row.appendChild(body);
+      // Manual markdown flag — by eye. Does NOT touch the count; only feeds
+      // Markdown Mode (Card Mode) the pass-4 list to scan into the gun.
+      row.classList.toggle('is-markdown', !!s.markdown);
+      var mdBtn = document.createElement('button');
+      mdBtn.type = 'button';
+      mdBtn.className = 'scan-md-toggle' + (s.markdown ? ' is-on' : '');
+      mdBtn.textContent = s.markdown ? '✓ MD' : 'Mark down';
+      mdBtn.addEventListener('click', function (e) { e.stopPropagation(); setMarkdown(s.id, !s.markdown); });
+      row.appendChild(mdBtn);
       li.appendChild(actions);
       li.appendChild(row);
       wireSwipe(li, row);
@@ -675,6 +726,8 @@
     saveSession: snapshotSession,
     grouped: grouped,
     periscopeRows: periscopeRows,
+    markdownRows: markdownRows,
+    setMarkdown: setMarkdown,
     activeScans: activeScans,
     countableScans: countableScans,
     render: render,

@@ -10,8 +10,9 @@
    Touches no scan/count state. */
 (function () {
   function el(id) { return document.getElementById(id); }
-  var overlay, stageEl, posEl, prevBtn, nextBtn, sizeEl;
+  var overlay, stageEl, posEl, prevBtn, nextBtn, sizeEl, titleEl;
   var rows = [], idx = 0;
+  var source = 'checklist';   // 'checklist' (periscopeRows) | 'markdown' (markdownRows)
   var SIZES = [2, 3, 4, 5, 6];      // module width in px
   var sizeIdx = 1;                   // default 3px/module (~55mm on a phone)
 
@@ -21,7 +22,12 @@
   } catch (e) {}
 
   function load() {
-    rows = (window.MMSession && window.MMSession.periscopeRows) ? window.MMSession.periscopeRows() : [];
+    var S = window.MMSession;
+    if (source === 'markdown') {
+      rows = (S && S.markdownRows) ? S.markdownRows() : [];
+    } else {
+      rows = (S && S.periscopeRows) ? S.periscopeRows() : [];
+    }
     if (idx >= rows.length) idx = 0;
   }
 
@@ -31,7 +37,9 @@
     if (!rows.length) {
       var empty = document.createElement('div');
       empty.className = 'pc-empty';
-      empty.textContent = 'No checklist items yet. Scan some packages first.';
+      empty.textContent = source === 'markdown'
+        ? 'No markdown items yet. Flag items with the Mark down button (or Markdown pass while scanning).'
+        : 'No checklist items yet. Scan some packages first.';
       stageEl.appendChild(empty);
       if (posEl) posEl.textContent = '0 / 0';
       return;
@@ -108,10 +116,13 @@
     renderStage();
   }
 
-  function open() {
+  function open(src) {
     if (!overlay) return;
-    load();
+    source = (src === 'markdown') ? 'markdown' : 'checklist';
+    if (titleEl) titleEl.textContent = source === 'markdown' ? 'Markdown Mode' : 'Periscope Card Mode';
+    overlay.classList.toggle('is-markdown', source === 'markdown');
     idx = 0;
+    load();
     overlay.hidden = false;
     renderStage();
   }
@@ -124,9 +135,12 @@
     prevBtn = el('pc-prev');
     nextBtn = el('pc-next');
     sizeEl = el('pc-size');
+    titleEl = el('pc-title');
     var openBtn = el('btn-periscope-cards');
+    var mdBtn = el('btn-markdown-cards');
     var closeBtn = el('pc-close');
-    if (openBtn) openBtn.addEventListener('click', open);
+    if (openBtn) openBtn.addEventListener('click', function () { open('checklist'); });
+    if (mdBtn) mdBtn.addEventListener('click', function () { open('markdown'); });
     if (closeBtn) closeBtn.addEventListener('click', close);
     if (prevBtn) prevBtn.addEventListener('click', function () { go(-1); });
     if (nextBtn) nextBtn.addEventListener('click', function () { go(1); });

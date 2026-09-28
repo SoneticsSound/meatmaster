@@ -43,6 +43,7 @@
 
   var running = false;   // camera on + decode loop active
   var paused = false;    // a result is showing; ignore new reads
+  var markdownPass = false;  // when on, each scan is flagged markdown (pass-2 walk); still counts
   var stream = null;     // MediaStream (so we can turn the camera off)
   var scanTimer = null;  // decode-loop timer
   var blurSkips = 0;     // consecutive blurry frames skipped (anti-starvation)
@@ -838,7 +839,8 @@
         code: code,
         format: prettyType(result.type),
         product: product,
-        price: price
+        price: price,
+        markdown: markdownPass
       });
       var scanAt = new Date();
       recent.unshift({
@@ -883,7 +885,8 @@
       format: prettyType(result.type),
       product: null,
       name: 'Unknown product',
-      price: price
+      price: price,
+      markdown: markdownPass
     });
     recent.unshift({
       id: unknownScan && unknownScan.id,
@@ -1284,6 +1287,21 @@
     scanSub.textContent = 'Walk the case · scan each package';
   }
 
+  // Markdown pass: while ON, every scan is flagged markdown (still counts). This
+  // is the pass-2 walk — scan the markdown pile once, it counts AND flags for the
+  // pass-4 markdown scan-out. A banner makes the mode impossible to forget.
+  var mdPassBtn = el('btn-markdown-pass');
+  var scanStage = el('scanner');
+  function renderMarkdownPass() {
+    if (mdPassBtn) {
+      mdPassBtn.textContent = markdownPass ? '● Markdown pass: ON' : 'Markdown pass: off';
+      mdPassBtn.classList.toggle('is-on', markdownPass);
+    }
+    if (scanStage) scanStage.classList.toggle('is-markdown-pass', markdownPass);
+  }
+  function toggleMarkdownPass() { markdownPass = !markdownPass; renderMarkdownPass(); }
+  renderMarkdownPass();
+
   /* ---------- wiring ---------- */
   el('btn-start').addEventListener('click', start);
   el('btn-retry').addEventListener('click', start);
@@ -1293,6 +1311,7 @@
   if (unitBtn) unitBtn.addEventListener('click', countToastAsUnit);
   if (removeBtn) removeBtn.addEventListener('click', removeToast);
   if (saveBtn) saveBtn.addEventListener('click', saveProduct);
+  if (mdPassBtn) mdPassBtn.addEventListener('click', toggleMarkdownPass);
 
   // turn the camera off when navigating away from the Scan tab
   document.querySelectorAll('.tab').forEach(function (t) {

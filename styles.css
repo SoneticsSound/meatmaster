@@ -497,6 +497,23 @@ body {
 .grassfed-kw { color: #4ade80; font-weight: 900; }
 /* Embedded price on each scan-log row — consistent with the scan card. */
 .ri-price { color: #4ade80; font-weight: 800; }
+
+/* ---- Markdown flag + Markdown Mode (yellow = the physical markdown sticker) ---- */
+.btn-md-pass.is-on { background: #ffd166; color: #201900; border-color: #ffd166; font-weight: 800; }
+.scanner.is-markdown-pass { outline: 3px solid #ffd166; outline-offset: -3px; }
+/* session Scan-log rows: flex so the Mark-down pill sits at the right */
+.scan-row { display: flex; align-items: center; gap: 10px; grid-template-columns: none; }
+.scan-row > div:first-child { flex: 1; min-width: 0; }
+.scan-md-toggle {
+  flex: none; padding: 6px 10px; border-radius: 999px;
+  font-size: 12px; font-weight: 800; cursor: pointer;
+  border: 1px solid var(--line); background: var(--surface-2); color: var(--ink-dim);
+}
+.scan-md-toggle.is-on { background: #ffd166; color: #201900; border-color: #ffd166; }
+.scan-row.is-markdown { box-shadow: inset 3px 0 0 #ffd166; }
+.btn-md-mode { color: #ffd166; border-color: rgba(255,209,102,.5); font-weight: 800; }
+.pc-overlay.is-markdown .pc-count-val,
+.pc-overlay.is-markdown .pc-plu { color: #ffd166; }
 .periscope-code {
   color: var(--ink-dim);
   font-size: 11px;

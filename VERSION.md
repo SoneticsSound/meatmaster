@@ -1,6 +1,8 @@
 # MeatMaster Version Fidelity
 
-Current app version: **v0.21.29**
+Current app version: **v0.21.30**
+
+- Markdown Mode (v0.21.30): Cowork's top next-build, shipped. A MANUAL markdown flag (by eye — OCR isn't trusted for auto-flag yet) that is ORTHOGONAL to the count: session.js scan objects get a `markdown` field; count filters stay `!removed && !duplicate`, so markdown NEVER moves the count (verified: 4 scans stay countable whether or not flagged). Set it two ways — (1) a "Markdown pass" toggle on the Scan tab (scanner.js markdownPass): while ON every scan is flagged markdown AND still counts (the pass-2 walk, one scan does both), with a yellow ring on the stage; (2) a per-row "Mark down" pill in the Session scan log to flag/correct by eye. New MMSession.markdownRows() groups flagged scans by PLU (case order), same shape as periscopeRows. Card Mode gained a rows-source param (open('checklist'|'markdown')) — NOT forked — and a new "Markdown Mode (scan markdowns)" button on the Session tab feeds it markdownRows: yellow-themed cards (count-on-top, EAN-13 on white) for the pass-4 scan-out into the gun. Verified end-to-end on localhost: count unaffected, markdownRows correct, Markdown Mode shows only flagged items, barcode decodes (PLU 7315 → 0207315000002), no console errors. Aligns with the canonical markdown workflow in SYNC_CHANNEL.json (pass 2 flag → pass 3 count-union → pass 4 mark down).
 
 - Session buttons spacing (v0.21.28): the new "Periscope Card Mode" button mushed against "Show Periscope Report" — .session-top-action is now a flex column with a 10px gap. CSS-only.
 
