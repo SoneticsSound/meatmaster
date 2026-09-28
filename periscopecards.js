@@ -63,11 +63,14 @@
     // recorded count — this is what you key into Periscope. Kept at the TOP with
     // the item info, because when you hold the phone to the gun your hand/scanner
     // blocks the BOTTOM of the screen; the barcode goes there instead.
+    // Checklist mode shows the inventory count. Markdown mode isn't a count —
+    // a markdown is a per-package sticker/price override, so the number is just
+    // how many packages of this item to sticker.
     var countWrap = document.createElement('div');
     countWrap.className = 'pc-count';
     var cl = document.createElement('span');
     cl.className = 'pc-count-label';
-    cl.textContent = 'Counted';
+    cl.textContent = source === 'markdown' ? 'to sticker' : 'Counted';
     var cv = document.createElement('span');
     cv.className = 'pc-count-val';
     cv.textContent = r.count;
