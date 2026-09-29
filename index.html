@@ -100,13 +100,14 @@
         <div class="ph-icon">🗂️</div>
         <h2>Product database loaded</h2>
         <p>Seed products plus anything saved from unknown scans live on this phone.</p>
-        <span class="chip">v0.21.31</span>
+        <span class="chip">v0.21.32</span>
       </div>
       <section class="product-list-wrap">
         <div class="product-tools">
           <!-- Production flow sits ABOVE the reference decks: it is the
                thing you act on in the morning, the others are lookups. -->
           <button class="btn btn-prod btn-block" id="btn-production-list">One-Pan Meals Production List</button>
+          <button class="btn btn-prod-2 btn-block" id="btn-prep-order">Prep Order (time-sorted)</button>
           <button class="btn btn-prod-2 btn-block" id="btn-recipes-production">Recipes for One-Pan Meals</button>
           <button class="btn btn-prod-2 btn-block" id="btn-case-production">Service Case Production List</button>
           <button class="btn btn-prod-2 btn-block" id="btn-recipes-service-case">Recipes for Service Case</button>
@@ -250,7 +251,7 @@
     <div class="sg-body" id="sg-body"></div>
   </div>
 
-  <div class="build-stamp" id="build-stamp">v0.21.31</div>
+  <div class="build-stamp" id="build-stamp">v0.21.32</div>
 
   <script src="vendor/zbar/index.js"></script>
   <script src="haptics.js"></script>
@@ -274,6 +275,7 @@
   <script src="servicecaserecipes.js"></script>
   <script src="fabrication_guides.js"></script>
   <script src="fabrication.js"></script>
+  <script src="prepsequence.js"></script>
   <script src="ocr.js"></script>
   <script src="app.js"></script>
   <script src="scanner.js"></script>
